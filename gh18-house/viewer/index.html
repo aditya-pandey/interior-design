@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GH-18 House Viewer</title>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="loading">Building GH-18 from house.json…</div>
+  <aside id="panel">
+    <h1>GH-18 <small>3D model · from house.json</small></h1>
+    <label class="row">View
+      <select id="preset"></select>
+    </label>
+    <div class="row seg" role="group" aria-label="Floors">
+      <span>Floors</span>
+      <button data-floor="GF">GF</button><button data-floor="FF">FF</button><button data-floor="SF">SF</button><button data-floor="ALL">All</button>
+    </div>
+    <label class="row">Explode <input id="explode" type="range" min="0" max="1" step="0.01" value="0" /></label>
+    <label class="row check"><input id="cutaway" type="checkbox" /> Cutaway (walls above 1.2 m)</label>
+    <label class="row check"><input id="labels" type="checkbox" /> Room names &amp; sizes</label>
+    <div class="row seg" role="group" aria-label="Lighting">
+      <span>Light</span>
+      <button data-time="day">Day</button><button data-time="dusk">Dusk</button>
+    </div>
+    <button id="walk" class="primary">Walk (first person)</button>
+    <p class="hint">Orbit: drag · pan: right-drag · zoom: scroll<br />Keys: 0–3 floors · C cutaway · L labels · N day/dusk<br />Second floor is <b class="prop">PROPOSED</b>.</p>
+  </aside>
+  <div id="walkhud">
+    <p>WASD / arrows to move · Shift to run · mouse to look · Esc to release · Q to leave walk mode</p>
+    <button id="exitwalk">Exit walk</button>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

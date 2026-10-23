@@ -248,3 +248,29 @@ If you want it merged, it is a one-wall change in `house.json`: remove FF-W06/GL
 - **Terraces and deck:** wood-look deck tiles.
 
 The BRIEF CHANGE tags on the plans mark B-01, B-03 and B-04.
+
+---
+
+## C. Phase 2: 3D viewer
+
+**C-01 · Textures (deviation).** The brief asks for Poly Haven CC0 textures. `polyhaven.com`, `ambientcg.com`, jsDelivr and unpkg are all blocked by the network policy of the build environment. In their place:
+- **Now:** `tools/gen_textures.py` makes procedural PBR sets (colour, normal and roughness). They are CC0 and can be regenerated.
+- **Later:** run `tools/fetch_polyhaven.py` once on a machine with internet access. It downloads the named Poly Haven sets and HDRIs and switches the viewer over without code changes.
+
+**C-02 · Sun and sky.**
+- **Day:** late afternoon, sun azimuth 235° (south-west) at 34° elevation, which lights the back lawn and the drawing room.
+- **Dusk:** sun 1.5° below the western horizon.
+- **Orientation:** both follow the East-facing assumption (A-02).
+- **Lighting:** the physical sky is the visible background. Image-based light comes from a neutral studio environment, because a blue sky dome would tint every interior wall.
+
+**C-03 · Interior lights at dusk.**
+- **Fixtures:** cove strips, a downlight grid of about 1.4 m in every POP ceiling, one warm 2700 K-look point light per room, the dining pendant and the mandir LED.
+- **Brightness:** intensities are set to read correctly on screen, not taken from photometric data.
+
+**C-04 · Furniture.** All furniture is parametric (built from bevelled and rounded boxes) from `house.json`. Detailed CC0 furniture models are planned for the Phase 3 renders.
+
+**C-05 · Doors.** In the model, hinged doors are shown open at about 90° so walk mode can pass through. The lift doors are closed, and the GL-5 / GL-7 sliders are shown closed but are walkable.
+
+**C-06 · Lift overrun.** A 1.5 m plastered box above the SF roof stands in for the overrun. The real size depends on the lift vendor (A-30).
+
+**C-07 · Stair handrail.** A walnut handrail runs along the spine of each flight.

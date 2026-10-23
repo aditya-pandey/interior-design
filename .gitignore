@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+gh18-house/viewer/dist/
+gh18-house/assets/polyhaven/

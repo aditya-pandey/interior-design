@@ -1,0 +1,128 @@
+{
+ "marble_beige": {
+  "color": "textures/marble_beige_color.jpg",
+  "normal": "textures/marble_beige_normal.jpg",
+  "rough": "textures/marble_beige_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Light beige Italian marble, honed"
+ },
+ "marble_white": {
+  "color": "textures/marble_white_color.jpg",
+  "normal": "textures/marble_white_normal.jpg",
+  "rough": "textures/marble_white_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "White statuario-style marble"
+ },
+ "walnut": {
+  "color": "textures/walnut_color.jpg",
+  "normal": "textures/walnut_normal.jpg",
+  "rough": "textures/walnut_rough.jpg",
+  "size_m": 0.8,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Walnut veneer, matte"
+ },
+ "walnut_fluted": {
+  "color": "textures/walnut_fluted_color.jpg",
+  "normal": "textures/walnut_fluted_normal.jpg",
+  "rough": "textures/walnut_fluted_rough.jpg",
+  "size_m": 0.6,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Fluted walnut panel, 25 mm flutes"
+ },
+ "plaster": {
+  "color": "textures/plaster_color.jpg",
+  "normal": "textures/plaster_normal.jpg",
+  "rough": "textures/plaster_rough.jpg",
+  "size_m": 2.0,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Warm white painted plaster"
+ },
+ "tile_matte_lg": {
+  "color": "textures/tile_matte_lg_color.jpg",
+  "normal": "textures/tile_matte_lg_normal.jpg",
+  "rough": "textures/tile_matte_lg_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Large-format matte porcelain 1200x600"
+ },
+ "tile_matte_dark": {
+  "color": "textures/tile_matte_dark_color.jpg",
+  "normal": "textures/tile_matte_dark_normal.jpg",
+  "rough": "textures/tile_matte_dark_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Large-format matte porcelain, charcoal"
+ },
+ "vitrified": {
+  "color": "textures/vitrified_color.jpg",
+  "normal": "textures/vitrified_normal.jpg",
+  "rough": "textures/vitrified_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Vitrified tile 600x600"
+ },
+ "deck_tile": {
+  "color": "textures/deck_tile_color.jpg",
+  "normal": "textures/deck_tile_normal.jpg",
+  "rough": "textures/deck_tile_rough.jpg",
+  "size_m": 1.2,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Wood-look porcelain deck tile 1200x200"
+ },
+ "granite_flamed": {
+  "color": "textures/granite_flamed_color.jpg",
+  "normal": "textures/granite_flamed_normal.jpg",
+  "rough": "textures/granite_flamed_rough.jpg",
+  "size_m": 0.8,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Flamed grey granite"
+ },
+ "cobble": {
+  "color": "textures/cobble_color.jpg",
+  "normal": "textures/cobble_normal.jpg",
+  "rough": "textures/cobble_rough.jpg",
+  "size_m": 1.0,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Cobble stone setts"
+ },
+ "grass": {
+  "color": "textures/grass_color.jpg",
+  "normal": "textures/grass_normal.jpg",
+  "rough": "textures/grass_rough.jpg",
+  "size_m": 1.5,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Lawn"
+ },
+ "pebbles": {
+  "color": "textures/pebbles_color.jpg",
+  "normal": "textures/pebbles_normal.jpg",
+  "rough": "textures/pebbles_rough.jpg",
+  "size_m": 0.8,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "White pebbles"
+ },
+ "concrete": {
+  "color": "textures/concrete_color.jpg",
+  "normal": "textures/concrete_normal.jpg",
+  "rough": "textures/concrete_rough.jpg",
+  "size_m": 2.0,
+  "source": "procedural (gen_textures.py)",
+  "license": "CC0",
+  "desc": "Plastered concrete"
+ }
+}
