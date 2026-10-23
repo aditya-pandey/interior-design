@@ -1,0 +1,415 @@
+{
+ "source": "GH-18 GF FF Floor Plan.pdf",
+ "frame": "PDF points, page rotated to reading orientation (lawn at top)",
+ "count": 51,
+ "dims": [
+  {
+   "text": "2761",
+   "value": 2761,
+   "floor": "FF",
+   "X": 543.2,
+   "Y": 345.0,
+   "orient": "h"
+  },
+  {
+   "text": "6000",
+   "value": 6000,
+   "floor": "FF",
+   "X": 701.9,
+   "Y": 383.5,
+   "orient": "h"
+  },
+  {
+   "text": "2940",
+   "value": 2940,
+   "floor": "FF",
+   "X": 497.2,
+   "Y": 393.2,
+   "orient": "v"
+  },
+  {
+   "text": "3864",
+   "value": 3864,
+   "floor": "FF",
+   "X": 802.4,
+   "Y": 449.4,
+   "orient": "v"
+  },
+  {
+   "text": "1685",
+   "value": 1685,
+   "floor": "FF",
+   "X": 482.4,
+   "Y": 480.0,
+   "orient": "v"
+  },
+  {
+   "text": "4730",
+   "value": 4730,
+   "floor": "FF",
+   "X": 724.4,
+   "Y": 512.5,
+   "orient": "h"
+  },
+  {
+   "text": "2780",
+   "value": 2780,
+   "floor": "FF",
+   "X": 690.1,
+   "Y": 524.9,
+   "orient": "h"
+  },
+  {
+   "text": "3240",
+   "value": 3240,
+   "floor": "FF",
+   "X": 579.3,
+   "Y": 527.8,
+   "orient": "h"
+  },
+  {
+   "text": "1965",
+   "value": 1965,
+   "floor": "FF",
+   "X": 527.3,
+   "Y": 558.0,
+   "orient": "v"
+  },
+  {
+   "text": "2015",
+   "value": 2015,
+   "floor": "FF",
+   "X": 733.4,
+   "Y": 558.8,
+   "orient": "v"
+  },
+  {
+   "text": "4455",
+   "value": 4455,
+   "floor": "FF",
+   "X": 643.7,
+   "Y": 601.5,
+   "orient": "v"
+  },
+  {
+   "text": "4070",
+   "value": 4070,
+   "floor": "FF",
+   "X": 564.8,
+   "Y": 619.8,
+   "orient": "h"
+  },
+  {
+   "text": "3100",
+   "value": 3100,
+   "floor": "FF",
+   "X": 752.8,
+   "Y": 680.8,
+   "orient": "h"
+  },
+  {
+   "text": "1500",
+   "value": 1500,
+   "floor": "FF",
+   "X": 802.1,
+   "Y": 706.1,
+   "orient": "v"
+  },
+  {
+   "text": "5540",
+   "value": 5540,
+   "floor": "FF",
+   "X": 496.1,
+   "Y": 715.7,
+   "orient": "v"
+  },
+  {
+   "text": "3250",
+   "value": 3250,
+   "floor": "FF",
+   "X": 750.2,
+   "Y": 742.2,
+   "orient": "h"
+  },
+  {
+   "text": "4550",
+   "value": 4550,
+   "floor": "FF",
+   "X": 660.0,
+   "Y": 764.5,
+   "orient": "v"
+  },
+  {
+   "text": "4258",
+   "value": 4258,
+   "floor": "FF",
+   "X": 800.0,
+   "Y": 812.1,
+   "orient": "v"
+  },
+  {
+   "text": "2921",
+   "value": 2921,
+   "floor": "GF",
+   "X": 139.8,
+   "Y": 343.6,
+   "orient": "h"
+  },
+  {
+   "text": "6000",
+   "value": 6000,
+   "floor": "GF",
+   "X": 295.7,
+   "Y": 343.6,
+   "orient": "h"
+  },
+  {
+   "text": "1721",
+   "value": 1721,
+   "floor": "GF",
+   "X": 139.5,
+   "Y": 369.6,
+   "orient": "h"
+  },
+  {
+   "text": "1850",
+   "value": 1850,
+   "floor": "GF",
+   "X": 193.2,
+   "Y": 374.3,
+   "orient": "v"
+  },
+  {
+   "text": "1250",
+   "value": 1250,
+   "floor": "GF",
+   "X": 164.5,
+   "Y": 384.8,
+   "orient": "v"
+  },
+  {
+   "text": "R300",
+   "value": 300,
+   "floor": "GF",
+   "X": 178.6,
+   "Y": 405.8,
+   "orient": "arc"
+  },
+  {
+   "text": "4785",
+   "value": 4785,
+   "floor": "GF",
+   "X": 91.6,
+   "Y": 425.4,
+   "orient": "v"
+  },
+  {
+   "text": "5100",
+   "value": 5100,
+   "floor": "GF",
+   "X": 394.1,
+   "Y": 431.1,
+   "orient": "v"
+  },
+  {
+   "text": "4185",
+   "value": 4185,
+   "floor": "GF",
+   "X": 118.2,
+   "Y": 436.0,
+   "orient": "v"
+  },
+  {
+   "text": "3170",
+   "value": 3170,
+   "floor": "GF",
+   "X": 171.8,
+   "Y": 516.4,
+   "orient": "h"
+  },
+  {
+   "text": "150",
+   "value": 150,
+   "floor": "GF",
+   "X": 221.8,
+   "Y": 516.4,
+   "orient": "h"
+  },
+  {
+   "text": "2850",
+   "value": 2850,
+   "floor": "GF",
+   "X": 282.7,
+   "Y": 516.4,
+   "orient": "h"
+  },
+  {
+   "text": "1950",
+   "value": 1950,
+   "floor": "GF",
+   "X": 366.5,
+   "Y": 516.4,
+   "orient": "h"
+  },
+  {
+   "text": "915",
+   "value": 915,
+   "floor": "GF",
+   "X": 121.1,
+   "Y": 525.4,
+   "orient": "v"
+  },
+  {
+   "text": "600",
+   "value": 600,
+   "floor": "GF",
+   "X": 222.7,
+   "Y": 530.9,
+   "orient": "v"
+  },
+  {
+   "text": "3170",
+   "value": 3170,
+   "floor": "GF",
+   "X": 171.8,
+   "Y": 550.8,
+   "orient": "h"
+  },
+  {
+   "text": "2100",
+   "value": 2100,
+   "floor": "GF",
+   "X": 327.1,
+   "Y": 557.2,
+   "orient": "v"
+  },
+  {
+   "text": "1800",
+   "value": 1800,
+   "floor": "GF",
+   "X": 395.9,
+   "Y": 557.4,
+   "orient": "v"
+  },
+  {
+   "text": "1450",
+   "value": 1450,
+   "floor": "GF",
+   "X": 120.0,
+   "Y": 572.3,
+   "orient": "v"
+  },
+  {
+   "text": "950",
+   "value": 950,
+   "floor": "GF",
+   "X": 91.9,
+   "Y": 614.2,
+   "orient": "v"
+  },
+  {
+   "text": "4000",
+   "value": 4000,
+   "floor": "GF",
+   "X": 157.4,
+   "Y": 624.4,
+   "orient": "h"
+  },
+  {
+   "text": "6430",
+   "value": 6430,
+   "floor": "GF",
+   "X": 235.3,
+   "Y": 633.1,
+   "orient": "v"
+  },
+  {
+   "text": "600",
+   "value": 600,
+   "floor": "GF",
+   "X": 91.6,
+   "Y": 646.6,
+   "orient": "v"
+  },
+  {
+   "text": "4000",
+   "value": 4000,
+   "floor": "GF",
+   "X": 157.4,
+   "Y": 661.2,
+   "orient": "h"
+  },
+  {
+   "text": "3275",
+   "value": 3275,
+   "floor": "GF",
+   "X": 280.9,
+   "Y": 688.5,
+   "orient": "v"
+  },
+  {
+   "text": "2470",
+   "value": 2470,
+   "floor": "GF",
+   "X": 221.7,
+   "Y": 700.5,
+   "orient": "v"
+  },
+  {
+   "text": "1550",
+   "value": 1550,
+   "floor": "GF",
+   "X": 259.6,
+   "Y": 719.0,
+   "orient": "h"
+  },
+  {
+   "text": "4440",
+   "value": 4440,
+   "floor": "GF",
+   "X": 91.6,
+   "Y": 734.9,
+   "orient": "v"
+  },
+  {
+   "text": "4590",
+   "value": 4590,
+   "floor": "GF",
+   "X": 395.2,
+   "Y": 764.2,
+   "orient": "v"
+  },
+  {
+   "text": "R1526",
+   "value": 1526,
+   "floor": "GF",
+   "X": 232.1,
+   "Y": 765.9,
+   "orient": "arc"
+  },
+  {
+   "text": "715",
+   "value": 715,
+   "floor": "GF",
+   "X": 178.9,
+   "Y": 800.3,
+   "orient": "v"
+  },
+  {
+   "text": "2730",
+   "value": 2730,
+   "floor": "GF",
+   "X": 135.1,
+   "Y": 809.5,
+   "orient": "h"
+  },
+  {
+   "text": "3070",
+   "value": 3070,
+   "floor": "GF",
+   "X": 347.1,
+   "Y": 826.7,
+   "orient": "h"
+  }
+ ]
+}

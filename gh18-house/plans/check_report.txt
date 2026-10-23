@@ -1,0 +1,130 @@
+GH-18 dimension check   (tolerance 50 mm)
+source: house.json vs 51 dimension strings in inputs/pdf_dims.json
+
+fl  PDF    model  delta   status        what
+GF  2921   2917        -4 OK            Kitchen: left wall inner face -> peninsula outer edge
+GF  6000   6004        +4 OK            Drawing: peninsula outer edge -> right wall inner face
+GF  1721   1721        -0 OK            Kitchen: left counter front -> peninsula inner edge
+GF  1850   1849        -1 OK            Peninsula: rear wall inner face -> centre of R300 end
+GF  1250   1249        -1 OK            Peninsula: rear counter front -> centre of R300 end
+GF  R300   300         +0 OK            Peninsula end radius
+GF  4785   4786        +1 OK            Left side: rear wall inner face -> OTS outer face
+GF  5100   5101        +1 OK            Right side: rear wall inner face -> lift top wall outer face
+GF  4185   4186        +1 OK            Kitchen left run: rear counter front -> OTS outer face
+GF  3170   3169        -1 OK            Service band: OTS -> lobby wall (toilet clear width)
+GF  150    150         +0 OK            Lobby west wall thickness
+GF  2850   2850        +0 OK            Lobby width at lift
+GF  1950   1951        +1 OK            Lift block width (incl. lift west wall)
+GF  915    914         -1 OK            Strip between OTS top and toilet top wall
+GF  600    599         -1 OK            Lift top line -> toilet top wall
+GF  3170   3169        -1 OK            Toilet clear width (upper part)
+GF  2100   2099        -1 OK            Lift block depth (outer)
+GF  1800   1799        -1 OK            Lift shaft clear depth
+GF  1450   1450        +0 OK            Toilet top wall -> OTS bottom (GL-3 zone)
+GF  950    951         +1 OK            OTS bottom -> toilet/guest wall
+GF  4000   3970       -30 OK~           Toilet clear width (lower part)
+GF  6430   6430        +0 OK            Lobby run: lift top line -> main door line
+GF  600    600         +0 OK            Guest wardrobe strip depth
+GF  4000   3970       -30 OK~           Guest room clear width
+GF  3275   3276        +1 OK            Stair spine -> main door line
+GF  2470   2472        +2 OK            Guest door jamb -> start of curved wall
+GF  1550   1550        +0 OK            Lobby narrow width
+GF  4440   4440        +0 OK            Guest room depth: wardrobe front -> GL-1 wall
+GF  4590   4592        +2 OK            Study (mandir+store) depth from janitor-side face
+GF  R1526  1526        +0 OK            Curved wall radius (guest-room face)
+GF  715    716         +1 OK            Pier top -> GL-1 wall inner face
+GF  2730   2700       -30 OK~           Left wall inner face -> pier (GL-1 jamb to jamb)
+GF  3070   3071        +1 OK            Study (mandir+store) width
+FF  2761   2763        +2 OK            Master toilet width
+FF  6000   6008        +8 OK            Master bedroom width (upper part)
+FF  2940   2940        +0 OK            Master toilet depth
+FF  3864   3864        +0 OK            Master bedroom depth (GL-7 wall -> band wall)
+FF  1685   1696       +11 OK            Dresser depth on the left wall
+FF  4730   4732        +2 OK            Master bedroom width at the lobby
+FF  2780   2779        -1 OK            FF lobby width
+FF  3240   3238        -2 OK            Kids toilet width
+FF  1965   1964        -1 OK            Kids toilet depth
+FF  2015   2016        +1 OK            FF lift block depth
+FF  4455   4457        +2 OK            FF lobby length
+FF  4070   4039       -31 OK~           Kids room clear width
+FF  3100   3103        +3 OK            Bedroom 3 toilet width
+FF  1500   1500        +0 OK            Bedroom 3 toilet depth
+FF  5540   5542        +2 OK            Kids room depth: wardrobe front -> GL-1 wall
+FF  3250   3253        +3 OK            Bedroom 3 toilet block width incl. west wall
+FF  4550   4550        +0 OK            Bedroom 3 wardrobe wall length
+FF  4258   4258        +0 OK            Bedroom 3 depth along the right wall
+
+PDF strings mapped: 51 / 51
+
+Openings vs door/window schedule
+  FF-D2a     D2     width  model  1000  schedule  1000     +0  OK
+  FF-D2a     D2     height model  2400  schedule  2400     +0  OK
+  FF-D2b     D2     width  model  1000  schedule  1000     +0  OK
+  FF-D2b     D2     height model  2400  schedule  2400     +0  OK
+  FF-D2c     D2     width  model  1000  schedule  1000     +0  OK
+  FF-D2c     D2     height model  2400  schedule  2400     +0  OK
+  FF-D2d     D2     width  model  1000  schedule  1000     +0  OK
+  FF-D2d     D2     height model  2400  schedule  2400     +0  OK
+  FF-D3a     D3     width  model   800  schedule   800     +0  OK
+  FF-D3a     D3     height model  2400  schedule  2400     +0  OK
+  FF-D3b     D3     width  model   800  schedule   800     +0  OK
+  FF-D3b     D3     height model  2400  schedule  2400     +0  OK
+  FF-D3c     D3     width  model   800  schedule   800     +0  OK
+  FF-D3c     D3     height model  2400  schedule  2400     +0  OK
+  FF-GL1     GL-1   width  model  2400  schedule  2400     +0  OK
+  FF-GL1     GL-1   sill   model   100  schedule   100     +0  OK
+  FF-GL1     GL-1   height model  2300  schedule  2300     +0  OK
+  FF-GL10    GL-10  width  model  1000  schedule  1000     +0  OK
+  FF-GL10    GL-10  sill   model   950  schedule   950     +0  OK
+  FF-GL10    GL-10  height model  1450  schedule  1450     +0  OK
+  FF-GL3     GL-3   width  model  1150  schedule  1150     +0  OK
+  FF-GL3     GL-3   sill   model   950  schedule   950     +0  OK
+  FF-GL3     GL-3   height model  1450  schedule  1450     +0  OK
+  FF-GL4     GL-4   width  model  1460  schedule  1460     +0  OK
+  FF-GL4     GL-4   sill   model   950  schedule   950     +0  OK
+  FF-GL4     GL-4   height model  1450  schedule  1450     +0  OK
+  FF-GL7     GL-7   width  model  3500  schedule  3500     +0  OK
+  FF-GL7     GL-7   sill   model   100  schedule   100     +0  OK
+  FF-GL7     GL-7   height model  2300  schedule  2300     +0  OK
+  FF-GL9     GL-9   width  model  4096  schedule  4100     -4  OK
+  FF-GL9     GL-9   sill   model   100  schedule   100     +0  OK
+  FF-GL9     GL-9   height model  2300  schedule  2300     +0  OK
+  GF-D1      D1     width  model  1450  schedule  1450     +0  OK
+  GF-D1      D1     height model  2400  schedule  2400     +0  OK
+  GF-D2a     D2     width  model  1000  schedule  1000     +0  OK
+  GF-D2a     D2     height model  2400  schedule  2400     +0  OK
+  GF-D2b     D2     width  model  1000  schedule  1000     +0  OK
+  GF-D2b     D2     height model  2400  schedule  2400     +0  OK
+  GF-D3a     D3     width  model   800  schedule   800     +0  OK
+  GF-D3a     D3     height model  2400  schedule  2400     +0  OK
+  GF-D3b     D3     width  model   800  schedule   800     +0  OK
+  GF-D3b     D3     height model  2400  schedule  2400     +0  OK
+  GF-GL1     GL-1   width  model  2400  schedule  2400     +0  OK
+  GF-GL1     GL-1   sill   model   100  schedule   100     +0  OK
+  GF-GL1     GL-1   height model  2300  schedule  2300     +0  OK
+  GF-GL2     GL-2   width  model  2770  schedule  2770     +0  OK
+  GF-GL2     GL-2   sill   model   100  schedule   100     +0  OK
+  GF-GL2     GL-2   height model  2300  schedule  2300     +0  OK
+  GF-GL3     GL-3   width  model  1150  schedule  1150     +0  OK
+  GF-GL3     GL-3   sill   model   950  schedule   950     +0  OK
+  GF-GL3     GL-3   height model  1450  schedule  1450     +0  OK
+  GF-GL4     GL-4   width  model  1460  schedule  1460     +0  OK
+  GF-GL4     GL-4   sill   model   950  schedule   950     +0  OK
+  GF-GL4     GL-4   height model  1450  schedule  1450     +0  OK
+  GF-GL5     GL-5   width  model  5700  schedule  5700     +0  OK
+  GF-GL5     GL-5   sill   model   100  schedule   100     +0  OK
+  GF-GL5     GL-5   height model  2300  schedule  2300     +0  OK
+  SF-GL3     GL-3   width  model  1150  schedule  1150     +0  OK
+  SF-GL3     GL-3   sill   model   950  schedule   950     +0  OK
+  SF-GL3     GL-3   height model  1450  schedule  1450     +0  OK
+  FF-W28+29  GL-8   length model  3968  schedule  3975     -7  OK
+
+Brief figures (informational, brief values are approximate)
+  Interior width (2921 + 6000)           model   8921   brief ~  8921       +0
+  Outer width                            model   9381   brief ~  9400      -19
+  Rear boundary -> front boundary        model  22276   brief ~ 22400     -124
+  Back lawn depth (boundary -> house)    model   5315   brief ~  5400      -85
+  Deck depth from house                  model   2701   brief ~  2700       +1
+
+RESULT: PASS  (0 mismatches over 50 mm, 0 unmapped PDF strings)
+Legend: OK = within 20 mm, OK~ = 21-50 mm (explained in ASSUMPTIONS.md), FAIL = over 50 mm
