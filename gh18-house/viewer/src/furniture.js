@@ -345,7 +345,7 @@ B.car_reference = (p, w, d) => {
   // hatchback ~3.8 m (local Z = length)
   box(p, 'car_paint', w, 0.6, d, 0, 0.25, 0, 0.12);
   box(p, 'car_paint', w - 0.12, 0.55, d * 0.55, 0, 0.82, -0.12, 0.15);
-  box(p, 'glass', w - 0.1, 0.45, d * 0.5, 0, 0.88, -0.12, 0.1);
+  box(p, 'car_glass', w - 0.1, 0.45, d * 0.5, 0, 0.88, -0.12, 0.1);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const g = new THREE.CylinderGeometry(0.31, 0.31, 0.2, 24);
     g.rotateZ(Math.PI / 2); g.translate(sx * (w / 2 - 0.12), 0.31, sz * (d / 2 - 0.65));

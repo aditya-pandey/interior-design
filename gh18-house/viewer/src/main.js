@@ -5,17 +5,21 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import house from '../../house.json';
 import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
+import { buildContext } from './context.js';
 import './style.css';
 
 // ------------------------------------------------------------------ renderer & scene
 const params = new URLSearchParams(location.search);
 const LOW = params.has('low');          // ?low = no AO / smaller shadow map (old laptops, CI)
+const CINEMA = params.has('cinema');    // ?cinema = no UI, bloom; camera driven by viewer.cine() (film render)
+if (CINEMA) document.body.classList.add('cinema');
 
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));   // retina cap keeps AO + MSAA smooth on laptops
@@ -84,7 +88,7 @@ let M, data, walker;
 const floorGroups = {};
 const ghost = new Map();
 const pointLights = [];
-let composer, gtao;
+let composer, gtao, context = null;
 
 async function init() {
   M = await createMaterials(renderer);
@@ -97,6 +101,12 @@ async function init() {
   for (const mesh of data.meshes) {
     const g = floorGroups[mesh.userData.floor];
     (g || scene).add(mesh);
+  }
+  if (CINEMA) {
+    context = buildContext(house.meta.plot, M);
+    scene.add(context);
+    // the parking "reference car" is a scale check, not part of the design: keep it out of the film
+    for (const mesh of data.meshes) if (['car_paint', 'tyre', 'car_glass'].includes(mesh.userData.mat)) mesh.visible = false;
   }
   // interior lights (dusk)
   for (const l of data.lights) {
@@ -143,6 +153,7 @@ function setupPost() {
     gtao.blendIntensity = 0.9;
     composer.addPass(gtao);
   }
+  if (CINEMA) composer.addPass(new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.22, 0.5, 1.15));
   composer.addPass(new OutputPass());
 }
 
@@ -191,7 +202,24 @@ function applyView() {
 
 function setTime(t) {
   state.time = t;
-  const T = TIMES[t];
+  applyTime(t === 'dusk' ? 1 : 0);
+  applyView();
+}
+
+// Blend between day (k=0) and dusk (k=1): sun path, sky, exposure and interior lights.
+function blendTimes(k) {
+  const a = TIMES.day, b = TIMES.dusk, T = {};
+  for (const key of Object.keys(a)) {
+    if (key === 'sunColor') T[key] = new THREE.Color(a[key]).lerp(new THREE.Color(b[key]), k);
+    else T[key] = a[key] + (b[key] - a[key]) * k;
+  }
+  // lights switch on through the second half of the blend
+  T.interior = T.emissive = THREE.MathUtils.smoothstep(k, 0.35, 0.9);
+  return T;
+}
+
+function applyTime(k) {
+  const T = blendTimes(k);
   const d = sunDir(T.az, T.el);
   {
     const u = sky.material.uniforms;
@@ -204,16 +232,16 @@ function setTime(t) {
   sun.position.copy(d.clone().multiplyScalar(60)).add(sun.target.position);
   sun.intensity = T.sun;
   sun.color.set(T.sunColor);
-  sun.visible = T.sun > 0;
+  sun.visible = T.sun > 0.01;
   hemi.intensity = T.hemi;
   renderer.toneMappingExposure = T.exposure;
   scene.environmentIntensity = T.env;
-  for (const pl of pointLights) pl.visible = T.interior > 0;
+  for (const pl of pointLights) { pl.visible = T.interior > 0.001; pl.intensity = pl.userData.base * T.interior; }
   M.cove.emissiveIntensity = T.emissive * 3;
   M.downlight.emissiveIntensity = T.emissive * 4;
   M.lamp.emissiveIntensity = T.emissive * 3;
   M.jaali_glow.emissiveIntensity = 0.8 + T.emissive * 2.5;
-  applyView();
+  M.window_lit.emissiveIntensity = T.emissive * 1.6;
 }
 
 // ------------------------------------------------------------------ camera flights
@@ -342,7 +370,7 @@ function frame() {
     if (k >= 1) flight = null;
   }
   if (state.mode === 'walk') walker.update(dt);
-  else controls.update();
+  else if (!CINEMA) controls.update();
   composer.render();
   labelRenderer.render(scene, camera);
 }
@@ -373,6 +401,27 @@ window.viewer = {
   settle: (n = 3) => { for (let i = 0; i < n; i++) frame(); return true; },
   stats: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, meshes: data.meshes.length, lights: pointLights.length }),
   walker: () => walker,
+  // Film camera: place the camera directly and choose what is shown (used by viewer/film/render.mjs).
+  cine: (o) => {
+    state.mode = o.interior ? 'walk' : 'orbit';
+    state.floor = o.floor || 'ALL';
+    state.cutaway = !!o.cutaway;
+    state.explode = o.explode || 0;
+    state.labels = false;
+    controls.enabled = false;
+    if (o.time !== undefined) { state.time = o.time > 0.5 ? 'dusk' : 'day'; applyTime(o.time); }
+    if (o.exposure !== undefined) renderer.toneMappingExposure = o.exposure;
+    if (context) context.visible = o.context !== false;
+    applyView();
+    camera.fov = o.fov || 45;
+    camera.updateProjectionMatrix();
+    camera.position.set(...o.pos);
+    controls.target.set(...o.target);
+    camera.up.set(Math.sin(o.roll || 0), Math.cos(o.roll || 0), 0);
+    camera.lookAt(...o.target);
+    return true;
+  },
+  renderFrame: () => { composer.render(); return true; },
 };
 
 // headless (screenshots): no animation loop; frames are rendered on demand via viewer.settle()

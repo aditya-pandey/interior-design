@@ -41,3 +41,7 @@ body.walking::after { content: ''; position: absolute; left: 50%; top: 50%; widt
 .room-label span { display: block; color: var(--muted); font-size: 10px; }
 .room-label.proposed { border-color: var(--prop); }
 .room-label.proposed b { color: var(--prop); }
+
+/* film render: no UI at all */
+body.cinema #panel, body.cinema #walkhud, body.cinema .labels { display: none !important; }
+body.cinema.walking::after { display: none; }

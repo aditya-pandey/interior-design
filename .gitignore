@@ -4,3 +4,6 @@ __pycache__/
 node_modules/
 gh18-house/viewer/dist/
 gh18-house/assets/polyhaven/
+gh18-house/viewer/film/frames/
+gh18-house/viewer/film/stills/
+gh18-house/viewer/film/score.wav

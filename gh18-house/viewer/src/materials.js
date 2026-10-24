@@ -98,6 +98,8 @@ export async function createMaterials(renderer) {
     side: THREE.DoubleSide, depthWrite: false, envMapIntensity: 1.6, ior: 1.52, reflectivity: 0.6,
   });
   M.glass.name = 'glass';
+  M.car_glass = M.glass.clone();
+  M.car_glass.name = 'car_glass';
   M.glass_frosted = new THREE.MeshPhysicalMaterial({
     color: 0xeef3f4, roughness: 0.6, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false,
   });
@@ -110,7 +112,12 @@ export async function createMaterials(renderer) {
   M.downlight = new THREE.MeshStandardMaterial({ color: 0xf6f3ee, emissive: 0xffd9a0, emissiveIntensity: 0, side: THREE.DoubleSide });
   M.lamp = new THREE.MeshStandardMaterial({ color: 0xf3e6cf, emissive: 0xffb866, emissiveIntensity: 0, side: THREE.DoubleSide });
   M.jaali_glow = new THREE.MeshStandardMaterial({ color: 0xffe1b0, emissive: 0xffa646, emissiveIntensity: 0.6 });
-  for (const k of ['cove', 'downlight', 'lamp', 'jaali_glow']) M[k].name = k;
+  M.window_lit = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, emissive: 0xffb466, emissiveIntensity: 0, roughness: 0.2 });
+  M.window_dark = new THREE.MeshStandardMaterial({ color: 0x2b3236, roughness: 0.1, metalness: 0.3 });
+  flat('trunk', 0x5b4636, { roughness: 0.95 });
+  flat('ctx_wall', 0xb9b3a9, { roughness: 0.95 });
+  flat('ctx_wall2', 0xaea89e, { roughness: 0.95 });
+  for (const k of ['cove', 'downlight', 'lamp', 'jaali_glow', 'window_lit', 'window_dark']) M[k].name = k;
 
   // per-floor cutaway copies of wall materials are made on demand
   return M;
