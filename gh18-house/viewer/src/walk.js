@@ -3,7 +3,7 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { pointInPoly, circleHitsPoly, polyBBox } from './geom.js';
 import { stairHeights } from './build.js';
 
-// First-person walk mode: WASD + mouse at 1.6 m eye height, wall/furniture collision,
+// First-person walk mode: WASD + mouse (or a touch joystick + drag to look) at 1.6 m eye height, wall/furniture collision,
 // and floor following (rooms, terraces, outdoor levels, stairs) taken from house.json.
 
 const EYE = 1.6, RADIUS = 250, STEP = 0.42, SPEED = 1.5, RUN = 3.2;
@@ -14,6 +14,7 @@ export class Walker {
     this.data = data;
     this.controls = new PointerLockControls(camera, dom);
     this.keys = {};
+    this.stick = { x: 0, y: 0 };      // touch joystick, -1..1 (y up = forward)
     this.foot = 0.45;
     this.active = false;
     for (const c of data.colliders) c.bb = polyBBox(c.poly);
@@ -61,13 +62,22 @@ export class Walker {
     this.camera.rotation.set(pitch, yaw, 0, 'YXZ');
   }
 
+  // touch look: drag deltas in px
+  look(dx, dy) {
+    const e = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(this.camera.quaternion);
+    e.y -= dx * 0.005;
+    e.x = Math.max(-1.45, Math.min(1.45, e.x - dy * 0.005));
+    this.camera.quaternion.setFromEuler(e);
+  }
+
   update(dt) {
     if (!this.active) return;
     const k = this.keys;
-    const fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
-    const side = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
-    if (!fwd && !side) return;
-    const speed = (k.ShiftLeft || k.ShiftRight ? RUN : SPEED) * dt;
+    const fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + this.stick.y;
+    const side = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + this.stick.x;
+    const mag = Math.min(1, Math.hypot(fwd, side));
+    if (mag < 0.08) return;
+    const speed = (k.ShiftLeft || k.ShiftRight ? RUN : SPEED) * mag * dt;
     const dir = new THREE.Vector3();
     this.camera.getWorldDirection(dir);
     dir.y = 0; dir.normalize();

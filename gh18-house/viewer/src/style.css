@@ -42,6 +42,42 @@ body.walking::after { content: ''; position: absolute; left: 50%; top: 50%; widt
 .room-label.proposed { border-color: var(--prop); }
 .room-label.proposed b { color: var(--prop); }
 
+#panel .head { display: flex; align-items: flex-start; justify-content: space-between; }
+#menu { display: none; }
+.touch { display: none; }
+#stick { display: none; position: absolute; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 50%;
+  background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.55); pointer-events: none; }
+#stick i { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px; border-radius: 50%;
+  background: rgba(255,255,255,.75); box-shadow: 0 1px 6px rgba(0,0,0,.25); }
+#stick.on { display: block; }
+
+/* touch devices: touch hints, bigger targets */
+@media (pointer: coarse) {
+  .desk { display: none; }
+  .touch { display: inline; }
+  body.walking #app { touch-action: none; }
+}
+
+/* phones: the panel becomes a bottom sheet - a slim bar until opened */
+@media (max-width: 640px) {
+  #panel { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto;
+    padding: 8px 10px 8px 14px; max-height: 72vh; overflow-y: auto; }
+  #panel .head { align-items: center; }
+  #panel h1 { margin: 0; font-size: 15px; }
+  #panel h1 small { display: inline; margin-left: 6px; }
+  #menu { display: block; padding: 8px 16px; font-weight: 600; }
+  #controls { display: none; padding-top: 6px; }
+  #panel.open #controls { display: block; }
+  #panel.open #menu { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .row { margin: 10px 0; }
+  .row select { padding: 8px 6px; font-size: 15px; }
+  button { padding: 9px 8px; }
+  .seg span { width: 52px; }
+  /* top of the screen, so both thumbs have the bottom half */
+  #walkhud { left: 8px; right: 8px; transform: none; top: calc(8px + env(safe-area-inset-top)); bottom: auto; justify-content: space-between; }
+  #walkhud button { padding: 9px 14px; }
+}
+
 /* film render: no UI at all */
 body.cinema #panel, body.cinema #walkhud, body.cinema .labels { display: none !important; }
 body.cinema.walking::after { display: none; }

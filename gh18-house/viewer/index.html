@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>GH-18 · 3D Home Tour</title>
   <meta name="description" content="Explore the GH-18 house in 3D: fly around every floor, walk through the rooms, and see it by day and at dusk." />
   <meta name="theme-color" content="#2b2622" />
@@ -26,7 +26,11 @@
   <div id="app"></div>
   <div id="loading">Building GH-18 from house.json…</div>
   <aside id="panel">
-    <h1>GH-18 <small>3D home tour</small></h1>
+    <div class="head">
+      <h1>GH-18 <small>3D home tour</small></h1>
+      <button id="menu" aria-expanded="false" aria-controls="controls">Menu</button>
+    </div>
+    <div id="controls">
     <label class="row">View
       <select id="preset"></select>
     </label>
@@ -42,12 +46,14 @@
       <button data-time="day">Day</button><button data-time="dusk">Dusk</button>
     </div>
     <button id="walk" class="primary">Walk (first person)</button>
-    <p class="hint">Orbit: drag · pan: right-drag · zoom: scroll<br />Keys: 0–3 floors · C cutaway · L labels · N day/dusk<br />Second floor is <b class="prop">PROPOSED</b>.</p>
+    <p class="hint"><span class="desk">Orbit: drag · pan: right-drag · zoom: scroll<br />Keys: 0–3 floors · C cutaway · L labels · N day/dusk<br /></span><span class="touch">Drag to orbit · pinch to zoom · two-finger drag to pan<br /></span>Second floor is <b class="prop">PROPOSED</b>.</p>
+    </div>
   </aside>
   <div id="walkhud">
-    <p>WASD / arrows to move · Shift to run · mouse to look · Esc to release · Q to leave walk mode</p>
+    <p><span class="desk">WASD / arrows to move · Shift to run · mouse to look · Esc to release · Q to leave walk mode</span><span class="touch">Left thumb: walk · right thumb: look around</span></p>
     <button id="exitwalk">Exit walk</button>
   </div>
+  <div id="stick"><i></i></div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

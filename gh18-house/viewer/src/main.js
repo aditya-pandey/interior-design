@@ -24,7 +24,9 @@ for (const fl of house.floors) {
   fl.furniture = fl.furniture.filter((f) => !f.variant || f.variant === (WITH_ART ? 'art' : 'no_art'));
 }
 // ?low = no AO / smaller shadow map (old laptops, CI); phones and tablets get it automatically
-const LOW = params.has('low') || window.matchMedia('(pointer: coarse)').matches;
+const TOUCH = window.matchMedia('(pointer: coarse)').matches;
+const LOW = params.has('low') || TOUCH;
+const PHONE = () => window.matchMedia('(max-width: 640px)').matches;
 const CINEMA = params.has('cinema');    // ?cinema = no UI, bloom; camera driven by viewer.cine() (film render)
 if (CINEMA) document.body.classList.add('cinema');
 
@@ -142,6 +144,7 @@ async function init() {
 
   setupPost();
   buildUI();
+  if (camera.aspect < 1.2) goPreset('all', true);    // portrait phones: the opening view, framed for the narrow screen
   setTime('day');
   applyView();
   window.viewer.ready = true;
@@ -292,9 +295,17 @@ function goPreset(id, instant = false) {
   if (state.mode === 'walk') exitWalk();
   state.floor = p.floor; state.cutaway = p.cut; state.explode = p.explode || 0;
   applyView();
-  flyTo(new THREE.Vector3(...p.pos), new THREE.Vector3(...p.target), instant ? 0 : 1.1);
+  flyTo(...framed(p), instant ? 0 : 1.1);
   document.getElementById('preset').value = id;
   return true;
+}
+
+// Presets are composed for a landscape window; on a tall (portrait) screen pull the camera back
+// along its line of sight so the house still fits across the narrow width.
+function framed(p) {
+  const pos = new THREE.Vector3(...p.pos), target = new THREE.Vector3(...p.target);
+  const k = camera.aspect < 1.2 ? Math.min(2, Math.sqrt(1.4 / camera.aspect)) : 1;
+  return [target.clone().add(pos.sub(target).multiplyScalar(k)), target];
 }
 
 // ------------------------------------------------------------------ walk mode
@@ -306,16 +317,20 @@ function enterWalk(roomId) {
   const [x, , z] = p.target;
   walker.place(x * 1000, z * 1000, p.fy, Math.PI, 0);
   controls.enabled = false;
-  if (!window.viewer.headless) walker.controls.lock();
+  if (TOUCH) walker.active = true;                     // no pointer lock on phones: joystick + drag
+  else if (!window.viewer.headless) walker.controls.lock();
+  closeMenu();
 }
 function exitWalk() {
   state.mode = 'orbit';
   walker.active = false;
+  walker.stick.x = walker.stick.y = 0;
+  document.getElementById('stick').classList.remove('on');
   if (walker.controls.isLocked) walker.controls.unlock();
   controls.enabled = true;
   camera.rotation.set(0, 0, 0);
   applyView();
-  flyTo(new THREE.Vector3(...overviewPresets()[0].pos), new THREE.Vector3(...overviewPresets()[0].target), 0);
+  flyTo(...framed(overviewPresets()[0]), 0);
 }
 
 // ------------------------------------------------------------------ UI
@@ -333,7 +348,14 @@ function buildUI() {
     o.value = p.id; o.textContent = p.name;
     groups[p.group].appendChild(o);
   }
-  sel.addEventListener('change', () => goPreset(sel.value));
+  sel.addEventListener('change', () => { goPreset(sel.value); closeMenu(); });
+  const panel = document.getElementById('panel'), menu = document.getElementById('menu');
+  menu.addEventListener('click', () => {
+    const open = panel.classList.toggle('open');
+    menu.setAttribute('aria-expanded', open);
+    menu.textContent = open ? 'Close' : 'Menu';
+  });
+  if (TOUCH) touchWalk();
   document.querySelectorAll('[data-floor]').forEach((b) => b.addEventListener('click', () => { state.floor = b.dataset.floor; applyView(); }));
   document.querySelectorAll('[data-time]').forEach((b) => b.addEventListener('click', () => setTime(b.dataset.time)));
   document.getElementById('explode').addEventListener('input', (e) => { state.explode = +e.target.value; applyView(); });
@@ -353,6 +375,61 @@ function buildUI() {
     if (e.code === 'Digit0') { state.floor = 'ALL'; applyView(); }
     if (e.code === 'KeyQ' && state.mode === 'walk') exitWalk();
   });
+}
+
+function closeMenu() {
+  if (!PHONE()) return;
+  document.getElementById('panel').classList.remove('open');
+  const m = document.getElementById('menu');
+  m.setAttribute('aria-expanded', false);
+  m.textContent = 'Menu';
+}
+
+// Phones in walk mode: a touch on the left part of the screen is a joystick, anywhere else drags the view.
+function touchWalk() {
+  const el = renderer.domElement, stick = document.getElementById('stick'), knob = stick.firstElementChild;
+  const R = 56;
+  let move = null;                                     // { id, x0, y0 }
+  const looks = new Map();                             // id -> last { x, y }
+  el.addEventListener('touchstart', (e) => {
+    if (state.mode !== 'walk') return;
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (!move && t.clientX < window.innerWidth * 0.45) {
+        move = { id: t.identifier, x0: t.clientX, y0: t.clientY };
+        stick.style.left = t.clientX + 'px'; stick.style.top = t.clientY + 'px';
+        knob.style.transform = '';
+        stick.classList.add('on');
+      } else looks.set(t.identifier, { x: t.clientX, y: t.clientY });
+    }
+  }, { passive: false });
+  el.addEventListener('touchmove', (e) => {
+    if (state.mode !== 'walk') return;
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (move && t.identifier === move.id) {
+        let dx = t.clientX - move.x0, dy = t.clientY - move.y0;
+        const d = Math.hypot(dx, dy);
+        if (d > R) { dx *= R / d; dy *= R / d; }
+        knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        walker.stick.x = dx / R; walker.stick.y = -dy / R;
+      } else if (looks.has(t.identifier)) {
+        const l = looks.get(t.identifier);
+        walker.look(t.clientX - l.x, t.clientY - l.y);
+        looks.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+    }
+  }, { passive: false });
+  const end = (e) => {
+    for (const t of e.changedTouches) {
+      if (move && t.identifier === move.id) {
+        move = null; walker.stick.x = walker.stick.y = 0; stick.classList.remove('on');
+      }
+      looks.delete(t.identifier);
+    }
+  };
+  el.addEventListener('touchend', end);
+  el.addEventListener('touchcancel', end);
 }
 
 window.addEventListener('resize', () => {

@@ -63,6 +63,10 @@ The viewer reads `../house.json` directly, so Vite reloads it when the file is s
   - at dusk, warm cove strips, downlights, room lights, the dining pendant and the mandir glow come on
 - **Room names and sizes** (L): labels showing each room's name, size and area.
 - **Rendering:** ACES tone mapping, soft sun shadows, ambient occlusion (GTAO) and 4× MSAA.
+- **Phones:**
+  - the panel is a bottom bar with a Menu button that opens the controls as a sheet; picking a view closes it
+  - overview cameras pull back to fit a portrait screen
+  - in walk mode the left thumb is a joystick and the right thumb looks around
 
 **Screenshots:** `npm run build && npm run shots` drives headless Chromium through every preset and mode, writing the images to `viewer/screenshots/`.
 
