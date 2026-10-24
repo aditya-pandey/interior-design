@@ -31,3 +31,12 @@ The script records each asset's source URL in `textures/manifest.json`. These ar
 ## Code dependencies
 - three.js (MIT)
 - Vite (MIT)
+
+## 3D models
+
+- `models/baleno.glb`: "2022 Maruti Suzuki Baleno" (https://sketchfab.com/3d-models/2022-maruti-suzuki-baleno-438c1b0c1a4e4732aa1a3cbb505d19e5) by BHP3D (https://sketchfab.com/BHP3D), licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/). Changes:
+  - body paint recoloured to Grandeur Grey
+  - meshes simplified to about 37% and compressed (meshopt)
+  - textures resized and converted to WebP
+  - stretched 5.3% lengthwise in the viewer to the published 3990 mm length
+  The credit is shown in the viewer panel.

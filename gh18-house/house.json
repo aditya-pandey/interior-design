@@ -1653,11 +1653,15 @@
         {
           "id": "GF-O07",
           "room": "GF-PARK",
-          "type": "car_reference",
-          "pos": [7615, 21800],
-          "size": [1700, 3800, 1500],
+          "type": "car_model",
+          "pos": [7615, 21945],
+          "size": [1745, 3990, 1500],
           "rot": 0,
-          "note": "3.8 m hatchback for scale only - the bay is 2.38 m deep inside the plot"
+          "src": "models/baleno.glb",
+          "model_front": "-z",
+          "model": "Maruti Suzuki Baleno (2022), Grandeur Grey",
+          "credit": "\"2022 Maruti Suzuki Baleno\" by BHP3D (sketchfab.com/BHP3D), CC BY 4.0",
+          "note": "reversed in; the bay is 2.38 m deep inside the plot, so the nose sits over the drain and ramp"
         }
       ],
       "pergola": {

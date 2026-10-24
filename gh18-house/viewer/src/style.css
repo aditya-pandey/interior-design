@@ -27,6 +27,8 @@ button.on { background: var(--accent); border-color: var(--accent); color: #fff;
 button.primary { width: 100%; margin-top: 4px; background: var(--ink); color: #fff; }
 .hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
 .prop { color: var(--prop); }
+.credit { margin: 6px 0 0; color: var(--muted); font-size: 10px; }
+.credit a { color: inherit; }
 #walkhud { display: none; position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 8px 12px;
   background: var(--bg); border: 1px solid var(--line); border-radius: 8px; align-items: center; gap: 10px; }
 #walkhud p { margin: 0; }

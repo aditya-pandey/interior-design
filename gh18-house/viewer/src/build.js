@@ -158,6 +158,7 @@ class Batch {
 // ------------------------------------------------------------------ main build
 
 export function buildHouse(house, M) {
+  const models = [];                 // glTF props (the car), loaded by main.js
   const batch = new Batch();
   const colliders = [];       // {poly (mm), y0, y1} in metres
   const surfaces = [];        // {poly (mm), y}
@@ -223,6 +224,7 @@ export function buildHouse(house, M) {
     for (const f of fl.furniture || []) {
       const outdoor = (fl.outdoor || []).find((a) => a.id === f.room);
       const baseY = outdoor ? mm(outdoor.z || 0) : fy;
+      if (f.src) models.push({ floor: fid, src: f.src, front: f.model_front || '+z', pos: f.pos, rot: f.rot || 0, baseY, size: f.size });
       for (const part of buildFurniture(f, baseY)) {
         const cat = part.m === 'glass' || part.m === 'glass_frosted' ? 'glass' : ['cove', 'lamp', 'jaali_glow', 'downlight'].includes(part.m) ? 'emissive' : 'furn';
         batch.add(fid, cat, part.m, part.g);
@@ -263,7 +265,7 @@ export function buildHouse(house, M) {
   street.rotateX(-Math.PI / 2); street.translate(4.7, -0.005, 24.1 + 4.5 + 1.5);
   batch.add('SITE', 'site', 'asphalt', street);
 
-  return { meshes: batch.meshes(M), colliders, surfaces, labels, lights, presets, stair: house.stair, levels: house.levels };
+  return { meshes: batch.meshes(M), models, colliders, surfaces, labels, lights, presets, stair: house.stair, levels: house.levels };
 }
 
 // ------------------------------------------------------------------ walls

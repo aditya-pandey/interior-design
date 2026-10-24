@@ -13,6 +13,8 @@ import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
 import { buildContext } from './context.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import './style.css';
 
 // ------------------------------------------------------------------ renderer & scene
@@ -116,6 +118,8 @@ async function init() {
     scene.add(context);
     // the parking "reference car" is a scale check, not part of the design: keep it out of the film
     for (const mesh of data.meshes) if (['car_paint', 'tyre', 'car_glass'].includes(mesh.userData.mat)) mesh.visible = false;
+  } else {
+    loadModels(data.models);
   }
   // interior lights (dusk)
   for (const l of data.lights) {
@@ -375,6 +379,39 @@ function buildUI() {
     if (e.code === 'Digit0') { state.floor = 'ALL'; applyView(); }
     if (e.code === 'KeyQ' && state.mode === 'walk') exitWalk();
   });
+}
+
+// glTF props (the Baleno in the parking bay): native scale across and up, stretched to the
+// real length along the car, front turned to the piece's +Z, then placed like furniture.
+function loadModels(list) {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  window.viewer.modelsReady = Promise.all(list.map(async (m) => {
+    try {
+      const gltf = await loader.loadAsync(m.src);
+      const obj = gltf.scene;
+      if (m.front === '-z') obj.rotation.y = Math.PI;
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const holder = new THREE.Group();
+      obj.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+      holder.add(obj);
+      holder.scale.z = m.size[1] / 1000 / size.z;
+      obj.traverse((o) => {
+        if (!o.isMesh) return;
+        o.castShadow = !o.material.transparent;
+        o.receiveShadow = true;
+        o.userData = { floor: m.floor, cat: 'furn', mat: 'model' };
+      });
+      const place = new THREE.Group();
+      place.add(holder);
+      place.position.set(m.pos[0] / 1000, m.baseY, m.pos[1] / 1000);
+      place.rotation.y = -THREE.MathUtils.degToRad(m.rot);
+      floorGroups[m.floor].add(place);
+      if (window.viewer.headless) frame();
+    } catch (e) {
+      console.warn('model failed to load', m.src, e);
+    }
+  }));
 }
 
 function closeMenu() {

@@ -160,8 +160,8 @@
 <polygon points="230,5414 230,3014 830,3014 830,5414" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <ellipse cx="530" cy="4214" rx="192" ry="132" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
 <polygon points="3050,3150 3050,4650 2450,4650 2450,3150" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="6765,19900 8465,19900 8465,23700 6765,23700" fill="none" stroke="#777" stroke-width="12" stroke-dasharray="90 60"/>
-<text x="7615" y="23450" font-size="100" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ref. car 3.8 m</text>
+<polygon points="6742.5,19950 8487.5,19950 8487.5,23940 6742.5,23940" fill="none" stroke="#777" stroke-width="12" stroke-dasharray="90 60"/>
+<text x="7615" y="23690" font-size="100" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ref. car 3.8 m</text>
 </g>
 <g id="stair">
 <polygon points="5899,12865 7899,12865 7899,13919 5899,13919" fill="#fbfbfb" stroke="#222" stroke-width="10" />

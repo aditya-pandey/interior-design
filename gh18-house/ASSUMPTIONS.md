@@ -318,3 +318,11 @@ The PDF dimensions these changes make obsolete are listed as `SUPER` in `plans/c
   - **Master bedroom:** the elephant over the bed on the fluted walnut wall; the Buddha on the wall between the lobby door and the bed.
   - **First-floor lobby:** the seven horses, facing you as you come up the stairs. Horses are traditionally kept out of bedrooms.
   - **Bedroom 3:** the whole gallery wall, about 2.0 × 1.4 m, over a low console and facing the bed. On /withpainting only, the console replaces the dresser and mirror, and the lounge chair moves (furniture `variant`).
+
+**D-06 · The family's car in the parking bay.**
+- **Model:** a 2022 Maruti Suzuki Baleno from Sketchfab, by BHP3D under CC BY 4.0.
+- **Changes:**
+  - recoloured from its dark blue to Grandeur Grey metallic with a clear-coat
+  - simplified from 708k to 262k triangles and compressed to 3.7 MB
+  - stretched 5.3% lengthwise to the published 3990 mm, keeping its native width, height and 620 mm wheels
+- **Placement:** reversed in, so the nose faces the street. It replaces the generic 3.8 m scale car. The bay is still only 2.38 m deep inside the plot (A-24).

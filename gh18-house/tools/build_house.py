@@ -369,8 +369,10 @@ gf_furniture = [
   F('GF-O05', 'GF-DECK', 'planter', (8900, 3100), (600, 600, 900), 0),
   F('GF-O06', 'GF-UTIL', 'utility_counter', (530, 4214), (2400, 600, 900), 270, sink=True, washer=True, note='utensil-wash sink + washing machine'),
   F('GF-O08', 'GF-UTIL', 'drying_rack', (2750, 3900), (1500, 600, 1500), 90),
-  F('GF-O07', 'GF-PARK', 'car_reference', (7615, 21800), (1700, 3800, 1500), 0,
-    note='3.8 m hatchback for scale only - the bay is 2.38 m deep inside the plot'),
+  F('GF-O07', 'GF-PARK', 'car_model', (7615, 21945), (1745, 3990, 1500), 0, src='models/baleno.glb', model_front='-z',
+    model='Maruti Suzuki Baleno (2022), Grandeur Grey',
+    credit='"2022 Maruti Suzuki Baleno" by BHP3D (sketchfab.com/BHP3D), CC BY 4.0',
+    note="reversed in; the bay is 2.38 m deep inside the plot, so the nose sits over the drain and ramp"),
 ]
 
 # ====================================================================== FIRST FLOOR

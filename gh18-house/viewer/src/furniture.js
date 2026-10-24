@@ -352,6 +352,7 @@ B.car_reference = (p, w, d) => {
     p.push({ g, m: 'tyre' });
   }
 };
+B.car_model = () => {};             // glTF model, loaded separately (build.js -> models)
 B.tv_unit = (p, w, d, h) => {
   box(p, 'walnut', w, h - 0.15, d, 0, 0.15, 0, 0.006);
   grooves(p, w, h - 0.15, d, 0.15, 0.45);
