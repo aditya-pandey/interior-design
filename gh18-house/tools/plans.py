@@ -436,7 +436,7 @@ def dim(svg, p1, p2, off, label, col=DIM, size=125):
 def draw_dims(svg, h, fl_id):
     P = check_dims.Probe(h)
     for fl, txt, X, Y, desc, fn, draw in check_dims.SPEC:
-        if fl != fl_id or draw is None:
+        if fl != fl_id or draw is None or check_dims.superseded(fl, txt, X):
             continue
         p1, p2, off = draw(P)
         val = fn(P)

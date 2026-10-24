@@ -68,9 +68,12 @@ await shot('mode_labels_gf', `window.viewer.setTime('day'); window.viewer.goPres
 await shot('mode_labels_ff', `window.viewer.setTime('day'); window.viewer.goPreset('ff', true); window.viewer.setLabels(true)`);
 await shot('walk_drawing_to_lawn', `window.viewer.setLabels(false); window.viewer.setTime('day'); window.viewer.walkPose(6600, 9900, 0.45, 0, -3)`);
 await shot('walk_foyer', `window.viewer.walkPose(5200, 19800, 0.45, 20, -2)`);
-await shot('walk_kitchen', `window.viewer.walkPose(4300, 9300, 0.45, 60, -8)`);
+await shot('walk_kitchen', `window.viewer.walkPose(2600, 10600, 0.45, 14, -10)`);
+await shot('walk_dining', `window.viewer.walkPose(6500, 11800, 0.45, 22, -8)`);
+await shot('walk_wash', `window.viewer.walkPose(2700, 4300, 0.3, 80, -12)`);
 await shot('walk_master', `window.viewer.walkPose(5000, 7000, 3.75, -120, -8)`);
-await shot('walk_kids', `window.viewer.walkPose(2900, 14200, 3.75, 160, -8)`);
+await shot('walk_kids', `window.viewer.walkPose(7600, 16600, 3.75, 155, -10)`);
+await shot('walk_bedroom3', `window.viewer.walkPose(2900, 14200, 3.75, 160, -8)`);
 await shot('walk_mandir', `window.viewer.walkPose(6500, 17495, 0.45, -90, -2)`);
 await shot('walk_dusk_drawing', `window.viewer.setTime('dusk'); window.viewer.walkPose(8200, 10300, 0.45, 35, -6)`);
 const stats = await page.evaluate(() => window.viewer.stats());

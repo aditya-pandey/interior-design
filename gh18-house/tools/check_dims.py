@@ -7,6 +7,8 @@ coverage of the PDF strings (every string must be mapped).
 
 Usage: python3 tools/check_dims.py            (prints the report, writes plans/check_report.txt)
 Exit code 1 if any mismatch over TOL or any PDF string is unmapped.
+PDF strings made obsolete by a client change (SUPERSEDED, ASSUMPTIONS.md section D)
+are still mapped and listed, with the model value, but are not counted as mismatches.
 """
 import json
 import math
@@ -17,6 +19,22 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import houselib as hl  # noqa: E402
 
 TOL = 50
+
+# (floor, PDF text, approx X) -> client change that made the PDF dimension obsolete
+SUPERSEDED = {
+    ("GF", "6000", 295.7): "D-01 closed kitchen: its new wall takes 150 from the drawing room",
+    ("GF", "1850", 193.2): "D-01 closed kitchen: peninsula removed",
+    ("GF", "1250", 164.5): "D-01 closed kitchen: peninsula removed",
+    ("GF", "R300", 180.0): "D-01 closed kitchen: peninsula removed",
+    ("FF", "3100", 752.8): "D-03 toilet moved to the front wall",
+    ("FF", "1500", 802.1): "D-03 toilet moved to the front wall",
+    ("FF", "3250", 750.2): "D-03 toilet moved to the front wall",
+    ("FF", "4258", 800.0): "D-03 toilet moved to the front wall",
+}
+
+
+def superseded(fl, txt, X):
+    return next((v for (f, t, x), v in SUPERSEDED.items() if f == fl and t == txt and abs(x - X) < 4), None)
 
 
 # ------------------------------------------------------------- model probes
@@ -61,20 +79,17 @@ class Probe:
 # p1/p2 are lambdas returning model points so the plan dimensions are drawn from the model, not copied.
 SPEC = [
   # ------------------------------------------------------------------ GF
-  ("GF", "2921", 139.8, 343.6, "Kitchen: left wall inner face -> peninsula outer edge",
-   lambda P: P.fb("GF-K02")[2] - P.f("GF-W02", "+"),
-   lambda P: ((P.f("GF-W02", "+"), 6265), (P.fb("GF-K02")[2], 6265), -300)),
-  ("GF", "6000", 295.7, 343.6, "Drawing: peninsula outer edge -> right wall inner face",
-   lambda P: P.f("GF-W04", "-") - P.fb("GF-K02")[2],
-   lambda P: ((P.fb("GF-K02")[2], 6265), (P.f("GF-W04", "-"), 6265), -300)),
-  ("GF", "1721", 139.5, 369.6, "Kitchen: left counter front -> peninsula inner edge",
+  ("GF", "2921", 139.8, 343.6, "Kitchen: left wall inner face -> kitchen wall (D-01, on the PDF peninsula line)",
+   lambda P: P.f("GF-W27", "-") - P.f("GF-W02", "+"),
+   lambda P: ((P.f("GF-W02", "+"), 6265), (P.f("GF-W27", "-"), 6265), -300)),
+  ("GF", "6000", 295.7, 343.6, "Drawing: kitchen wall outer face -> right wall inner face",
+   lambda P: P.f("GF-W04", "-") - P.f("GF-W27", "+"),
+   lambda P: ((P.f("GF-W27", "+"), 6265), (P.f("GF-W04", "-"), 6265), -300)),
+  ("GF", "1721", 139.5, 369.6, "Kitchen: left counter front -> right run front (was the peninsula inner edge)",
    lambda P: P.fb("GF-K02")[0] - P.fb("GF-K03")[2], None),
-  ("GF", "1850", 193.2, 374.3, "Peninsula: rear wall inner face -> centre of R300 end",
-   lambda P: P.fb("GF-K02")[3] - P.furn["GF-K02"]["end_radius"] - P.f("GF-W01", "+"), None),
-  ("GF", "1250", 164.5, 384.8, "Peninsula: rear counter front -> centre of R300 end",
-   lambda P: P.fb("GF-K02")[3] - P.furn["GF-K02"]["end_radius"] - P.fb("GF-K01")[3], None),
-  ("GF", "R300", 180.0, 405.0, "Peninsula end radius",
-   lambda P: P.furn["GF-K02"]["end_radius"], None),
+  ("GF", "1850", 193.2, 374.3, "Peninsula: rear wall inner face -> centre of R300 end", None, None),
+  ("GF", "1250", 164.5, 384.8, "Peninsula: rear counter front -> centre of R300 end", None, None),
+  ("GF", "R300", 180.0, 405.0, "Peninsula end radius", None, None),
   ("GF", "4785", 91.6, 425.4, "Left side: rear wall inner face -> OTS outer face",
    lambda P: P.f("GF-OTS1", "-") - P.f("GF-W01", "+"),
    lambda P: ((P.f("GF-W02", "+"), P.f("GF-W01", "+")), (P.f("GF-W02", "+"), P.f("GF-OTS1", "-")), -450)),
@@ -171,23 +186,18 @@ SPEC = [
   ("FF", "4455", 643.7, 601.5, "FF lobby length",
    lambda P: P.f("FF-W17", "-") - P.f("FF-W09", "+"),
    lambda P: ((P.f("FF-W11", "+"), P.f("FF-W09", "+")), (P.f("FF-W11", "+"), P.f("FF-W17", "-")), -300)),
-  ("FF", "4070", 564.8, 619.8, "Kids room clear width",
+  ("FF", "4070", 564.8, 619.8, "Bedroom 3 (was kids room) clear width",
    lambda P: P.f("FF-W11", "-") - P.f("FF-W03", "+"),
    lambda P: ((P.f("FF-W03", "+"), 14000), (P.f("FF-W11", "-"), 14000), 0)),
-  ("FF", "3100", 752.8, 680.8, "Bedroom 3 toilet width",
-   lambda P: P.f("FF-W04", "-") - P.f("FF-W19", "+"), None),
-  ("FF", "1500", 802.1, 706.1, "Bedroom 3 toilet depth",
-   lambda P: P.f("FF-W20", "-") - P.f("FF-W18", "+"), None),
-  ("FF", "5540", 496.1, 715.7, "Kids room depth: wardrobe front -> GL-1 wall",
-   lambda P: P.f("FF-W24", "-") - P.fb("FF-K01")[3],
-   lambda P: ((P.f("FF-W03", "+"), P.fb("FF-K01")[3]), (P.f("FF-W03", "+"), P.f("FF-W24", "-")), 400)),
-  ("FF", "3250", 750.2, 742.2, "Bedroom 3 toilet block width incl. west wall",
-   lambda P: P.f("FF-W04", "-") - P.f("FF-W19", "-"), None),
-  ("FF", "4550", 660.0, 764.5, "Bedroom 3 wardrobe wall length",
+  ("FF", "3100", 752.8, 680.8, "Old bedroom 3 toilet width", None, None),
+  ("FF", "1500", 802.1, 706.1, "Old bedroom 3 toilet depth", None, None),
+  ("FF", "5540", 496.1, 715.7, "Bedroom 3 (was kids room) depth: wardrobe front -> GL-1 wall",
+   lambda P: P.f("FF-W24", "-") - P.fb("FF-B01")[3],
+   lambda P: ((P.f("FF-W03", "+"), P.fb("FF-B01")[3]), (P.f("FF-W03", "+"), P.f("FF-W24", "-")), 400)),
+  ("FF", "3250", 750.2, 742.2, "Old bedroom 3 toilet block width incl. west wall", None, None),
+  ("FF", "4550", 660.0, 764.5, "Kids room (was bedroom 3) wardrobe wall length",
    lambda P: P.b("FF-W21", 1) - P.a("FF-W21", 1), None),
-  ("FF", "4258", 800.0, 812.1, "Bedroom 3 depth along the right wall",
-   lambda P: P.arc_y_at_x("FF-W27", P.f("FF-W04", "-"), "in") - P.f("FF-W20", "+"),
-   lambda P: ((P.f("FF-W04", "-"), P.f("FF-W20", "+")), (P.f("FF-W04", "-"), P.arc_y_at_x("FF-W27", P.f("FF-W04", "-"), "in")), 450)),
+  ("FF", "4258", 800.0, 812.1, "Old bedroom 3 depth along the right wall (to the old toilet)", None, None),
 ]
 
 
@@ -239,6 +249,14 @@ def main():
         rec = "" if cand else "  [not found in pdf_dims.json]"
         used.update(cand)
         val = int(txt.lstrip("R"))
+        why = superseded(fl, txt, X)
+        if why:
+            m = fn(P) if fn else None
+            if not cand:
+                bad += 1
+            out("%-3s %-6s %-6s %7s %-6s %-6s %s  [superseded: %s]%s" % (
+                fl, txt, "-" if m is None else "%.0f" % m, "-" if m is None else "%+.0f" % (m - val), "SUPER", "", desc, why, rec))
+            continue
         m = fn(P)
         d = m - val
         st = "OK" if abs(d) <= 20 else ("OK~" if abs(d) <= TOL else "FAIL")
@@ -267,7 +285,8 @@ def main():
     fails = sum(1 for l in lines if " FAIL" in l)
     out("RESULT: %s  (%d mismatches over %d mm, %d unmapped PDF strings)" % (
         "PASS" if bad == 0 else "FAIL", fails, TOL, len(unmapped)))
-    out("Legend: OK = within 20 mm, OK~ = 21-50 mm (explained in ASSUMPTIONS.md), FAIL = over 50 mm")
+    out("Legend: OK = within 20 mm, OK~ = 21-50 mm (explained in ASSUMPTIONS.md), FAIL = over 50 mm,")
+    out("        SUPER = PDF dimension superseded by a client change (ASSUMPTIONS.md section D)")
     text = "\n".join(lines)
     print(text)
     os.makedirs(os.path.join(hl.ROOT, "plans"), exist_ok=True)

@@ -7,8 +7,8 @@
 </g>
 <g id="outdoor">
 <polygon points="230,200 9151,200 9151,2814 230,2814" fill="url(#grass)" stroke="#9a9a9a" stroke-width="10" />
-<polygon points="2339,2814 9151,2814 9151,5515 2339,5515" fill="url(#deck)" stroke="#9a9a9a" stroke-width="10" />
-<polygon points="230,2814 2339,2814 2339,5515 230,5515" fill="#e3e1dd" stroke="#9a9a9a" stroke-width="10" />
+<polygon points="3450,2814 9151,2814 9151,5515 3450,5515" fill="url(#deck)" stroke="#9a9a9a" stroke-width="10" />
+<polygon points="230,2964 3300,2964 3300,5515 230,5515" fill="#e3e1dd" stroke="#9a9a9a" stroke-width="10" />
 <polygon points="230,20157 1894,20157 1900,20153 2150,20364 2410,20565 2678,20753 2954,20930 3237,21095 3229,21975 230,21975" fill="url(#grass)" stroke="#9a9a9a" stroke-width="10" />
 <polygon points="230,19257 2930,19257 2930,19489 3229,19489 3229,19500 3383,19502 3633,19668 3891,19821 4156,19961 4428,20088 4706,20202 4989,20301 5276,20387 5568,20457 5863,20514 5900,20602 5900,21975 3229,21975 3229,21095 3237,21095 2954,20930 2678,20753 2410,20565 2150,20364 1900,20153 1894,20157 230,20157" fill="#e3e1dd" stroke="#9a9a9a" stroke-width="10" />
 <polygon points="3209,19144 3473,19341 3747,19524 4032,19690 4325,19840 4627,19974 4935,20090 5250,20189 5569,20270 5893,20333 5863,20514 5568,20457 5276,20387 4989,20301 4706,20202 4428,20088 4156,19961 3891,19821 3633,19668 3383,19502 3229,19500 3229,19113" fill="#e3e1dd" stroke="#9a9a9a" stroke-width="10" />
@@ -17,9 +17,9 @@
 <polygon points="6080,22578 9381,22578 9381,24077 6080,24077" fill="#d6d2cb" stroke="#9a9a9a" stroke-width="10" stroke-dasharray="80 60"/>
 </g>
 <g id="rooms">
-<polygon points="230,5665 3150,5665 3150,7814 1430,7814 1430,10451 230,10451" fill="#fbf8f2" stroke="none" stroke-width="0" />
-<polygon points="1430,7814 4700,7814 4700,10766 4200,10766 4200,11365 1031,11365 1031,10451 1430,10451" fill="#fbf8f2" stroke="none" stroke-width="0" />
-<polygon points="3150,5665 9151,5665 9151,10766 4700,10766 4700,7814 3150,7814" fill="#fbf8f2" stroke="none" stroke-width="0" />
+<polygon points="230,5665 3150,5665 3150,11365 1031,11365 1031,10451 230,10451" fill="#fbf8f2" stroke="none" stroke-width="0" />
+<polygon points="3300,8500 9151,8500 9151,10766 4200,10766 4200,11365 3300,11365" fill="#fbf8f2" stroke="none" stroke-width="0" />
+<polygon points="3300,5665 9151,5665 9151,8500 3300,8500" fill="#fbf8f2" stroke="none" stroke-width="0" />
 <polygon points="4350,10766 7200,10766 7200,12865 5900,12865 5900,17196 4350,17196" fill="#fbf8f2" stroke="none" stroke-width="0" />
 <polygon points="1031,11515 4200,11515 4200,13916 230,13916 230,12965 1031,12965" fill="#eaf2f5" stroke="none" stroke-width="0" />
 <polygon points="230,14066 4200,14066 4200,16969 4216,16969 4185,17274 4094,17567 3946,17836 3747,18069 3506,18258 3232,18396 2930,18390 2930,19106 230,19106" fill="#fbf8f2" stroke="none" stroke-width="0" />
@@ -37,55 +37,54 @@
 <polygon points="0,5515 5349,5515 5702,5467 6049,5386 6387,5273 6713,5128 7023,4953 7306,4816 7599,4703 7901,4616 8209,4553 8521,4516 8835,4505 9149,4520 9381,4521 9381,21504 9386,21504 9061,21515 8736,21516 8411,21505 8086,21483 7763,21450 7441,21406 7120,21351 6802,21285 6855,21288 6552,21196 6251,21096 5953,20987 5658,20870 5367,20744 5079,20610 4796,20468 4516,20318 4241,20160 3971,19994 3705,19820 3445,19639 3190,19451 2928,19489 2928,19257 0,19257 0,12964 -735,12964 -735,10451 0,10451" fill="none" stroke="#777" stroke-width="10" stroke-dasharray="120 80"/>
 <text x="7300" y="4900" font-size="110" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >FF BALCONY ABOVE</text>
 <text x="7615" y="21750" font-size="110" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >FF BEDROOM ABOVE</text>
-<polygon points="2414,2889 9151,2889 9151,5515 2414,5515" fill="none" stroke="#8a6a44" stroke-width="12" stroke-dasharray="100 60"/>
-<line x1="2414" y1="3189" x2="9151" y2="3189" stroke="#c2a57f" stroke-width="6" />
-<line x1="2414" y1="3639" x2="9151" y2="3639" stroke="#c2a57f" stroke-width="6" />
-<line x1="2414" y1="4089" x2="9151" y2="4089" stroke="#c2a57f" stroke-width="6" />
-<line x1="2414" y1="4539" x2="9151" y2="4539" stroke="#c2a57f" stroke-width="6" />
-<line x1="2414" y1="4989" x2="9151" y2="4989" stroke="#c2a57f" stroke-width="6" />
-<polygon points="2414,2889 2564,2889 2564,3039 2414,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
-<polygon points="4584,2889 4734,2889 4734,3039 4584,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
-<polygon points="6755,2889 6905,2889 6905,3039 6755,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
+<polygon points="3525,2889 9151,2889 9151,5515 3525,5515" fill="none" stroke="#8a6a44" stroke-width="12" stroke-dasharray="100 60"/>
+<line x1="3525" y1="3189" x2="9151" y2="3189" stroke="#c2a57f" stroke-width="6" />
+<line x1="3525" y1="3639" x2="9151" y2="3639" stroke="#c2a57f" stroke-width="6" />
+<line x1="3525" y1="4089" x2="9151" y2="4089" stroke="#c2a57f" stroke-width="6" />
+<line x1="3525" y1="4539" x2="9151" y2="4539" stroke="#c2a57f" stroke-width="6" />
+<line x1="3525" y1="4989" x2="9151" y2="4989" stroke="#c2a57f" stroke-width="6" />
+<polygon points="3525,2889 3675,2889 3675,3039 3525,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
+<polygon points="5325,2889 5475,2889 5475,3039 5325,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
+<polygon points="7125,2889 7275,2889 7275,3039 7125,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
 <polygon points="8926,2889 9076,2889 9076,3039 8926,3039" fill="#8a6a44" stroke="none" stroke-width="0" />
-<text x="5782.5" y="2769" font-size="120" fill="#8a6a44" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PERGOLA OVER DECK (top +3000) — BRIEF CHANGE</text>
+<text x="6338" y="2769" font-size="120" fill="#8a6a44" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PERGOLA OVER DECK (top +3000) — BRIEF CHANGE</text>
 </g>
 <g id="furn">
-<polygon points="5300,6600 8700,6600 8700,9200 5300,9200" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
+<polygon points="5200,5850 8600,5850 8600,8450 5200,8450" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
 <polygon points="700,15345 3100,15345 3100,18345 700,18345" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
 <polygon points="7200,16495 8600,16495 8600,18495 7200,18495" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
-<polygon points="8400,9300 5400,9300 5400,7600 6350,7600 6350,8350 8400,8350" fill="#f4ede2" stroke="#8a7a5c" stroke-width="12" />
-<polyline points="8200,9100 5600,9100" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="7900,7900 6600,7900 6600,7300 7900,7300" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="8950,6500 8950,7260 8150,7260 8150,6500" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="8860,6540 8860,7220" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="8950,7400 8950,8160 8150,8160 8150,7400" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="8860,7440 8860,8120" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="8425,8675 8875,8675 8875,9125 8425,9125" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="7800,9750 6000,9750 6000,9350 7800,9350" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<circle cx="5150" cy="7500" r="200" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10"/>
+<polygon points="8200,8450 5200,8450 5200,6750 6150,6750 6150,7500 8200,7500" fill="#f4ede2" stroke="#8a7a5c" stroke-width="12" />
+<polyline points="8000,8250 5400,8250" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="7750,7100 6450,7100 6450,6500 7750,6500" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="9050,6020 9050,6780 8250,6780 8250,6020" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="8960,6060 8960,6740" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="9050,6870 9050,7630 8250,7630 8250,6870" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="8960,6910 8960,7590" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="4725,7875 5175,7875 5175,8325 4725,8325" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<circle cx="4900" cy="6300" r="200" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10"/>
 <circle cx="8950" cy="5900" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<circle cx="3450" cy="5900" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<polygon points="2200,8965 4000,8965 4000,9915 2200,9915" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="2460,8530 2940,8530 2940,9050 2460,9050" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="2500,8620 2900,8620" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="3260,8530 3740,8530 3740,9050 3260,9050" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3300,8620 3700,8620" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="2940,10350 2460,10350 2460,9830 2940,9830" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="2900,10260 2500,10260" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="3740,10350 3260,10350 3260,9830 3740,9830" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3700,10260 3300,10260" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="1690,9680 1690,9200 2210,9200 2210,9680" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="1780,9640 1780,9240" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="4510,9200 4510,9680 3990,9680 3990,9200" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="4420,9240 4420,9640" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="2400,9290 3800,9290 3800,9590 2400,9590" fill="none" stroke="#b08d57" stroke-width="10" stroke-dasharray="30 30"/>
-<text x="3100" y="9230" font-size="80" fill="#b08d57" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PENDANT</text>
-<polygon points="3815,11365 1415,11365 1415,10915 3815,10915" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3815,10955 1415,10955" fill="none" stroke="#8a7a5c" stroke-width="6" />
-<polyline points="3815,11365 1415,10915" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polyline points="3815,10915 1415,11365" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polygon points="230,5665 3150,5665 3150,6265 230,6265" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<path d="M2551,6264 L3147,6264 L3147,7514 A300,300 0 0,1 2551,7514 Z" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10"/>
+<circle cx="3600" cy="5950" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<polygon points="4800,9375 6600,9375 6600,10325 4800,10325" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="5060,8940 5540,8940 5540,9460 5060,9460" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="5100,9030 5500,9030" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="5860,8940 6340,8940 6340,9460 5860,9460" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="5900,9030 6300,9030" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="5540,10760 5060,10760 5060,10240 5540,10240" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="5500,10670 5100,10670" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="6340,10760 5860,10760 5860,10240 6340,10240" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="6300,10670 5900,10670" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="4290,10090 4290,9610 4810,9610 4810,10090" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="4380,10050 4380,9650" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="7110,9610 7110,10090 6590,10090 6590,9610" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="7020,9650 7020,10050" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="5000,9700 6400,9700 6400,10000 5000,10000" fill="none" stroke="#b08d57" stroke-width="10" stroke-dasharray="30 30"/>
+<text x="5700" y="9640" font-size="80" fill="#b08d57" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PENDANT</text>
+<polygon points="4200,11365 3300,11365 3300,10915 4200,10915" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="4200,10955 3300,10955" fill="none" stroke="#8a7a5c" stroke-width="6" />
+<polyline points="4200,11365 3300,10915" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polyline points="4200,10915 3300,11365" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="230,5665 2250,5665 2250,6265 230,6265" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="3150,6500 3150,9100 2550,9100 2550,6500" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="230,9250 230,6264 830,6264 830,9250" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="230,10451 230,9251 830,9251 830,10451" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polyline points="790,10451 790,9251" fill="none" stroke="#8a7a5c" stroke-width="6" />
@@ -93,17 +92,18 @@
 <polyline points="830,10451 230,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polygon points="230,9250 230,6264 580,6264 580,9250" fill="none" stroke="#8a7a5c" stroke-width="8" stroke-dasharray="50 35"/>
 <polygon points="230,7750 230,6850 730,6850 730,7750" fill="none" stroke="#8a7a5c" stroke-width="8" stroke-dasharray="50 35"/>
-<polygon points="1207,5740 2007,5740 2007,6190 1207,6190" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<ellipse cx="1607" cy="5965" rx="144" ry="99" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
+<polygon points="1060,5740 1860,5740 1860,6190 1060,6190" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<ellipse cx="1460" cy="5965" rx="144" ry="99" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
 <polygon points="270,7675 270,6925 790,6925 790,7675" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <circle cx="400" cy="7487.5" r="70" fill="none" stroke="#8a7a5c" stroke-width="6"/>
 <circle cx="660" cy="7487.5" r="70" fill="none" stroke="#8a7a5c" stroke-width="6"/>
 <circle cx="400" cy="7112.5" r="70" fill="none" stroke="#8a7a5c" stroke-width="6"/>
 <circle cx="660" cy="7112.5" r="70" fill="none" stroke="#8a7a5c" stroke-width="6"/>
-<polygon points="3610,6640 3610,7060 3190,7060 3190,6640" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3520,6680 3520,7020" fill="none" stroke="#8a7a5c" stroke-width="8" />
-<polygon points="3610,7190 3610,7610 3190,7610 3190,7190" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3520,7230 3520,7570" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="3150,6500 3150,9100 2800,9100 2800,6500" fill="none" stroke="#8a7a5c" stroke-width="8" stroke-dasharray="50 35"/>
+<polygon points="3140,11365 1040,11365 1040,10915 3140,10915" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="3140,10955 1040,10955" fill="none" stroke="#8a7a5c" stroke-width="6" />
+<polyline points="3140,11365 1040,10915" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polyline points="3140,10915 1040,11365" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polygon points="4350,17000 4350,15800 4650,15800 4650,17000" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="5900,17600 5900,19400 5450,19400 5450,17600" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="5895,18100 5895,18900 5865,18900 5865,18100" fill="none" stroke="#8a7a5c" stroke-width="8" stroke-dasharray="50 35"/>
@@ -157,8 +157,9 @@
 <polyline points="7610,3140 7610,3860" fill="none" stroke="#8a7a5c" stroke-width="8" />
 <polygon points="5300,3100 6300,3100 6300,3700 5300,3700" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <circle cx="8900" cy="3100" r="300" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<polygon points="230,5414 230,3214 830,3214 830,5414" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<ellipse cx="530" cy="4314" rx="192" ry="132" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
+<polygon points="230,5414 230,3014 830,3014 830,5414" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<ellipse cx="530" cy="4214" rx="192" ry="132" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
+<polygon points="3050,3150 3050,4650 2450,4650 2450,3150" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="6765,19900 8465,19900 8465,23700 6765,23700" fill="none" stroke="#777" stroke-width="12" stroke-dasharray="90 60"/>
 <text x="7615" y="23450" font-size="100" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ref. car 3.8 m</text>
 </g>
@@ -188,8 +189,9 @@
 <text x="8525" y="13150" font-size="95" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >LANDING +1650</text>
 </g>
 <g id="walls">
-<polygon points="230,5515 877,5515 877,5665 230,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
-<polygon points="2337,5515 3301,5515 3301,5665 2337,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
+<polygon points="230,5515 730,5515 730,5665 230,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
+<polygon points="2190,5515 2300,5515 2300,5665 2190,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
+<polygon points="3100,5515 3301,5515 3301,5665 3100,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="9001,5515 9151,5515 9151,5665 9001,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="230,5515 230,10451 0,10451 0,5515" fill="#262626" stroke="#262626" stroke-width="4" />
 <polygon points="230,12964 230,19257 0,19257 0,12964" fill="#262626" stroke="#262626" stroke-width="4" />
@@ -210,6 +212,8 @@
 <polygon points="230,19106 366,19106 366,19256 230,19256" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="2766,19106 2930,19106 2930,19256 2766,19256" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="1031,11365 4200,11365 4200,11515 1031,11515" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
+<polygon points="3300,5665 3300,9350 3150,9350 3150,5665" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
+<polygon points="3300,10350 3300,11365 3150,11365 3150,10350" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="230,13916 4200,13916 4200,14066 230,14066" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="6080,13919 6080,14272 5900,14272 5900,13919" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
 <polygon points="6080,15072 6080,15426 5900,15426 5900,15072" fill="#6f6f6f" stroke="#6f6f6f" stroke-width="4" />
@@ -226,15 +230,21 @@
 <polygon points="230,19257 230,21975 0,21975 0,19257" fill="#8c8c8c" stroke="#8c8c8c" stroke-width="4" />
 <polygon points="0,21975 6080,21975 6080,22275 0,22275" fill="#8c8c8c" stroke="#8c8c8c" stroke-width="4" />
 <polygon points="9381,21506 9381,22276 9151,22276 9151,21506" fill="#8c8c8c" stroke="#8c8c8c" stroke-width="4" />
-<polyline points="2339,2814 2339,4614" fill="none" stroke="#8a6a44" stroke-width="50" stroke-dasharray="40 30"/>
+<polygon points="3450,2814 3450,5515 3300,5515 3300,2814" fill="url(#hatchP)" stroke="#c0601f" stroke-width="4" />
+<polygon points="230,2814 1430,2814 1430,2964 230,2964" fill="url(#hatchP)" stroke="#c0601f" stroke-width="4" />
+<polygon points="2230,2814 3450,2814 3450,2964 2230,2964" fill="url(#hatchP)" stroke="#c0601f" stroke-width="4" />
 </g>
 <g id="open">
-<line x1="877" y1="5515" x2="877" y2="5665" stroke="#222" stroke-width="8" />
-<line x1="2337" y1="5515" x2="2337" y2="5665" stroke="#222" stroke-width="8" />
-<polyline points="877,5515 2337,5515" fill="none" stroke="#222" stroke-width="8" />
-<polyline points="877,5665 2337,5665" fill="none" stroke="#222" stroke-width="8" />
-<polyline points="877,5590 2337,5590" fill="none" stroke="#2aa7c9" stroke-width="14" />
-<polyline points="877,5556.2 2337,5556.2" fill="none" stroke="#222" stroke-width="5" />
+<line x1="730" y1="5515" x2="730" y2="5665" stroke="#222" stroke-width="8" />
+<line x1="2190" y1="5515" x2="2190" y2="5665" stroke="#222" stroke-width="8" />
+<polyline points="730,5515 2190,5515" fill="none" stroke="#222" stroke-width="8" />
+<polyline points="730,5665 2190,5665" fill="none" stroke="#222" stroke-width="8" />
+<polyline points="730,5590 2190,5590" fill="none" stroke="#2aa7c9" stroke-width="14" />
+<polyline points="730,5556.2 2190,5556.2" fill="none" stroke="#222" stroke-width="5" />
+<line x1="2300" y1="5515" x2="2300" y2="5665" stroke="#222" stroke-width="8" />
+<line x1="3100" y1="5515" x2="3100" y2="5665" stroke="#222" stroke-width="8" />
+<line x1="3100" y1="5515" x2="3100" y2="4715" stroke="#222" stroke-width="16" />
+<path d="M2300,5515 A800,800 0 0,1 3100,4715" fill="none" stroke="#222" stroke-width="6" stroke-dasharray="45 30"/>
 <line x1="3301" y1="5515" x2="3301" y2="5665" stroke="#222" stroke-width="8" />
 <line x1="9001" y1="5515" x2="9001" y2="5665" stroke="#222" stroke-width="8" />
 <polyline points="3301,5515 9001,5515" fill="none" stroke="#222" stroke-width="6" />
@@ -263,6 +273,12 @@
 <polyline points="366,19106 2766,19106" fill="none" stroke="#222" stroke-width="8" />
 <polyline points="366,19256 2766,19256" fill="none" stroke="#222" stroke-width="8" />
 <polyline points="366,19181 2766,19181" fill="none" stroke="#2aa7c9" stroke-width="14" />
+<line x1="3300" y1="9350" x2="3150" y2="9350" stroke="#222" stroke-width="8" />
+<line x1="3300" y1="10350" x2="3150" y2="10350" stroke="#222" stroke-width="8" />
+<polyline points="3300,9350 3300,10350" fill="none" stroke="#222" stroke-width="6" />
+<polyline points="3150,9350 3150,10350" fill="none" stroke="#222" stroke-width="6" />
+<polyline points="3247.5,9350 3247.5,9950" fill="none" stroke="#2aa7c9" stroke-width="22" />
+<polyline points="3202.5,9750 3202.5,10350" fill="none" stroke="#2aa7c9" stroke-width="22" />
 <line x1="6080" y1="14272" x2="5900" y2="14272" stroke="#222" stroke-width="8" />
 <line x1="6080" y1="15072" x2="5900" y2="15072" stroke="#222" stroke-width="8" />
 <line x1="6080" y1="15072" x2="6880" y2="15072" stroke="#222" stroke-width="16" />
@@ -291,6 +307,10 @@
 <line x1="6020" y1="21902" x2="5960" y2="21902" stroke="#222" stroke-width="8" />
 <line x1="6020" y1="20902" x2="7020" y2="20902" stroke="#222" stroke-width="16" />
 <path d="M6020,21902 A1000,1000 0 0,0 7020,20902" fill="none" stroke="#222" stroke-width="6" stroke-dasharray="45 30"/>
+<line x1="1430" y1="2814" x2="1430" y2="2964" stroke="#222" stroke-width="8" />
+<line x1="2230" y1="2814" x2="2230" y2="2964" stroke="#222" stroke-width="8" />
+<line x1="1430" y1="2814" x2="1430" y2="2014" stroke="#222" stroke-width="16" />
+<path d="M2230,2814 A800,800 0 0,0 1430,2014" fill="none" stroke="#222" stroke-width="6" stroke-dasharray="45 30"/>
 <line x1="2368" y1="13215" x2="2358" y2="13215" stroke="#222" stroke-width="8" />
 <line x1="2368" y1="13915" x2="2358" y2="13915" stroke="#222" stroke-width="8" />
 <line x1="2368" y1="13915" x2="3068" y2="13915" stroke="#2aa7c9" stroke-width="16" />
@@ -308,17 +328,11 @@
 </g>
 <g id="dims">
 <line x1="230" y1="6265" x2="230" y2="6565" stroke="#c0392b" stroke-width="4" />
-<line x1="3147" y1="6265" x2="3147" y2="6565" stroke="#c0392b" stroke-width="4" />
-<line x1="230" y1="6565" x2="3147" y2="6565" stroke="#c0392b" stroke-width="6" />
+<line x1="3150" y1="6265" x2="3150" y2="6565" stroke="#c0392b" stroke-width="4" />
+<line x1="230" y1="6565" x2="3150" y2="6565" stroke="#c0392b" stroke-width="6" />
 <line x1="180" y1="6515" x2="280" y2="6615" stroke="#c0392b" stroke-width="10" />
-<line x1="3097" y1="6515" x2="3197" y2="6615" stroke="#c0392b" stroke-width="10" />
-<text x="1688.5" y="6610" font-size="125" fill="#c0392b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="30" paint-order="stroke">2917</text>
-<line x1="3147" y1="6265" x2="3147" y2="6565" stroke="#c0392b" stroke-width="4" />
-<line x1="9151" y1="6265" x2="9151" y2="6565" stroke="#c0392b" stroke-width="4" />
-<line x1="3147" y1="6565" x2="9151" y2="6565" stroke="#c0392b" stroke-width="6" />
-<line x1="3097" y1="6515" x2="3197" y2="6615" stroke="#c0392b" stroke-width="10" />
-<line x1="9101" y1="6515" x2="9201" y2="6615" stroke="#c0392b" stroke-width="10" />
-<text x="6149" y="6610" font-size="125" fill="#c0392b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="30" paint-order="stroke">6004</text>
+<line x1="3100" y1="6515" x2="3200" y2="6615" stroke="#c0392b" stroke-width="10" />
+<text x="1690" y="6610" font-size="125" fill="#c0392b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="30" paint-order="stroke">2920</text>
 <line x1="230" y1="5665" x2="-220" y2="5665" stroke="#c0392b" stroke-width="4" />
 <line x1="230" y1="10451" x2="-220" y2="10451" stroke="#c0392b" stroke-width="4" />
 <line x1="-220" y1="5665" x2="-220" y2="10451" stroke="#c0392b" stroke-width="6" />
@@ -417,8 +431,10 @@
 <text x="9926" y="4164.5" font-size="125" fill="#555" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" transform="rotate(90 9926 4164.5)" stroke="#fff" stroke-width="30" paint-order="stroke">2700 deck</text>
 </g>
 <g id="labels">
-<circle cx="1607" cy="5235" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
-<text x="1607" y="5277" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GL-4</text>
+<circle cx="1460" cy="5235" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
+<text x="1460" y="5277" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GL-4</text>
+<circle cx="2700" cy="5925" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
+<text x="2700" y="5967" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >D3</text>
 <circle cx="6151" cy="5235" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
 <text x="6151" y="5277" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GL-5</text>
 <circle cx="451" cy="12091" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
@@ -429,6 +445,8 @@
 <text x="4610" y="15207" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >D2</text>
 <circle cx="1566" cy="19536" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
 <text x="1566" y="19578" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GL-1</text>
+<circle cx="2870" cy="9850" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
+<text x="2870" y="9892" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >KD-1</text>
 <circle cx="5640" cy="14672" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
 <text x="5640" y="14714" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >D3</text>
 <circle cx="5640" cy="15926" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
@@ -441,26 +459,32 @@
 <text x="4981.7" y="20422" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GD-1</text>
 <circle cx="5700" cy="21402" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
 <text x="5700" y="21444" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GS-1</text>
+<circle cx="1830" cy="3224" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
+<text x="1830" y="3266" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GT-1</text>
 <circle cx="2098" cy="13565" r="150" fill="#fff" stroke="#c2185b" stroke-width="10"/>
 <text x="2098" y="13607" font-size="115" fill="#c2185b" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >GL-6</text>
-<text x="1690" y="6969.4" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">KITCHEN</text>
-<text x="1690" y="6969.4" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >KITCHEN</text>
-<text x="1690" y="7231.9" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">9.4 m² · 102 ft²</text>
-<text x="1690" y="7231.9" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >9.4 m² · 102 ft²</text>
-<text x="1690" y="7400.6" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">2920 × 4790</text>
-<text x="1690" y="7400.6" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >2920 × 4790</text>
-<text x="4350" y="8069.4" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DINING</text>
-<text x="4350" y="8069.4" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DINING</text>
-<text x="4350" y="8331.9" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">11.7 m² · 126 ft²</text>
-<text x="4350" y="8331.9" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >11.7 m² · 126 ft²</text>
-<text x="4350" y="8500.6" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">3670 × 3550</text>
-<text x="4350" y="8500.6" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >3670 × 3550</text>
-<text x="4550" y="6969.4" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DRAWING</text>
-<text x="4550" y="6969.4" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DRAWING</text>
-<text x="4550" y="7231.9" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">26.0 m² · 280 ft²</text>
-<text x="4550" y="7231.9" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >26.0 m² · 280 ft²</text>
-<text x="4550" y="7400.6" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">6000 × 5100</text>
-<text x="4550" y="7400.6" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >6000 × 5100</text>
+<text x="1690" y="7850.6" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">KITCHEN</text>
+<text x="1690" y="7850.6" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >KITCHEN</text>
+<text x="1690" y="8113.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">15.9 m² · 171 ft²</text>
+<text x="1690" y="8113.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >15.9 m² · 171 ft²</text>
+<text x="1690" y="8281.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">2920 × 5700</text>
+<text x="1690" y="8281.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >2920 × 5700</text>
+<text x="1690" y="8431.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
+<text x="1690" y="8431.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
+<text x="8100" y="9550.6" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DINING</text>
+<text x="8100" y="9550.6" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DINING</text>
+<text x="8100" y="9813.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">13.8 m² · 149 ft²</text>
+<text x="8100" y="9813.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >13.8 m² · 149 ft²</text>
+<text x="8100" y="9981.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">5850 × 2860</text>
+<text x="8100" y="9981.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >5850 × 2860</text>
+<text x="8100" y="10131.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
+<text x="8100" y="10131.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
+<text x="4200" y="7219.4" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DRAWING</text>
+<text x="4200" y="7219.4" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DRAWING</text>
+<text x="4200" y="7481.9" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">16.6 m² · 179 ft²</text>
+<text x="4200" y="7481.9" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >16.6 m² · 179 ft²</text>
+<text x="4200" y="7650.6" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">5850 × 2840</text>
+<text x="4200" y="7650.6" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >5850 × 2840</text>
 <text x="5775" y="11819.4" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">LOBBY</text>
 <text x="5775" y="11819.4" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >LOBBY</text>
 <text x="5775" y="12081.9" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">12.7 m² · 137 ft²</text>
@@ -509,22 +533,22 @@
 <text x="4690.5" y="1591.4" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >23.3 m² · 251 ft²</text>
 <text x="4690.5" y="1760.1" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">8920 × 2610</text>
 <text x="4690.5" y="1760.1" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >8920 × 2610</text>
-<text x="5745" y="3992.6" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DECK + PERGOLA</text>
-<text x="5745" y="3992.6" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DECK + PERGOLA</text>
-<text x="5745" y="4180.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">18.4 m² · 198 ft²</text>
-<text x="5745" y="4180.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >18.4 m² · 198 ft²</text>
-<text x="5745" y="4348.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">6810 × 2700</text>
-<text x="5745" y="4348.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >6810 × 2700</text>
-<text x="5745" y="4498.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
-<text x="5745" y="4498.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
-<text x="1284.5" y="3992.6" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">UTILITY / WASH AREA</text>
-<text x="1284.5" y="3992.6" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >UTILITY / WASH AREA</text>
-<text x="1284.5" y="4180.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">5.7 m² · 61 ft²</text>
-<text x="1284.5" y="4180.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >5.7 m² · 61 ft²</text>
-<text x="1284.5" y="4348.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">2110 × 2700</text>
-<text x="1284.5" y="4348.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >2110 × 2700</text>
-<text x="1284.5" y="4498.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
-<text x="1284.5" y="4498.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
+<text x="6300.5" y="3992.6" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">DECK + PERGOLA</text>
+<text x="6300.5" y="3992.6" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >DECK + PERGOLA</text>
+<text x="6300.5" y="4180.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">15.4 m² · 166 ft²</text>
+<text x="6300.5" y="4180.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >15.4 m² · 166 ft²</text>
+<text x="6300.5" y="4348.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">5700 × 2700</text>
+<text x="6300.5" y="4348.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >5700 × 2700</text>
+<text x="6300.5" y="4498.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
+<text x="6300.5" y="4498.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
+<text x="1765" y="4067.6" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">WASH AREA</text>
+<text x="1765" y="4067.6" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >WASH AREA</text>
+<text x="1765" y="4255.1" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">7.8 m² · 84 ft²</text>
+<text x="1765" y="4255.1" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >7.8 m² · 84 ft²</text>
+<text x="1765" y="4423.9" font-size="120" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">3070 × 2550</text>
+<text x="1765" y="4423.9" font-size="120" fill="#666" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >3070 × 2550</text>
+<text x="1765" y="4573.9" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE</text>
+<text x="1765" y="4573.9" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
 <text x="1586.3" y="21044.3" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">FRONT LAWN</text>
 <text x="1586.3" y="21044.3" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >FRONT LAWN</text>
 <text x="1586.3" y="21231.8" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">4.8 m² · 52 ft²</text>
@@ -582,14 +606,16 @@
 <text x="11760" y="7490" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Dimension measured from house.json (red = PDF string)</text>
 <text x="11200" y="7960" font-size="170" fill="#222" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ROOM AREAS (internal, incl. built-in joinery)</text>
 <text x="11200" y="8260" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Kitchen</text>
-<text x="14800" y="8260" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >9.4 m²</text>
-<text x="16100" y="8260" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >102 ft²</text>
+<text x="14800" y="8260" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >15.9 m²</text>
+<text x="16100" y="8260" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >171 ft²</text>
+<text x="16250" y="8260" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
 <text x="11200" y="8480" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Dining</text>
-<text x="14800" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >11.7 m²</text>
-<text x="16100" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >126 ft²</text>
+<text x="14800" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >13.8 m²</text>
+<text x="16100" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >149 ft²</text>
+<text x="16250" y="8480" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE</text>
 <text x="11200" y="8700" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Drawing</text>
-<text x="14800" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >26.0 m²</text>
-<text x="16100" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >280 ft²</text>
+<text x="14800" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >16.6 m²</text>
+<text x="16100" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >179 ft²</text>
 <text x="11200" y="8920" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Lobby</text>
 <text x="14800" y="8920" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >12.7 m²</text>
 <text x="16100" y="8920" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >137 ft²</text>
@@ -614,12 +640,12 @@
 <text x="16100" y="10240" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >251 ft²</text>
 <text x="16250" y="10240" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >outdoor</text>
 <text x="11200" y="10460" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Deck + Pergola</text>
-<text x="14800" y="10460" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >18.4 m²</text>
-<text x="16100" y="10460" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >198 ft²</text>
+<text x="14800" y="10460" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >15.4 m²</text>
+<text x="16100" y="10460" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >166 ft²</text>
 <text x="16250" y="10460" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >outdoor</text>
-<text x="11200" y="10680" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Utility / Wash Area</text>
-<text x="14800" y="10680" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >5.7 m²</text>
-<text x="16100" y="10680" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >61 ft²</text>
+<text x="11200" y="10680" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Wash Area</text>
+<text x="14800" y="10680" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >7.8 m²</text>
+<text x="16100" y="10680" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >84 ft²</text>
 <text x="16250" y="10680" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >outdoor</text>
 <text x="11200" y="10900" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Front Lawn</text>
 <text x="14800" y="10900" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >4.8 m²</text>
@@ -635,6 +661,6 @@
 <text x="16250" y="11340" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >outdoor</text>
 <line x1="11200" y1="11440" x2="16100" y2="11440" stroke="#999" stroke-width="8" />
 <text x="11200" y="11620" font-size="140" fill="#222" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Total indoor (rooms listed above, excl. outdoor)</text>
-<text x="16100" y="11620" font-size="140" fill="#222" text-anchor="end" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >110.9 m² / 1194 ft²</text>
+<text x="16100" y="11620" font-size="140" fill="#222" text-anchor="end" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >110.1 m² / 1185 ft²</text>
 </g>
 </svg>

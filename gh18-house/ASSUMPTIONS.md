@@ -274,3 +274,32 @@ The BRIEF CHANGE tags on the plans mark B-01, B-03 and B-04.
 **C-06 · Lift overrun.** A 1.5 m plastered box above the SF roof stands in for the overrun. The real size depends on the lift vendor (A-30).
 
 **C-07 · Stair handrail.** A walnut handrail runs along the spine of each flight.
+
+## D. Client feedback, round 1
+
+The PDF dimensions these changes make obsolete are listed as `SUPER` in `plans/check_report.txt` rather than counted as mismatches.
+
+**D-01 · Closed kitchen, dining moved (GF).**
+- The kitchen is now a closed room. A new 150 mm wall stands on the PDF peninsula line, so the kitchen keeps its 2920 clear width.
+- The layout is a U-shape: the sink under GL-4, the hob on the left run, and a new right run on the new wall. The peninsula and bar stools are gone.
+- The 915 strip behind the kitchen is now its pantry.
+- The door to the dining is KD-1, a 1000-wide sliding door in fluted glass, so no leaf swings into the kitchen.
+- The drawing room keeps the lawn half, 5850 × 2840. Its width drops from 6000 to 5851 because of the new wall.
+- The dining (6-seater) moves between the drawing room and the lobby, next to the kitchen door. The crockery unit sits in the niche between the kitchen and lobby walls.
+
+**D-02 · Separate wash area (GF).**
+- The rear-left corner outside the kitchen is now a walled wash area, 3070 × 2550, open to sky. It holds a utensil-wash sink, the washing machine and a drying rack.
+- It is reached from the kitchen through a new door D3 in the rear wall. GL-4 moves 147 mm left to make room for it. A service gate (GT-1) opens to the back lawn.
+- 2.1 m walls replace the slatted screen, and the deck and pergola now start at x 3450.
+- *Option:* a polycarbonate canopy for monsoon use.
+
+**D-03 · Kids-room toilet on the outer wall (FF).**
+- The toilet of the front-right bedroom used to sit against the stair, with no outside wall. The side walls are taken as blind party walls.
+- It is now in the front (east) corner. Window GL-10 is frosted and takes the exhaust fan.
+- Size is 2130 × 2020 (4.2 m²): WC, vanity, and a walk-in shower behind a glass panel.
+- *Check:* it sits over the parking and over the store end of the GF mandir room. The mandir itself is about 1.1 m away. Drainage runs down the right wall into the parking.
+
+**D-04 · Kids room and bedroom 3 swapped (FF).**
+- The front-right room, with the curved east glazing GL-9, is now the kids room.
+- Its study desk runs along GL-9, so the child faces east while studying.
+- The front-left room is now bedroom 3, with the former kids toilet (window GL-3 to the open-to-sky OTS).

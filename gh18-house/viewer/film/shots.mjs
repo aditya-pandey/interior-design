@@ -31,12 +31,12 @@ export const SHOTS = [
     keys: [{ pos: [3.7, 1.75, 10.35], target: [5.2, 1.35, 5.6] }, { pos: [5.9, 1.65, 10.45], target: [6.4, 1.3, 5.6] }, { pos: [8.2, 1.6, 10.3], target: [7.0, 1.3, 5.6] }],
   },
   {
-    id: 's05_kitchen', bars: 1, caption: 'Kitchen', time: 0.52, exposure: 0.8, fov: 46, interior: true,
-    keys: [{ pos: [4.3, 1.95, 9.5], target: [2.0, 1.0, 6.6] }, { pos: [2.6, 1.85, 9.6], target: [1.6, 1.0, 6.3] }],
+    id: 's05_kitchen', bars: 1, caption: 'Kitchen', time: 0.52, exposure: 0.8, fov: 58, interior: true,
+    keys: [{ pos: [2.75, 1.8, 10.9], target: [1.3, 1.0, 6.2] }, { pos: [2.3, 1.7, 10.4], target: [1.1, 1.0, 6.0] }],
   },
   {
     id: 's06_dining', bars: 1, caption: null, time: 0.96, exposure: 0.55, fov: 40, interior: true,
-    keys: [{ pos: [5.2, 1.7, 11.0], target: [3.1, 1.75, 9.44] }, { pos: [4.5, 1.95, 10.5], target: [3.1, 1.85, 9.44] }],
+    keys: [{ pos: [7.0, 1.7, 11.8], target: [5.4, 1.6, 9.7] }, { pos: [6.4, 1.95, 11.3], target: [5.3, 1.75, 9.75] }],
   },
   {
     id: 's07_mandir', bars: 1, caption: 'Mandir', time: 0.96, exposure: 0.5, fov: 44, interior: true,
@@ -59,7 +59,7 @@ export const SHOTS = [
   },
   {
     id: 's10_kids', bars: 1, caption: 'Kids room', time: 0.52, exposure: 0.8, fov: 56, interior: true,
-    keys: [{ pos: [3.6, 5.2, 13.9], target: [1.5, 4.4, 18.2] }, { pos: [2.5, 5.2, 14.3], target: [2.4, 4.5, 19.0] }],
+    keys: [{ pos: [7.9, 5.2, 16.2], target: [5.9, 4.4, 20.4] }, { pos: [7.3, 5.2, 16.8], target: [5.8, 4.5, 20.6] }],
   },
   {
     id: 's11_roof', bars: 1, caption: 'Rooftop terraces — proposed', time: 0.6, exposure: 0.95, fov: 40,

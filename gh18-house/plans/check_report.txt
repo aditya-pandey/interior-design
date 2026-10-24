@@ -2,12 +2,12 @@ GH-18 dimension check   (tolerance 50 mm)
 source: house.json vs 51 dimension strings in inputs/pdf_dims.json
 
 fl  PDF    model  delta   status        what
-GF  2921   2917        -4 OK            Kitchen: left wall inner face -> peninsula outer edge
-GF  6000   6004        +4 OK            Drawing: peninsula outer edge -> right wall inner face
-GF  1721   1721        -0 OK            Kitchen: left counter front -> peninsula inner edge
-GF  1850   1849        -1 OK            Peninsula: rear wall inner face -> centre of R300 end
-GF  1250   1249        -1 OK            Peninsula: rear counter front -> centre of R300 end
-GF  R300   300         +0 OK            Peninsula end radius
+GF  2921   2920        -1 OK            Kitchen: left wall inner face -> kitchen wall (D-01, on the PDF peninsula line)
+GF  6000   5851      -149 SUPER         Drawing: kitchen wall outer face -> right wall inner face  [superseded: D-01 closed kitchen: its new wall takes 150 from the drawing room]
+GF  1721   1720        -1 OK            Kitchen: left counter front -> right run front (was the peninsula inner edge)
+GF  1850   -            - SUPER         Peninsula: rear wall inner face -> centre of R300 end  [superseded: D-01 closed kitchen: peninsula removed]
+GF  1250   -            - SUPER         Peninsula: rear counter front -> centre of R300 end  [superseded: D-01 closed kitchen: peninsula removed]
+GF  R300   -            - SUPER         Peninsula end radius  [superseded: D-01 closed kitchen: peninsula removed]
 GF  4785   4786        +1 OK            Left side: rear wall inner face -> OTS outer face
 GF  5100   5101        +1 OK            Right side: rear wall inner face -> lift top wall outer face
 GF  4185   4186        +1 OK            Kitchen left run: rear counter front -> OTS outer face
@@ -46,13 +46,13 @@ FF  3240   3238        -2 OK            Kids toilet width
 FF  1965   1964        -1 OK            Kids toilet depth
 FF  2015   2016        +1 OK            FF lift block depth
 FF  4455   4457        +2 OK            FF lobby length
-FF  4070   4039       -31 OK~           Kids room clear width
-FF  3100   3103        +3 OK            Bedroom 3 toilet width
-FF  1500   1500        +0 OK            Bedroom 3 toilet depth
-FF  5540   5542        +2 OK            Kids room depth: wardrobe front -> GL-1 wall
-FF  3250   3253        +3 OK            Bedroom 3 toilet block width incl. west wall
-FF  4550   4550        +0 OK            Bedroom 3 wardrobe wall length
-FF  4258   4258        +0 OK            Bedroom 3 depth along the right wall
+FF  4070   4039       -31 OK~           Bedroom 3 (was kids room) clear width
+FF  3100   -            - SUPER         Old bedroom 3 toilet width  [superseded: D-03 toilet moved to the front wall]
+FF  1500   -            - SUPER         Old bedroom 3 toilet depth  [superseded: D-03 toilet moved to the front wall]
+FF  5540   5542        +2 OK            Bedroom 3 (was kids room) depth: wardrobe front -> GL-1 wall
+FF  3250   -            - SUPER         Old bedroom 3 toilet block width incl. west wall  [superseded: D-03 toilet moved to the front wall]
+FF  4550   4550        +0 OK            Kids room (was bedroom 3) wardrobe wall length
+FF  4258   -            - SUPER         Old bedroom 3 depth along the right wall (to the old toilet)  [superseded: D-03 toilet moved to the front wall]
 
 PDF strings mapped: 51 / 51
 
@@ -99,6 +99,8 @@ Openings vs door/window schedule
   GF-D3a     D3     height model  2400  schedule  2400     +0  OK
   GF-D3b     D3     width  model   800  schedule   800     +0  OK
   GF-D3b     D3     height model  2400  schedule  2400     +0  OK
+  GF-D3d     D3     width  model   800  schedule   800     +0  OK
+  GF-D3d     D3     height model  2400  schedule  2400     +0  OK
   GF-GL1     GL-1   width  model  2400  schedule  2400     +0  OK
   GF-GL1     GL-1   sill   model   100  schedule   100     +0  OK
   GF-GL1     GL-1   height model  2300  schedule  2300     +0  OK
@@ -127,4 +129,5 @@ Brief figures (informational, brief values are approximate)
   Deck depth from house                  model   2701   brief ~  2700       +1
 
 RESULT: PASS  (0 mismatches over 50 mm, 0 unmapped PDF strings)
-Legend: OK = within 20 mm, OK~ = 21-50 mm (explained in ASSUMPTIONS.md), FAIL = over 50 mm
+Legend: OK = within 20 mm, OK~ = 21-50 mm (explained in ASSUMPTIONS.md), FAIL = over 50 mm,
+        SUPER = PDF dimension superseded by a client change (ASSUMPTIONS.md section D)
