@@ -17,7 +17,8 @@ import './style.css';
 
 // ------------------------------------------------------------------ renderer & scene
 const params = new URLSearchParams(location.search);
-const LOW = params.has('low');          // ?low = no AO / smaller shadow map (old laptops, CI)
+// ?low = no AO / smaller shadow map (old laptops, CI); phones and tablets get it automatically
+const LOW = params.has('low') || window.matchMedia('(pointer: coarse)').matches;
 const CINEMA = params.has('cinema');    // ?cinema = no UI, bloom; camera driven by viewer.cine() (film render)
 if (CINEMA) document.body.classList.add('cinema');
 
