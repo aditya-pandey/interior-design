@@ -37,6 +37,19 @@ F_CAP = font('InterDisplay-Light.otf', 30)
 F_NUM = font('InterDisplay-Medium.otf', 20)
 
 
+def ffmpeg_exe():
+    """System ffmpeg, else the static build from `pip install imageio-ffmpeg`."""
+    import shutil
+    exe = shutil.which('ffmpeg')
+    if exe:
+        return exe
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        sys.exit('ffmpeg not found: run `brew install ffmpeg` or `python3 -m pip install --user imageio-ffmpeg`')
+
+
 def shots():
     js = "import {SHOTS} from './film/shots.mjs'; console.log(JSON.stringify(SHOTS))"
     out = subprocess.run(['node', '--input-type=module', '-e', js], cwd=os.path.dirname(HERE), capture_output=True, text=True, check=True)
@@ -196,7 +209,7 @@ def main():
     score = os.path.join(HERE, 'score.wav')
     if not os.path.exists(score):
         subprocess.run([sys.executable, os.path.join(HERE, 'score.py'), score], check=True)
-    cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (W, H), '-r', str(FPS), '-i', '-',
+    cmd = [ffmpeg_exe(), '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (W, H), '-r', str(FPS), '-i', '-',
            '-i', score, '-af', 'loudnorm=I=-14:TP=-1.0:LRA=11',
            '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-tune', 'film', '-pix_fmt', 'yuv420p',
            '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-shortest', '-movflags', '+faststart', out]
