@@ -1,5 +1,5 @@
 // Render the film's frames from the live three.js model (headless Chromium, SwiftShader).
-// Usage: node film/render.mjs [only=s01_aerial,s04_drawing] [still] [w=1920 h=804]
+// Usage: node film/render.mjs [gpu] [only=s01_aerial,s04_drawing] [still] [w=1920 h=804]
 //   still : render only the middle frame of each shot (framing check) into film/stills/
 // Frames go to film/frames/<shot>/0001.png; existing frames are skipped (resumable).
 import { spawn } from 'node:child_process';
@@ -24,7 +24,10 @@ try { await fetch(`http://localhost:${PORT}/`); } catch {
   await new Promise((res) => { server.stdout.on('data', (d) => { if (String(d).includes(String(PORT))) res(); }); setTimeout(res, 8000); });
 }
 
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+// `gpu`: visible browser window on the real GPU (fast on a Mac); default: headless SwiftShader (CPU, any machine)
+const browser = args.gpu
+  ? await chromium.launch({ headless: false, args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization'] })
+  : await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 page.on('pageerror', (e) => console.error('pageerror', String(e)));
 await page.goto(`http://localhost:${PORT}/?headless&cinema`);
