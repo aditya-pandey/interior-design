@@ -303,3 +303,18 @@ The PDF dimensions these changes make obsolete are listed as `SUPER` in `plans/c
 - The front-right room, with the curved east glazing GL-9, is now the kids room.
 - Its study desk runs along GL-9, so the child faces east while studying.
 - The front-left room is now bedroom 3, with the former kids toilet (window GL-3 to the open-to-sky OTS).
+
+**D-05 · The family's own paintings (FF).**
+- **Textures:** made by `tools/prep_art.py` from the client's photos. The photos themselves stay out of the repo.
+  - Each framed canvas is straightened from four corners read off its photo.
+  - Glass glare is patched with nearby texture, and on the elephant with the mirror-symmetric side.
+  - Frames are modelled in 3D, so the textures are canvas only.
+  - The gallery-wall canvases are cut from the photo of the wall as hung (about 1.39 mm per px, set from the 20 × 20 and 30 × 40 cm canvases). The wooden elephant is cut out with transparency.
+- **Assumed sizes** (not measured; tell us the real ones):
+  - Buddha: 40 × 50 cm, black mat, gold frame.
+  - Elephant: 75 × 40 cm, blue frame with a gilt lip.
+  - Seven horses: 100 × 50 cm, dark carved frame with a gilt lip.
+- **Placement:**
+  - **Master bedroom:** the elephant over the bed on the fluted walnut wall; the Buddha on the wall between the lobby door and the bed.
+  - **First-floor lobby:** the seven horses, facing you as you come up the stairs. Horses are traditionally kept out of bedrooms.
+  - **Bedroom 3:** the whole gallery wall, about 2.0 × 1.4 m, over a low console and facing the bed. On /withpainting only, the console replaces the dresser and mirror, and the lounge chair moves (furniture `variant`).

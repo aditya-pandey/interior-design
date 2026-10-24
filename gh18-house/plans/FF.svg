@@ -81,9 +81,9 @@
 <polyline points="1595,16386 1385,14766" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polygon points="230,14766 230,14266 680,14266 680,14766" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="230,16886 230,16386 680,16386 680,16886" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="4246,16100 4246,17300 3796,17300 3796,16100" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="3500,18865.7 2934.3,18300 3500,17734.3 4065.7,18300" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3535.4,18773.8 3026.2,18264.6" fill="none" stroke="#8a7a5c" stroke-width="8" />
+<polygon points="4271,16350 4271,18150 3871,18150 3871,16350" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="3300,19115.7 2734.3,18550 3300,17984.3 3865.7,18550" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="3335.4,19023.8 2826.2,18514.6" fill="none" stroke="#8a7a5c" stroke-width="8" />
 <polygon points="2766,19106 366,19106 366,18656 2766,18656" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polyline points="2766,18696 366,18696" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polyline points="2766,19106 366,18656" fill="none" stroke="#8a7a5c" stroke-width="5" />
@@ -130,6 +130,14 @@
 <polygon points="6975,5925 7425,5925 7425,6375 6975,6375" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="3230,19106 4270,19106 4270,20006 3932,19791 3602,19567 3281,19331 3230,19301" fill="#efe2cf" stroke="#8a7a5c" stroke-width="10" />
 <text x="3860.9" y="19451.7" font-size="90" fill="#8a7a5c" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >SEAT</text>
+<line x1="9106" y1="8296" x2="9106" y2="9180" stroke="#b08d57" stroke-width="40" />
+<text x="8936" y="8768" font-size="70" fill="#8a6a44" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" transform="rotate(90 8936 8768)" >ELEPHANT</text>
+<line x1="6555" y1="10651.5" x2="5945" y2="10651.5" stroke="#b08d57" stroke-width="40" />
+<text x="6250" y="10511.5" font-size="70" fill="#8a6a44" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BUDDHA</text>
+<line x1="4441.5" y1="12730" x2="4441.5" y2="11570" stroke="#b08d57" stroke-width="45" />
+<text x="4611.5" y="12180" font-size="70" fill="#8a6a44" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" transform="rotate(90 4611.5 12180)" >SEVEN HORSES</text>
+<line x1="4262" y1="16242.5" x2="4262" y2="18257.5" stroke="#b08d57" stroke-width="40" />
+<text x="4092" y="17280" font-size="70" fill="#8a6a44" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" transform="rotate(90 4092 17280)" >GALLERY WALL</text>
 </g>
 <g id="stair">
 <polygon points="5899,12865 7899,12865 7899,13919 5899,13919" fill="#fbfbfb" stroke="#222" stroke-width="10" />

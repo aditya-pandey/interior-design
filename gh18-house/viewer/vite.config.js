@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
 
 // house.json lives one level up; textures are served from ../assets.
@@ -26,10 +28,30 @@ const siteUrl = {
   transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', SITE_URL === '/' ? '' : SITE_URL),
 };
 
+// /withpainting/: the same build with the paintings switched on. Its index.html points every relative
+// URL back at the site root with <base href="../">, so nothing is duplicated. Without the trailing
+// slash that base would be wrong, so that URL first redirects to the slashed one.
+const withPainting = {
+  name: 'with-painting-page',
+  apply: 'build',
+  closeBundle() {
+    const dist = path.resolve(__dirname, 'dist');
+    const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8')
+      .replace('<head>', `<head>
+  <script>if (!location.pathname.endsWith('/')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+  <base href="../" />
+  <script>window.GH18_ART = true;</script>`)
+      .replaceAll('GH-18 · 3D Home Tour', 'GH-18 · 3D Home Tour · with paintings')
+      .replace(/(og:url" content="[^"]+)/, '$1withpainting/');
+    fs.mkdirSync(path.join(dist, 'withpainting'), { recursive: true });
+    fs.writeFileSync(path.join(dist, 'withpainting', 'index.html'), html);
+  },
+};
+
 export default defineConfig({
   base: './',                       // relative paths so the site works under a sub-path (GitHub Pages)
   publicDir: '../assets',
-  plugins: [stripPrivate, siteUrl],
+  plugins: [stripPrivate, siteUrl, withPainting],
   server: { port: 5173, fs: { allow: ['..'] } },
   build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
 });

@@ -17,6 +17,12 @@ import './style.css';
 
 // ------------------------------------------------------------------ renderer & scene
 const params = new URLSearchParams(location.search);
+// The family's paintings (house.json floors[].art) show only on the /withpainting page (or with ?art).
+const WITH_ART = window.GH18_ART === true || params.has('art') || /\/withpainting\/?$/.test(location.pathname);
+for (const fl of house.floors) {
+  if (!WITH_ART) delete fl.art;
+  fl.furniture = fl.furniture.filter((f) => !f.variant || f.variant === (WITH_ART ? 'art' : 'no_art'));
+}
 // ?low = no AO / smaller shadow map (old laptops, CI); phones and tablets get it automatically
 const LOW = params.has('low') || window.matchMedia('(pointer: coarse)').matches;
 const CINEMA = params.has('cinema');    // ?cinema = no UI, bloom; camera driven by viewer.cine() (film render)

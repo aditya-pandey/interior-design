@@ -362,7 +362,8 @@ def draw_peninsula(svg, it):
 
 
 def draw_furniture(svg, fl):
-    items = sorted(fl.get("furniture", []), key=lambda it: 0 if it["type"] == "rug" else 1)
+    # plans show the /withpainting layout (paintings drawn below), so skip the pieces it replaces
+    items = sorted((it for it in fl.get("furniture", []) if it.get("variant") != "no_art"), key=lambda it: 0 if it["type"] == "rug" else 1)
     for it in items:
         if it["type"] == "counter_peninsula":
             draw_peninsula(svg, it)
@@ -372,6 +373,16 @@ def draw_furniture(svg, fl):
         svg.poly("furn", j["polygon"], fill="#efe2cf", stroke=FURN, sw=10)
         cx, cy = hl.poly_centroid(j["polygon"])
         svg.text("furn", cx, cy + 30, "SEAT", size=90, fill=FURN)
+    for a in fl.get("art", []):                       # paintings: a gilt bar on the wall face
+        r = math.radians(a["rot"])
+        fx, fy = -math.sin(r), math.cos(r)
+        rx, ry = math.cos(r), math.sin(r)
+        w = a["size"][0] if a["type"] == "gallery" else a["canvas"][0] + 2 * (a["frame"]["width"] + a["frame"].get("lip_width", 0))
+        d = a.get("depth") or a["frame"]["depth"]
+        x, y = a["pos"][0] + fx * d / 2, a["pos"][1] + fy * d / 2
+        svg.line("furn", (x - rx * w / 2, y - ry * w / 2), (x + rx * w / 2, y + ry * w / 2), stroke="#b08d57", sw=max(d, 40))
+        svg.text("furn", x + fx * 170, y + fy * 170 + 30, a["title"].upper(), size=70, fill="#8a6a44",
+                 rot=90 if abs(fx) > 0.5 else 0)
 
 
 # --------------------------------------------------------------------- stair

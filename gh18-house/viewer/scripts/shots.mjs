@@ -42,7 +42,7 @@ const page = await browser.newPage({ viewport: { width: +(args.w || 1600), heigh
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
-await page.goto(`http://localhost:${PORT}/?headless${args.low ? '&low' : ''}`);
+await page.goto(`http://localhost:${PORT}/?headless${args.low ? '&low' : ''}${args.art ? '&art' : ''}`);   // art: the /withpainting version
 await page.waitForFunction(() => window.viewer && (window.viewer.ready || window.viewer.error), null, { timeout: 180000 });
 const err = await page.evaluate(() => window.viewer.error);
 if (err) { console.error(err); process.exit(1); }
@@ -75,6 +75,12 @@ await shot('walk_master', `window.viewer.walkPose(5000, 7000, 3.75, -120, -8)`);
 await shot('walk_kids', `window.viewer.walkPose(7600, 16600, 3.75, 155, -10)`);
 await shot('walk_bedroom3', `window.viewer.walkPose(2900, 14200, 3.75, 160, -8)`);
 await shot('walk_mandir', `window.viewer.walkPose(6500, 17495, 0.45, -90, -2)`);
+if (args.art) {
+  await shot('art_master_bed', `window.viewer.walkPose(5300, 8738, 3.75, -90, 2)`);
+  await shot('art_master_buddha', `window.viewer.walkPose(6250, 7700, 3.75, 180, 0)`);
+  await shot('art_lobby_horses', `window.viewer.walkPose(5800, 11450, 3.75, 115, 0)`);
+  await shot('art_bedroom3_gallery', `window.viewer.walkPose(1500, 17250, 3.75, -90, 3)`);
+}
 await shot('walk_dusk_drawing', `window.viewer.setTime('dusk'); window.viewer.walkPose(8200, 10300, 0.45, 35, -6)`);
 const stats = await page.evaluate(() => window.viewer.stats());
 console.log('stats', JSON.stringify(stats));

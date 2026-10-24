@@ -2534,7 +2534,8 @@
           "pos": [4021, 16700],
           "size": [1200, 450, 750],
           "rot": 90,
-          "mirror": true
+          "mirror": true,
+          "variant": "no_art"
         },
         {
           "id": "FF-B06",
@@ -2542,7 +2543,27 @@
           "type": "lounge_chair",
           "pos": [3500, 18300],
           "size": [800, 800, 780],
-          "rot": 225
+          "rot": 225,
+          "variant": "no_art"
+        },
+        {
+          "id": "FF-B05a",
+          "room": "FF-BD3",
+          "type": "console",
+          "pos": [4071, 17250],
+          "size": [1800, 400, 750],
+          "rot": 90,
+          "variant": "art",
+          "note": "low console under the gallery wall"
+        },
+        {
+          "id": "FF-B06a",
+          "room": "FF-BD3",
+          "type": "lounge_chair",
+          "pos": [3300, 18550],
+          "size": [800, 800, 780],
+          "rot": 225,
+          "variant": "art"
         },
         {
           "id": "FF-B08",
@@ -2730,6 +2751,256 @@
           "polygon": [[3230, 19106], [4270, 19106], [4270, 20006], [3932, 19791], [3602, 19567], [3281, 19331], [3230, 19301]],
           "h": 450,
           "note": "brown triangle in the PDF at the GL-9 corner - modelled as a walnut window seat"
+        }
+      ],
+      "art": [
+        {
+          "id": "FF-A01",
+          "room": "FF-MST",
+          "type": "framed",
+          "title": "Elephant",
+          "src": "art/elephant.jpg",
+          "pos": [9126, 8738],
+          "rot": 90,
+          "z": 1720,
+          "canvas": [750, 400],
+          "frame": {
+            "width": 55,
+            "depth": 40,
+            "mat": "art_frame_blue",
+            "lip": "brass",
+            "lip_width": 12
+          },
+          "glass": true,
+          "note": "over the bed, on the fluted walnut wall (25 mm proud of W04)"
+        },
+        {
+          "id": "FF-A02",
+          "room": "FF-MST",
+          "type": "framed",
+          "title": "Buddha",
+          "src": "art/buddha.jpg",
+          "pos": [6250, 10669],
+          "rot": 180,
+          "z": 1500,
+          "canvas": [520, 620],
+          "frame": {
+            "width": 45,
+            "depth": 35,
+            "mat": "art_frame_gold"
+          },
+          "glass": true,
+          "note": "40 x 50 canvas in a 60 mm black mat; on the wall between the lobby door and the bed"
+        },
+        {
+          "id": "FF-A03",
+          "room": "FF-LOB",
+          "type": "framed",
+          "title": "Seven horses",
+          "src": "art/horses.jpg",
+          "pos": [4419, 12150],
+          "rot": 270,
+          "z": 1550,
+          "canvas": [1000, 500],
+          "frame": {
+            "width": 70,
+            "depth": 45,
+            "mat": "art_frame_brown",
+            "lip": "brass",
+            "lip_width": 10
+          },
+          "glass": true,
+          "note": "faces you as you come up the stairs"
+        },
+        {
+          "id": "FF-A04",
+          "room": "FF-BD3",
+          "type": "gallery",
+          "title": "Gallery wall",
+          "atlas": "art/gallery.jpg",
+          "pos": [4271, 17250],
+          "rot": 90,
+          "z": 1657,
+          "depth": 18,
+          "size": [2015, 1414],
+          "items": [
+            {
+              "name": "moon_night",
+              "right": 915,
+              "up": -387,
+              "size": [190, 540],
+              "uv": [0.00341, 0.70305, 0.15114, 0.99771]
+            },
+            {
+              "name": "sun",
+              "right": 743,
+              "up": -147,
+              "size": [170, 530],
+              "uv": [0.15455, 0.71069, 0.2875, 0.99771]
+            },
+            {
+              "name": "lovers_sunset",
+              "right": -861,
+              "up": -423,
+              "size": [290, 340],
+              "uv": [0.29091, 0.81527, 0.52614, 0.99771]
+            },
+            {
+              "name": "guitar",
+              "right": 49,
+              "up": -114,
+              "size": [400, 310],
+              "uv": [0.52955, 0.83206, 0.85568, 0.99771]
+            },
+            {
+              "name": "heart_couple",
+              "right": -269,
+              "up": 223,
+              "size": [410, 310],
+              "uv": [0.00341, 0.53588, 0.33409, 0.70076]
+            },
+            {
+              "name": "fairies",
+              "right": -694,
+              "up": 238,
+              "size": [410, 300],
+              "uv": [0.3375, 0.54046, 0.66591, 0.70076]
+            },
+            {
+              "name": "sunset_pair",
+              "right": 691,
+              "up": 512,
+              "size": [390, 290],
+              "uv": [0.66932, 0.54198, 0.9875, 0.70076]
+            },
+            {
+              "name": "couple_bench",
+              "right": -723,
+              "up": 563,
+              "size": [400, 290],
+              "uv": [0.00341, 0.37863, 0.325, 0.53359]
+            },
+            {
+              "name": "glitter_trees",
+              "right": -571,
+              "up": -453,
+              "size": [220, 280],
+              "uv": [0.32841, 0.38321, 0.50227, 0.53359]
+            },
+            {
+              "name": "shiva",
+              "right": 278,
+              "up": -476,
+              "size": [310, 280],
+              "uv": [0.50568, 0.38397, 0.75341, 0.53359]
+            },
+            {
+              "name": "swing_girl",
+              "right": 564,
+              "up": -523,
+              "size": [210, 270],
+              "uv": [0.75682, 0.38779, 0.92273, 0.53359]
+            },
+            {
+              "name": "blue_flower",
+              "right": 438,
+              "up": -123,
+              "size": [210, 270],
+              "uv": [0.00341, 0.2313, 0.17386, 0.37634]
+            },
+            {
+              "name": "girl_tree",
+              "right": 514,
+              "up": 175,
+              "size": [210, 260],
+              "uv": [0.17727, 0.23511, 0.34432, 0.37634]
+            },
+            {
+              "name": "moon_dancer",
+              "right": -856,
+              "up": -57,
+              "size": [210, 250],
+              "uv": [0.34773, 0.23969, 0.51818, 0.37634]
+            },
+            {
+              "name": "chakra_yogi",
+              "right": -388,
+              "up": 516,
+              "size": [210, 250],
+              "uv": [0.52159, 0.24427, 0.68523, 0.37634]
+            },
+            {
+              "name": "do_what_you_love",
+              "right": -270,
+              "up": -395,
+              "size": [220, 220],
+              "uv": [0.68864, 0.25649, 0.86705, 0.37634]
+            },
+            {
+              "name": "dragonflies",
+              "right": -12,
+              "up": -404,
+              "size": [210, 220],
+              "uv": [0.00341, 0.11069, 0.17273, 0.22901]
+            },
+            {
+              "name": "elephant_moon",
+              "right": -615,
+              "up": -128,
+              "size": [220, 210],
+              "uv": [0.17614, 0.11527, 0.34773, 0.22901]
+            },
+            {
+              "name": "girl_butterfly",
+              "right": -320,
+              "up": -108,
+              "size": [260, 210],
+              "uv": [0.35114, 0.11832, 0.56136, 0.22901]
+            },
+            {
+              "name": "birds_branch",
+              "right": 68,
+              "up": 390,
+              "size": [210, 210],
+              "uv": [0.56477, 0.11908, 0.73523, 0.22901]
+            },
+            {
+              "name": "golden_buds",
+              "right": -166,
+              "up": 538,
+              "size": [200, 200],
+              "uv": [0.73864, 0.1229, 0.89886, 0.22901]
+            },
+            {
+              "name": "solar_system",
+              "right": 811,
+              "up": 246,
+              "size": [260, 200],
+              "uv": [0.00341, 0.00229, 0.21136, 0.1084]
+            },
+            {
+              "name": "little_buddha",
+              "right": 61,
+              "up": 158,
+              "size": [190, 200],
+              "uv": [0.21477, 0.00305, 0.36705, 0.1084]
+            },
+            {
+              "name": "lanterns",
+              "right": -168,
+              "up": -616,
+              "size": [540, 180],
+              "uv": [0.37045, 0.01145, 0.80682, 0.1084]
+            },
+            {
+              "name": "elephant_cutout",
+              "right": 322,
+              "up": 423,
+              "size": [300, 310],
+              "src": "art/elephant_cutout.png"
+            }
+          ],
+          "note": "the arrangement as hung at home (photo at ~1.39 mm/px), over a low console, facing the bed"
         }
       ]
     },

@@ -117,6 +117,14 @@ export async function createMaterials(renderer) {
   flat('trunk', 0x5b4636, { roughness: 0.95 });
   flat('ctx_wall', 0xb9b3a9, { roughness: 0.95 });
   flat('ctx_wall2', 0xaea89e, { roughness: 0.95 });
+  // picture frames (client's paintings) and their glazing
+  flat('art_frame_blue', 0x5b7886, { roughness: 0.55 });
+  flat('art_frame_brown', 0x3a2618, { roughness: 0.5, metalness: 0.15 });
+  flat('art_frame_gold', 0xd4a94e, { roughness: 0.32, metalness: 0.55 });
+  M.art_glass = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.07, depthWrite: false, envMapIntensity: 1.2,
+  });
+  M.art_glass.name = 'art_glass';
   for (const k of ['cove', 'downlight', 'lamp', 'jaali_glow', 'window_lit', 'window_dark']) M[k].name = k;
 
   // per-floor cutaway copies of wall materials are made on demand

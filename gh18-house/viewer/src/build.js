@@ -235,6 +235,7 @@ export function buildHouse(house, M) {
       if (f.type === 'counter' || f.type === 'utility_counter') buildBacksplash(f, fl, baseY, batch);
     }
     for (const j of fl.joinery || []) for (const part of buildJoinery(j, fy)) batch.add(fid, 'furn', part.m, part.g);
+    for (const art of fl.art || []) buildArt(art, fid, fy, batch, M);
 
     if (fl.pergola) buildPergola(fl.pergola, fid, batch, colliders);
     if (fl.canopy) buildCanopy(fl.canopy, fid, fy, batch, colliders);
@@ -526,6 +527,79 @@ function buildSkin(r, fl, fy, height, mat, batch) {
   for (const e of insetEdges(r.polygon)) {
     skinAlong(batch, fl.id, fy, e.p, e.q, e.n, fy, fy + height, mat, fl);
   }
+}
+
+// ------------------------------------------------------------------ paintings
+// pos is a point on the wall face, rot the facing (as for furniture), z the centre height above FFL.
+// Frames are modelled; the texture is only the canvas (tools/prep_art.py). One material per image.
+
+const artLoader = new THREE.TextureLoader();
+
+function artMaterial(M, src, opts = {}) {
+  const key = `art:${src}`;
+  if (!M[key]) {
+    const t = artLoader.load(src);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    M[key] = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7, metalness: 0, ...opts });
+    M[key].name = key;
+  }
+  return key;
+}
+
+// flat quad facing (fx, fy), centred at plan point c (mm) and height zc (m), uv = [u0, v0, u1, v1]
+function artQuad(c, f, right, w, h, zc, uv = [0, 0, 1, 1]) {
+  const g = new THREE.PlaneGeometry(w, h);
+  const u = g.attributes.uv;
+  for (let i = 0; i < u.count; i++) u.setXY(i, uv[0] + u.getX(i) * (uv[2] - uv[0]), uv[1] + u.getY(i) * (uv[3] - uv[1]));
+  g.rotateY(Math.atan2(f[0], f[1]));
+  g.translate(mm(c[0]), zc, mm(c[1]));
+  return g;
+}
+
+function buildArt(a, fid, fy, batch, M) {
+  const r = THREE.MathUtils.degToRad(a.rot);
+  const f = [-Math.sin(r), Math.cos(r)];            // facing (out of the wall)
+  const right = [Math.cos(r), Math.sin(r)];         // viewer's right when looking at it
+  const at = (along, out) => [a.pos[0] + right[0] * along + f[0] * out, a.pos[1] + right[1] * along + f[1] * out];
+  const zc = fy + mm(a.z);
+
+  if (a.type === 'gallery') {
+    const key = artMaterial(M, a.atlas, { roughness: 0.75 });
+    for (const it of a.items) {
+      const [w, h] = it.size;
+      const z = zc + mm(it.up);
+      if (it.src) {                                  // cut-out piece with alpha: 6 mm board, no box
+        const k = artMaterial(M, it.src, { transparent: true, alphaTest: 0.5, roughness: 0.6 });
+        batch.add(fid, 'upper', k, artQuad(at(it.right, 8), f, right, mm(w), mm(h), z));
+        continue;
+      }
+      batch.add(fid, 'upper', 'linen_white', orientedBox(...at(it.right, a.depth / 2), right, mm(w), mm(a.depth), z - mm(h) / 2, mm(h)));
+      batch.add(fid, 'upper', key, artQuad(at(it.right, a.depth + 0.6), f, right, mm(w), mm(h), z, it.uv));
+    }
+    return;
+  }
+
+  const [cw, ch] = a.canvas;
+  const fr = a.frame || { width: 40, depth: 30, mat: 'black_metal' };
+  const lw = fr.lip ? fr.lip_width || 10 : 0;
+  const iw = cw + 2 * lw, ih = ch + 2 * lw;          // frame opening
+  const ow = iw + 2 * fr.width, oh = ih + 2 * fr.width;
+  const D = fr.depth;
+  // moulding: top and bottom run the full width, sides fit between them
+  for (const s of [-1, 1]) {
+    batch.add(fid, 'upper', fr.mat, orientedBox(...at(0, D / 2), right, mm(ow), mm(D), zc + s * mm(oh / 2 - fr.width / 2) - mm(fr.width) / 2, mm(fr.width)));
+    batch.add(fid, 'upper', fr.mat, orientedBox(...at(s * (ow / 2 - fr.width / 2), D / 2), right, mm(fr.width), mm(D), zc - mm(ih) / 2, mm(ih)));
+  }
+  if (lw) {                                          // gilt lip, set back from the moulding face
+    for (const s of [-1, 1]) {
+      batch.add(fid, 'upper', fr.lip, orientedBox(...at(0, (D - 8) / 2), right, mm(iw), mm(D - 8), zc + s * mm(ih / 2 - lw / 2) - mm(lw) / 2, mm(lw)));
+      batch.add(fid, 'upper', fr.lip, orientedBox(...at(s * (iw / 2 - lw / 2), (D - 8) / 2), right, mm(lw), mm(D - 8), zc - mm(ch) / 2, mm(ch)));
+    }
+  }
+  batch.add(fid, 'upper', 'black_metal', orientedBox(...at(0, 4), right, mm(iw), mm(8), zc - mm(ih) / 2, mm(ih)));    // backing board
+  batch.add(fid, 'upper', artMaterial(M, a.src), artQuad(at(0, D - 14), f, right, mm(cw), mm(ch), zc));
+  if (a.glass) batch.add(fid, 'glassUpper', 'art_glass', artQuad(at(0, D - 6), f, right, mm(iw), mm(ih), zc));
 }
 
 function buildFeatureWall(fw, fl, fy, r, batch) {

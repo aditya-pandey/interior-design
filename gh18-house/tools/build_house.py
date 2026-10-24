@@ -487,8 +487,11 @@ ff_furniture = [
   F('FF-B02', 'FF-BD3', 'bed_queen', (1280, 15576), (1620, 2100, 1100), 270, mattress=[1524, 1981]),
   F('FF-B03', 'FF-BD3', 'side_table', (455, 14516), (500, 450, 500), 270),
   F('FF-B04', 'FF-BD3', 'side_table', (455, 16636), (500, 450, 500), 270),
-  F('FF-B05', 'FF-BD3', 'dresser', (4021, 16700), (1200, 450, 750), 90, mirror=True),
-  F('FF-B06', 'FF-BD3', 'lounge_chair', (3500, 18300), (800, 800, 780), 225),
+  # variant: 'no_art' pieces show on the main site, 'art' pieces only on /withpainting (D-05)
+  F('FF-B05', 'FF-BD3', 'dresser', (4021, 16700), (1200, 450, 750), 90, mirror=True, variant='no_art'),
+  F('FF-B06', 'FF-BD3', 'lounge_chair', (3500, 18300), (800, 800, 780), 225, variant='no_art'),
+  F('FF-B05a', 'FF-BD3', 'console', (4071, 17250), (1800, 400, 750), 90, variant='art', note='low console under the gallery wall'),
+  F('FF-B06a', 'FF-BD3', 'lounge_chair', (3300, 18550), (800, 800, 780), 225, variant='art'),
   F('FF-B08', 'FF-BD3', 'storage_bench', (1566, 18881), (2400, 450, 450), 180),
   F('FF-B07', 'FF-BD3', 'rug', (1900, 15576), (2400, 3000, 10), 0),
   # bedroom 3 toilet (D-04: was the kids toilet)
@@ -515,6 +518,24 @@ ff_furniture = [
   F('FF-L02', 'FF-BAL', 'lounge_chair', (6600, 5950), (750, 750, 750), 180),
   F('FF-L03', 'FF-BAL', 'lounge_chair', (7800, 5750), (750, 750, 750), 180),
   F('FF-L04', 'FF-BAL', 'side_table', (7200, 6150), (450, 450, 450), 0),
+]
+
+# client's own paintings (D-05). Textures are made by tools/prep_art.py from their photos.
+# pos = point on the wall face (plan mm); rot = facing, as for furniture; z = centre height above FFL.
+_gallery = json.load(open(os.path.join(HERE, '..', 'assets', 'art', 'gallery.json')))
+ff_art = [
+  dict(id='FF-A01', room='FF-MST', type='framed', title='Elephant', src='art/elephant.jpg', pos=[9126, 8738], rot=90, z=1720,
+       canvas=[750, 400], frame=dict(width=55, depth=40, mat='art_frame_blue', lip='brass', lip_width=12), glass=True,
+       note='over the bed, on the fluted walnut wall (25 mm proud of W04)'),
+  dict(id='FF-A02', room='FF-MST', type='framed', title='Buddha', src='art/buddha.jpg', pos=[6250, 10669], rot=180, z=1500,
+       canvas=[520, 620], frame=dict(width=45, depth=35, mat='art_frame_gold'), glass=True,
+       note='40 x 50 canvas in a 60 mm black mat; on the wall between the lobby door and the bed'),
+  dict(id='FF-A03', room='FF-LOB', type='framed', title='Seven horses', src='art/horses.jpg', pos=[4419, 12150], rot=270, z=1550,
+       canvas=[1000, 500], frame=dict(width=70, depth=45, mat='art_frame_brown', lip='brass', lip_width=10), glass=True,
+       note='faces you as you come up the stairs'),
+  dict(id='FF-A04', room='FF-BD3', type='gallery', title='Gallery wall', atlas='art/gallery.jpg', pos=[4271, 17250], rot=90,
+       z=950 + _gallery['size_mm'][1] // 2, depth=18, size=_gallery['size_mm'], items=_gallery['items'],
+       note='the arrangement as hung at home (photo at ~1.39 mm/px), over a low console, facing the bed'),
 ]
 
 # glass shower partitions (GL-6 family) as thin walls with a glass door
@@ -662,7 +683,7 @@ house = dict(
     dict(id='GF', name='Ground Floor', status='renovation', walls=gf_walls, rooms=gf_rooms, outdoor=gf_outdoor,
          furniture=gf_furniture, pergola=pergola),
     dict(id='FF', name='First Floor', status='renovation', walls=ff_walls, rooms=ff_rooms, outdoor=[],
-         furniture=ff_furniture, joinery=[ff_joinery_seat]),
+         furniture=ff_furniture, joinery=[ff_joinery_seat], art=ff_art),
     dict(id='SF', name='Second Floor (PROPOSED)', status='PROPOSED', walls=sf_walls, rooms=sf_rooms, outdoor=[],
          furniture=sf_furniture, canopy=canopy),
   ],
