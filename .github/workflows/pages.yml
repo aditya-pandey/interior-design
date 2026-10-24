@@ -34,6 +34,7 @@ jobs:
       - run: npm run build
         env:
           PUBLIC_BUILD: '1'      # strips client name and address from house.json
+          SITE_URL: https://aditya-pandey.github.io/interior-design/   # absolute link-preview URLs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: gh18-house/viewer/dist

@@ -3,13 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GH-18 House Viewer</title>
+  <title>GH-18 · 3D Home Tour</title>
+  <meta name="description" content="Explore the GH-18 house in 3D: fly around every floor, walk through the rooms, and see it by day and at dusk." />
+  <meta name="theme-color" content="#2b2622" />
+  <link rel="icon" href="site/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="site/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="site/apple-touch-icon.png" />
+  <link rel="manifest" href="site/site.webmanifest" />
+  <!-- link previews (WhatsApp, iMessage, Slack, X...). __SITE_URL__ is filled in at build time (vite.config.js) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GH-18 · 3D Home Tour" />
+  <meta property="og:title" content="GH-18 · 3D Home Tour" />
+  <meta property="og:description" content="Fly around every floor, walk through the rooms, and see the house by day and at dusk." />
+  <meta property="og:url" content="__SITE_URL__" />
+  <meta property="og:image" content="__SITE_URL__site/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The GH-18 house at dusk" />
+  <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
   <div id="app"></div>
   <div id="loading">Building GH-18 from house.json…</div>
   <aside id="panel">
-    <h1>GH-18 <small>3D model · from house.json</small></h1>
+    <h1>GH-18 <small>3D home tour</small></h1>
     <label class="row">View
       <select id="preset"></select>
     </label>

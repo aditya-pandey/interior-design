@@ -18,10 +18,18 @@ const stripPrivate = {
   },
 };
 
+// Absolute site URL for the link-preview tags in index.html (og:image must be absolute).
+// Netlify sets URL during its build; the GitHub Pages workflow sets SITE_URL.
+const SITE_URL = (process.env.SITE_URL || process.env.URL || '').replace(/\/?$/, '/');
+const siteUrl = {
+  name: 'site-url',
+  transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', SITE_URL === '/' ? '' : SITE_URL),
+};
+
 export default defineConfig({
   base: './',                       // relative paths so the site works under a sub-path (GitHub Pages)
   publicDir: '../assets',
-  plugins: [stripPrivate],
+  plugins: [stripPrivate, siteUrl],
   server: { port: 5173, fs: { allow: ['..'] } },
   build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
 });
