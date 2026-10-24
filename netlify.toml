@@ -1,0 +1,9 @@
+# Netlify: build the GH-18 viewer (the app lives in gh18-house/viewer, not the repo root)
+[build]
+  base = "gh18-house/viewer"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PUBLIC_BUILD = "1"   # strips client name / address from house.json in the published site
