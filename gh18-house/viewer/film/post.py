@@ -25,7 +25,7 @@ FONT_DIR = '/usr/share/fonts/opentype/inter'
 
 
 def font(name, size):
-    for p in (os.path.join(FONT_DIR, name), os.path.join(HERE, name)):
+    for p in (os.path.join(HERE, 'fonts', name), os.path.join(FONT_DIR, name)):
         if os.path.exists(p):
             return ImageFont.truetype(p, size)
     return ImageFont.load_default()
