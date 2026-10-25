@@ -249,9 +249,14 @@ def room_label(svg, r, proposed=False, small=False):
     big = 210 if not small else 150
     lines = [(name, big, "bold", INK)]
     if r.get("kind") not in ("lift", "shaft"):
-        lines.append(("%.1f m² · %.0f ft²" % (hl.sqm(A), hl.sqft(A)), 135, "normal", "#444"))
-        dims = r.get("dims_label") or "%d × %d" % (round((x1 - x0) / 10) * 10, round((y1 - y0) / 10) * 10)
-        lines.append((dims, 120, "normal", "#666"))
+        if FEET:
+            lines.append(("%.0f sq ft (%.1f m²)" % (hl.sqft(A), hl.sqm(A)), 135, "normal", "#444"))
+            lines.append(("%s × %s" % (hl.ftin(x1 - x0), hl.ftin(y1 - y0)), 125, "normal", "#555"))
+            lines.append(("(%.2f × %.2f m)" % ((x1 - x0) / 1000, (y1 - y0) / 1000), 105, "normal", "#777"))
+        else:
+            lines.append(("%.1f m² · %.0f ft²" % (hl.sqm(A), hl.sqft(A)), 135, "normal", "#444"))
+            dims = r.get("dims_label") or "%d × %d" % (round((x1 - x0) / 10) * 10, round((y1 - y0) / 10) * 10)
+            lines.append((dims, 120, "normal", "#666"))
     if r.get("brief_change"):
         lines.append(("BRIEF CHANGE (was %s)" % r["was"] if r.get("was") else "BRIEF CHANGE", 110, "bold", "#c0601f"))
     if proposed:
@@ -451,18 +456,19 @@ def draw_dims(svg, h, fl_id):
             continue
         p1, p2, off = draw(P)
         val = fn(P)
-        dim(svg, p1, p2, off, "%d" % round(val))
+        dim(svg, p1, p2, off, hl.length_label(h, val))
     # overall dimensions (derived, grey)
     W = h["meta"]["plot"]["width_outer"]
+    L = lambda v: hl.length_label(h, v)  # noqa: E731
     if fl_id == "GF":
-        dim(svg, (0, 0), (W, 0), 700, "%d plot (outer)" % W, col="#555")
-        dim(svg, (0, 0), (0, h["meta"]["plot"]["depth_to_front_boundary"]), -1100, "%d rear boundary to front boundary" % h["meta"]["plot"]["depth_to_front_boundary"], col="#555")
-        dim(svg, (0, 200), (0, 5515), -600, "%d back lawn" % (5515 - 200), col="#555")
-        dim(svg, (9381, 2814), (9381, 5515), 500, "2700 deck", col="#555")
+        dim(svg, (0, 0), (W, 0), 700, "%s plot (outer)" % L(W), col="#555")
+        dim(svg, (0, 0), (0, h["meta"]["plot"]["depth_to_front_boundary"]), -1100, "%s rear boundary to front boundary" % L(h["meta"]["plot"]["depth_to_front_boundary"]), col="#555")
+        dim(svg, (0, 200), (0, 5515), -600, "%s back lawn" % L(5515 - 200), col="#555")
+        dim(svg, (9381, 2814), (9381, 5515), 500, "%s deck" % L(2700), col="#555")
     elif fl_id == "FF":
-        dim(svg, (0, 5515), (W, 5515), 1500, "%d" % W, col="#555")
+        dim(svg, (0, 5515), (W, 5515), 1500, L(W), col="#555")
     else:
-        dim(svg, (0, 5515), (W, 5515), 1500, "%d" % W, col="#555")
+        dim(svg, (0, 5515), (W, 5515), 1500, L(W), col="#555")
 
 
 # --------------------------------------------------------------------- overlays
@@ -504,13 +510,19 @@ def draw_overlays(svg, h, fl):
 
 def title_block(svg, h, fl, rooms_table):
     x0 = 11200
-    svg.text("top", x0, 0, "GH-18  ·  %s" % fl["name"].upper(), size=420, anchor="start", weight="bold")
+    rev = h["meta"].get("revision")
+    svg.text("top", x0, 0, "GH-18  ·  %s%s" % (fl["name"].upper(), "  ·  " + rev if rev else ""), size=420, anchor="start", weight="bold")
     svg.text("top", x0, 520, h["meta"]["project"], size=170, anchor="start", fill="#444")
     svg.text("top", x0, 760, "Client: %s" % h["meta"]["client"], size=170, anchor="start", fill="#444")
-    svg.text("top", x0, 1000, "Generated from house.json, all units mm. Source: %s" % h["meta"]["source"], size=105, anchor="start", fill="#666")
     lvl = h["levels"][fl["id"]]
-    svg.text("top", x0, 1260, "FFL +%d above ground · floor to floor %d · clear %d" % (lvl["ffl"], lvl["floor_to_floor"], lvl["clear"]),
-             size=140, anchor="start", fill="#444")
+    if FEET:
+        svg.text("top", x0, 1000, "Generated from %s; dimensions in feet-inches (metres). Source: %s" % (SRC, h["meta"]["source"]), size=105, anchor="start", fill="#666")
+        svg.text("top", x0, 1260, "FFL +%s above ground · floor to floor %s · clear %s" % tuple(hl.length_label(h, lvl[k]) for k in ("ffl", "floor_to_floor", "clear")),
+                 size=140, anchor="start", fill="#444")
+    else:
+        svg.text("top", x0, 1000, "Generated from house.json, all units mm. Source: %s" % h["meta"]["source"], size=105, anchor="start", fill="#666")
+        svg.text("top", x0, 1260, "FFL +%d above ground · floor to floor %d · clear %d" % (lvl["ffl"], lvl["floor_to_floor"], lvl["clear"]),
+                 size=140, anchor="start", fill="#444")
     if fl["status"] == "PROPOSED":
         svg.add("top", '<rect x="%d" y="1500" width="4300" height="620" fill="none" stroke="#c0601f" stroke-width="40"/>' % x0)
         svg.text("top", x0 + 2150, 1990, "PROPOSED — NOT IN PDF", size=330, fill="#c0601f", weight="bold")
@@ -520,14 +532,16 @@ def title_block(svg, h, fl, rooms_table):
     ang = math.degrees(math.atan2(nv[1], nv[0])) + 90
     svg.add("top", '<g transform="translate(%d %d) rotate(%s)"><circle r="420" fill="none" stroke="%s" stroke-width="18"/>'
             '<path d="M0,-380 L140,200 L0,110 L-140,200 Z" fill="%s"/></g>' % (nx, ny, f(ang), INK, INK))
-    svg.text("top", nx + 640, ny - 60, "N (assumed:", size=140, anchor="start")
-    svg.text("top", nx + 640, ny + 140, "entrance faces East)", size=140, anchor="start")
+    n1, n2 = h["meta"].get("north_label") or ["N (assumed:", "entrance faces East)"]
+    svg.text("top", nx + 640, ny - 60, n1, size=140, anchor="start")
+    svg.text("top", nx + 640, ny + 140, n2, size=140, anchor="start")
     sx, sy = x0, 4500
+    seg = 4 * 304.8 if FEET else 1000          # 5 x 4 ft = 20 ft, or 5 x 1 m
     for i in range(5):
-        svg.add("top", '<rect x="%d" y="%d" width="1000" height="120" fill="%s" stroke="%s" stroke-width="10"/>' % (
-            sx + i * 1000, sy, INK if i % 2 == 0 else "#fff", INK))
+        svg.add("top", '<rect x="%s" y="%d" width="%s" height="120" fill="%s" stroke="%s" stroke-width="10"/>' % (
+            f(sx + i * seg), sy, f(seg), INK if i % 2 == 0 else "#fff", INK))
     svg.text("top", sx, sy + 340, "0", size=130, anchor="middle")
-    svg.text("top", sx + 5000, sy + 340, "5000 mm", size=130, anchor="middle")
+    svg.text("top", sx + 5 * seg, sy + 340, "20 ft (6.1 m)" if FEET else "5000 mm", size=130, anchor="middle")
     # legend
     ly = 5300
     items = [("#262626", "Existing wall (dark grey in PDF)"), ("#6f6f6f", "New wall / partition (light grey in PDF)"),
@@ -549,15 +563,20 @@ def title_block(svg, h, fl, rooms_table):
     tot = 0.0
     for name, a, note in rooms_table:
         svg.text("top", x0, ty, name, size=140, anchor="start")
-        svg.text("top", x0 + 3600, ty, "%.1f m²" % hl.sqm(a), size=140, anchor="end")
-        svg.text("top", x0 + 4900, ty, "%.0f ft²" % hl.sqft(a), size=140, anchor="end")
+        if FEET:
+            svg.text("top", x0 + 3600, ty, "%.0f sq ft" % hl.sqft(a), size=140, anchor="end")
+            svg.text("top", x0 + 4900, ty, "(%.1f m²)" % hl.sqm(a), size=140, anchor="end")
+        else:
+            svg.text("top", x0 + 3600, ty, "%.1f m²" % hl.sqm(a), size=140, anchor="end")
+            svg.text("top", x0 + 4900, ty, "%.0f ft²" % hl.sqft(a), size=140, anchor="end")
         if note:
             svg.text("top", x0 + 5050, ty, note, size=110, anchor="start", fill="#c0601f")
         tot += a if note != "outdoor" else 0
         ty += 220
     svg.line("top", (x0, ty - 120), (x0 + 4900, ty - 120), stroke="#999", sw=8)
     svg.text("top", x0, ty + 60, "Total indoor (rooms listed above, excl. outdoor)", size=140, anchor="start", weight="bold")
-    svg.text("top", x0 + 4900, ty + 60, "%.1f m² / %.0f ft²" % (hl.sqm(tot), hl.sqft(tot)), size=140, anchor="end", weight="bold")
+    svg.text("top", x0 + 4900, ty + 60, ("%.0f sq ft (%.1f m²)" % (hl.sqft(tot), hl.sqm(tot))) if FEET else ("%.1f m² / %.0f ft²" % (hl.sqm(tot), hl.sqft(tot))),
+             size=140, anchor="end", weight="bold")
     return ty
 
 
@@ -604,9 +623,17 @@ def build(h, fl):
     return svg.render("GH-18 %s plan" % fl["name"])
 
 
+FEET = False           # set from the model in main(): feet-inches (metres) for Revision R1 onward
+SRC = "house.json"
+
+
 def main():
-    h = hl.load()
-    out_dir = os.path.join(hl.ROOT, "plans")
+    """python3 tools/plans.py [house_r1.json plans/r1]"""
+    global FEET, SRC
+    SRC = sys.argv[1] if len(sys.argv) > 1 else "house.json"
+    h = hl.load(os.path.join(hl.ROOT, SRC))
+    FEET = hl.feet(h)
+    out_dir = os.path.join(hl.ROOT, sys.argv[2] if len(sys.argv) > 2 else "plans")
     os.makedirs(out_dir, exist_ok=True)
     for fl in h["floors"]:
         path = os.path.join(out_dir, "%s.svg" % fl["id"])

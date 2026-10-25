@@ -92,6 +92,21 @@ python3 film/post.py ../renders/film/GH-18_film.mp4       # edit, grade, titles,
 - **Score:** `film/score.py` synthesises the score.
 - **Context:** the neighbourhood (flanking houses, street, trees, lamps) appears only in the film view (`?cinema`). It is scenery, not part of `house.json`.
 
+## Versions
+
+| Version | Data | Plans | Site |
+|---|---|---|---|
+| Main (R0 + changes D-01 to D-06) | `house.json` (`tools/build_house.py`) | `plans/` | `/`, `/withpainting/` |
+| Revision R1 (owner changes, Oct 2026) | `house_r1.json` (`tools/build_r1.py` = main + tagged patches) | `plans/r1/` | `/v1/`, `/v1/withpainting/` |
+
+To rebuild R1:
+
+```bash
+python3 tools/build_r1.py && python3 tools/check_dims.py house_r1.json && python3 tools/plans.py house_r1.json plans/r1
+```
+
+R1 changes are listed in ASSUMPTIONS.md section E. All the extra pages come from one viewer build; locally, use `?rev=r1` (and `?art`).
+
 ## house.json conventions
 
 - **Units and origin.** Units are mm. The origin is the rear-left outer corner of the plot.

@@ -5,7 +5,8 @@ measurement taken from house.json. Anything off by more than TOL mm is a
 mismatch. Also checks opening sizes against the door/window schedule and the
 coverage of the PDF strings (every string must be mapped).
 
-Usage: python3 tools/check_dims.py            (prints the report, writes plans/check_report.txt)
+Usage: python3 tools/check_dims.py [house_r1.json]   (prints the report, writes plans/check_report.txt,
+       or plans/r1/check_report.txt for house_r1.json)
 Exit code 1 if any mismatch over TOL or any PDF string is unmapped.
 PDF strings made obsolete by a client change (SUPERSEDED, ASSUMPTIONS.md section D)
 are still mapped and listed, with the model value, but are not counted as mismatches.
@@ -233,7 +234,9 @@ def brief_checks(P):
 
 
 def main():
-    h = hl.load()
+    src = sys.argv[1] if len(sys.argv) > 1 else "house.json"
+    h = hl.load(os.path.join(hl.ROOT, src))
+    out_dir = os.path.join(hl.ROOT, "plans", *(["r1"] if src == "house_r1.json" else []))
     P = Probe(h)
     pdf = json.load(open(os.path.join(hl.ROOT, "inputs", "pdf_dims.json")))["dims"]
     lines, bad = [], 0
@@ -289,8 +292,8 @@ def main():
     out("        SUPER = PDF dimension superseded by a client change (ASSUMPTIONS.md section D)")
     text = "\n".join(lines)
     print(text)
-    os.makedirs(os.path.join(hl.ROOT, "plans"), exist_ok=True)
-    with open(os.path.join(hl.ROOT, "plans", "check_report.txt"), "w") as f:
+    os.makedirs(out_dir, exist_ok=True)
+    with open(os.path.join(out_dir, "check_report.txt"), "w") as f:
         f.write(text + "\n")
     return 1 if bad else 0
 

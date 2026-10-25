@@ -716,6 +716,7 @@ def dump(o, ind=0):
         return '[\n' + ',\n'.join(items) + '\n' + sp + ']'
     return json.dumps(o)
 
-with open(OUT, 'w') as f:
-    f.write(dump(house) + '\n')
-print('wrote', OUT)
+if __name__ == '__main__':      # importable: tools/build_r1.py builds Revision R1 on top of `house`
+    with open(OUT, 'w') as f:
+        f.write(dump(house) + '\n')
+    print('wrote', OUT)

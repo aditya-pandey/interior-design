@@ -186,3 +186,19 @@ def sqm(mm2):
 
 def sqft(mm2):
     return mm2 / 1e6 * 10.7639
+
+
+def ftin(mm):
+    """Length in feet-inches to the nearest inch, e.g. 4110 -> 13'-6\"."""
+    inches = round(mm / 25.4)
+    return "%d'-%d\"" % (inches // 12, inches % 12)
+
+
+def feet(h):
+    """True when the model asks for feet-inches (Revision R1 onward)."""
+    return h["meta"].get("display_units") == "ft-in (m)"
+
+
+def length_label(h, mm):
+    """A dimension as the model wants it shown: mm, or feet-inches with metres in brackets."""
+    return "%s (%.2f m)" % (ftin(mm), mm / 1000) if feet(h) else "%d" % round(mm)

@@ -11,7 +11,7 @@ const stripPrivate = {
   name: 'strip-private-house-data',
   enforce: 'pre',
   transform(code, id) {
-    if (!PUBLIC || !id.endsWith('house.json')) return null;
+    if (!PUBLIC || !/house(_r1)?\.json$/.test(id)) return null;
     const h = JSON.parse(code);
     h.meta.project = 'GH-18';
     delete h.meta.client;
@@ -28,30 +28,42 @@ const siteUrl = {
   transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', SITE_URL === '/' ? '' : SITE_URL),
 };
 
-// /withpainting/: the same build with the paintings switched on. Its index.html points every relative
-// URL back at the site root with <base href="../">, so nothing is duplicated. Without the trailing
-// slash that base would be wrong, so that URL first redirects to the slashed one.
-const withPainting = {
-  name: 'with-painting-page',
+// Extra pages, all from the same build: each is index.html with a <base> pointing back at the site
+// root (so nothing is duplicated) and a flag for main.js. A URL without the trailing slash first
+// redirects to the slashed one, where the relative <base> is right.
+//   /withpainting/      the family's paintings on
+//   /v1/                Revision R1 (owner changes, Oct 2026) - the main site stays as it is
+//   /v1/withpainting/   Revision R1 with the paintings
+const PAGES = [
+  { dir: 'withpainting', base: '../', flags: { GH18_ART: true }, title: ' · with paintings' },
+  { dir: 'v1', base: '../', flags: { GH18_REV: 'r1' }, title: ' · R1' },
+  { dir: 'v1/withpainting', base: '../../', flags: { GH18_REV: 'r1', GH18_ART: true }, title: ' · R1 · with paintings' },
+];
+const extraPages = {
+  name: 'extra-pages',
   apply: 'build',
   closeBundle() {
     const dist = path.resolve(__dirname, 'dist');
-    const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8')
-      .replace('<head>', `<head>
+    const src = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+    for (const pg of PAGES) {
+      const flags = Object.entries(pg.flags).map(([k, v]) => `window.${k} = ${JSON.stringify(v)};`).join(' ');
+      const html = src
+        .replace('<head>', `<head>
   <script>if (!location.pathname.endsWith('/')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
-  <base href="../" />
-  <script>window.GH18_ART = true;</script>`)
-      .replaceAll('GH-18 · 3D Home Tour', 'GH-18 · 3D Home Tour · with paintings')
-      .replace(/(og:url" content="[^"]+)/, '$1withpainting/');
-    fs.mkdirSync(path.join(dist, 'withpainting'), { recursive: true });
-    fs.writeFileSync(path.join(dist, 'withpainting', 'index.html'), html);
+  <base href="${pg.base}" />
+  <script>${flags}</script>`)
+        .replaceAll('GH-18 · 3D Home Tour', 'GH-18 · 3D Home Tour' + pg.title)
+        .replace(/(og:url" content="[^"]+)/, `$1${pg.dir}/`);
+      fs.mkdirSync(path.join(dist, pg.dir), { recursive: true });
+      fs.writeFileSync(path.join(dist, pg.dir, 'index.html'), html);
+    }
   },
 };
 
 export default defineConfig({
   base: './',                       // relative paths so the site works under a sub-path (GitHub Pages)
   publicDir: '../assets',
-  plugins: [stripPrivate, siteUrl, withPainting],
+  plugins: [stripPrivate, siteUrl, extraPages],
   server: { port: 5173, fs: { allow: ['..'] } },
   build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
 });

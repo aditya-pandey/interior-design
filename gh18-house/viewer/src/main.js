@@ -8,7 +8,8 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import house from '../../house.json';
+import houseMain from '../../house.json';
+import houseR1 from '../../house_r1.json';
 import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
@@ -19,6 +20,10 @@ import './style.css';
 
 // ------------------------------------------------------------------ renderer & scene
 const params = new URLSearchParams(location.search);
+// Which version: the main site, or Revision R1 on /v1/ (or ?rev=r1). Both share all code and assets.
+const REV = window.GH18_REV || params.get('rev') || (/\/v1(\/|$)/.test(location.pathname) ? 'r1' : 'main');
+const house = REV === 'r1' ? houseR1 : houseMain;
+const FEET = house.meta.display_units === 'ft-in (m)';
 // The family's paintings (house.json floors[].art) show only on the /withpainting page (or with ?art).
 const WITH_ART = window.GH18_ART === true || params.has('art') || /\/withpainting\/?$/.test(location.pathname);
 for (const fl of house.floors) {
@@ -80,10 +85,19 @@ scene.add(sun, sun.target);
 const hemi = new THREE.HemisphereLight(0xdfe9ff, 0x9a8f80, 0.35);
 scene.add(hemi);
 
-// Plan: front (+Z) faces East (ASSUMPTIONS A-02), so North = +X, East = +Z.
+// Compass from house.json: north_vector is North in plan (x, y) = scene (x, z); East is North turned 90 degrees.
+// Main site: front faces East, so North = +X. Revision R1: North = road side = +Z (front), East = -X.
+const NORTH = house.meta.north_vector, EAST = [-NORTH[1], NORTH[0]];
+// compass point of a plan direction (dx, dy), e.g. the front (0, 1) -> 'East' on the main site, 'North' in R1
+function compass(dx, dy) {
+  const b = (Math.atan2(dx * EAST[0] + dy * EAST[1], dx * NORTH[0] + dy * NORTH[1]) * 180 / Math.PI + 360) % 360;
+  return ['North', 'North-East', 'East', 'South-East', 'South', 'South-West', 'West', 'North-West'][Math.round(b / 45) % 8];
+}
+
 function sunDir(azimuthDeg, elevationDeg) {
   const az = THREE.MathUtils.degToRad(azimuthDeg), el = THREE.MathUtils.degToRad(elevationDeg);
-  return new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el));
+  const n = Math.cos(az) * Math.cos(el), e = Math.sin(az) * Math.cos(el);
+  return new THREE.Vector3(NORTH[0] * n + EAST[0] * e, Math.sin(el), NORTH[1] * n + EAST[1] * e);
 }
 
 const TIMES = {
@@ -136,7 +150,9 @@ async function init() {
   for (const lb of data.labels) {
     const div = document.createElement('div');
     div.className = 'room-label' + (lb.status === 'PROPOSED' ? ' proposed' : '');
-    div.innerHTML = `<b>${lb.name}</b><span>${(lb.w / 1000).toFixed(2)} × ${(lb.d / 1000).toFixed(2)} m</span><span>${lb.area.toFixed(1)} m² · ${(lb.area * 10.7639).toFixed(0)} ft²</span>`;
+    div.innerHTML = FEET
+      ? `<b>${lb.name}</b><span>${ftin(lb.w)} × ${ftin(lb.d)} (${(lb.w / 1000).toFixed(2)} × ${(lb.d / 1000).toFixed(2)} m)</span><span>${(lb.area * 10.7639).toFixed(0)} sq ft (${lb.area.toFixed(1)} m²)</span>`
+      : `<b>${lb.name}</b><span>${(lb.w / 1000).toFixed(2)} × ${(lb.d / 1000).toFixed(2)} m</span><span>${lb.area.toFixed(1)} m² · ${(lb.area * 10.7639).toFixed(0)} ft²</span>`;
     const obj = new CSS2DObject(div);
     obj.position.set(...lb.pos);
     obj.userData.isLabel = true;
@@ -148,6 +164,7 @@ async function init() {
 
   setupPost();
   buildUI();
+  if (house.meta.revision) document.querySelector('#panel h1 small').textContent = `3D home tour · ${house.meta.revision} draft`;
   if (camera.aspect < 1.2) goPreset('all', true);    // portrait phones: the opening view, framed for the narrow screen
   setTime('day');
   applyView();
@@ -278,8 +295,8 @@ function overviewPresets() {
     { id: 'gf', name: 'Ground floor (cutaway)', group: 'Overview', floor: 'GF', cut: true, pos: [cx + 14, 22, cz + 16], target: [cx, 0.5, cz] },
     { id: 'ff', name: 'First floor (cutaway)', group: 'Overview', floor: 'FF', cut: true, pos: [cx + 14, 25, cz + 16], target: [cx, 3.8, cz] },
     { id: 'sf', name: 'Second floor — PROPOSED (cutaway)', group: 'Overview', floor: 'SF', cut: true, pos: [cx + 14, 28, cz + 16], target: [cx, 7.1, cz] },
-    { id: 'front', name: 'Exterior — front (East)', group: 'Overview', floor: 'ALL', cut: false, pos: [cx + 6, 3.5, D + 16], target: [cx, 4.5, D - 4] },
-    { id: 'rear', name: 'Exterior — rear lawn (West)', group: 'Overview', floor: 'ALL', cut: false, pos: [cx - 5, 5.5, -14], target: [cx, 3.5, 6] },
+    { id: 'front', name: `Exterior — front (${compass(0, 1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx + 6, 3.5, D + 16], target: [cx, 4.5, D - 4] },
+    { id: 'rear', name: `Exterior — rear lawn (${compass(0, -1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx - 5, 5.5, -14], target: [cx, 3.5, 6] },
   ];
 }
 
@@ -412,6 +429,12 @@ function loadModels(list) {
       console.warn('model failed to load', m.src, e);
     }
   }));
+}
+
+// feet-inches to the nearest inch: 4110 mm -> 13'-6"
+function ftin(mm) {
+  const inches = Math.round(mm / 25.4);
+  return `${Math.floor(inches / 12)}'-${inches % 12}"`;
 }
 
 function closeMenu() {
