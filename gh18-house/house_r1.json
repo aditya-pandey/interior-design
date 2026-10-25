@@ -167,6 +167,9 @@
       },
       "GT-1": {
         "desc": "D-02 wash-area service gate to the back lawn, 800 x 2000."
+      },
+      "KW-1": {
+        "desc": "R1-B4 wash-nook vent window into the OTS, 500 x 600, sill 1050, with exhaust fan."
       }
     }
   },
@@ -378,23 +381,11 @@
               "id": "GF-GL4",
               "mark": "GL-4",
               "type": "window",
-              "offset": 500,
+              "offset": 647,
               "width": 1460,
               "height": 1450,
               "sill": 950,
-              "note": "over kitchen sink (D-01: moved 147 left to make room for the wash-area door)"
-            },
-            {
-              "id": "GF-D3d",
-              "mark": "D3",
-              "type": "door",
-              "offset": 2070,
-              "width": 800,
-              "height": 2400,
-              "sill": 0,
-              "hinge": "b",
-              "swing": "-y",
-              "note": "D-01 kitchen -> wash area"
+              "note": "R1-B4: back at its R0 position over the prep counter"
             },
             {
               "id": "GF-GL5",
@@ -477,6 +468,16 @@
               "height": 1450,
               "sill": 950,
               "note": "toilet window into OTS"
+            },
+            {
+              "id": "GF-KW1",
+              "mark": "KW-1",
+              "type": "window",
+              "offset": 50,
+              "width": 500,
+              "height": 600,
+              "sill": 1050,
+              "note": "R1-B4 wash-nook vent window + exhaust into the OTS"
             }
           ]
         },
@@ -658,8 +659,8 @@
               "height": 2400,
               "sill": 0,
               "hinge": "b",
-              "swing": "+x",
-              "note": "janitor"
+              "swing": "-x",
+              "note": "R1-B7 under-stair store; opens out to the lobby"
             },
             {
               "id": "GF-D2b",
@@ -859,42 +860,6 @@
           "base": 0
         },
         {
-          "id": "GF-S1",
-          "a": [3375, 2814],
-          "b": [3375, 5515],
-          "t": 150,
-          "kind": "external",
-          "status": "proposed",
-          "h": 2100,
-          "base": 300,
-          "note": "D-02 wash area | deck, 2100 high above the deck"
-        },
-        {
-          "id": "GF-S2",
-          "a": [230, 2889],
-          "b": [3450, 2889],
-          "t": 150,
-          "kind": "external",
-          "status": "proposed",
-          "h": 2100,
-          "base": 300,
-          "openings": [
-            {
-              "id": "GF-GT1",
-              "mark": "GT-1",
-              "type": "door",
-              "offset": 1200,
-              "width": 800,
-              "height": 2000,
-              "sill": 0,
-              "hinge": "a",
-              "swing": "-y",
-              "note": "service gate to the back lawn"
-            }
-          ],
-          "note": "D-02 wash area | back lawn"
-        },
-        {
           "id": "GF-GL6",
           "a": [2363, 11515],
           "b": [2363, 13916],
@@ -933,7 +898,7 @@
           },
           "pdf_finish": "Kitchen: Italian Stone / Italian Stone / POP Painted",
           "brief_change": true,
-          "note": "D-01 closed kitchen (U-shaped), door to the dining; the 915 strip behind it is now its pantry"
+          "note": "R1-B4 closed U-kitchen; north strip = wash nook (double sink) venting into the OTS"
         },
         {
           "id": "GF-DIN",
@@ -955,8 +920,8 @@
         },
         {
           "id": "GF-DRW",
-          "name": "Drawing",
-          "label_at": [4200, 7300],
+          "name": "Family Lounge",
+          "label_at": [4300, 6500],
           "polygon": [[3300, 5665], [9151, 5665], [9151, 8500], [3300, 8500]],
           "open_to": ["GF-DIN"],
           "floor": "marble_beige",
@@ -975,7 +940,10 @@
             "height": 2750,
             "cove": true
           },
-          "pdf_finish": "Drawing/Dining: Italian Stone / Veneer Cladding / POP Painted/Veneer/Glass"
+          "pdf_finish": "Drawing/Dining: Italian Stone / Veneer Cladding / POP Painted/Veneer/Glass",
+          "was": "Drawing",
+          "brief_change": true,
+          "note": "R1-B3: TV on the west wall, sofa facing it; lawn glass to the south"
         },
         {
           "id": "GF-LOB",
@@ -1014,7 +982,8 @@
             "height": 2750,
             "cove": true
           },
-          "pdf_finish": "Guest Room: Italian Stone / Paint Finish / POP Painted"
+          "pdf_finish": "Guest Room: Italian Stone / Paint Finish / POP Painted",
+          "note": "R1-B6: small mandir in the NE corner; wardrobe on the south wall (red-line 2)"
         },
         {
           "id": "GF-FOY",
@@ -1041,7 +1010,7 @@
         },
         {
           "id": "GF-MND",
-          "name": "Mandir + Store",
+          "name": "Guest Lounge / Study",
           "polygon": [[6080, 15274], [9151, 15274], [9151, 19716], [6080, 19716]],
           "floor": "marble_beige",
           "wall": "walnut (veneer cladding)",
@@ -1050,15 +1019,16 @@
             "height": 2750,
             "cove": true
           },
-          "was": "Study Room",
+          "was": "Mandir + Store",
           "pdf_finish": "Study Room: Italian Stone / Veneer Cladding / POP Painted",
-          "brief_change": true
+          "brief_change": true,
+          "note": "R1-B5 (R0: Study Room): desk, sofa + settee, TV",
+          "label_at": [7650, 18300]
         },
         {
           "id": "GF-JAN",
-          "name": "Electrical Panel & Janitor",
-          "label_name": "Janitor + DB",
-          "label_at": [8525, 14450],
+          "name": "Under-stair Storage",
+          "label_at": [8525, 14000],
           "polygon": [[6080, 14070], [7899, 14070], [7899, 12865], [9151, 12865], [9151, 15124], [6080, 15124]],
           "floor": "granite_flamed",
           "wall": "paint_warm_white",
@@ -1066,7 +1036,9 @@
             "type": "stair soffit",
             "height": null
           },
-          "note": "under the second flight and the landing; clear height ~1.4-2.9 m"
+          "note": "R1-B7: cupboards cut to the stair soffit; inverter/network bay",
+          "was": "Electrical Panel & Janitor",
+          "brief_change": true
         },
         {
           "id": "GF-LFT",
@@ -1097,20 +1069,11 @@
         {
           "id": "GF-DECK",
           "name": "Deck + Pergola",
-          "polygon": [[3450, 2814], [9151, 2814], [9151, 5515], [3450, 5515]],
+          "polygon": [[230, 2814], [9151, 2814], [9151, 5515], [230, 5515]],
           "surface": "deck_tile",
           "z": 300,
           "brief_change": true,
-          "note": "2.7 m deep from the house; PDF says granite for the lawn sitting area - wood-look deck tiles per brief"
-        },
-        {
-          "id": "GF-UTIL",
-          "name": "Wash Area",
-          "polygon": [[230, 2964], [3300, 2964], [3300, 5515], [230, 5515]],
-          "surface": "granite_flamed",
-          "z": 300,
-          "brief_change": true,
-          "note": "D-02 walled wash area (utensils + laundry) outside the kitchen, door from the kitchen, gate to the lawn; open to sky"
+          "note": "R1-B4: paving across the full width; no walls or roof added outside the house (pergola kept, as before D-02)"
         },
         {
           "id": "GF-LAWN-F",
@@ -1162,80 +1125,6 @@
         }
       ],
       "furniture": [
-        {
-          "id": "GF-F01",
-          "room": "GF-DRW",
-          "type": "sofa_l",
-          "pos": [6700, 7600],
-          "size": [3000, 1700, 800],
-          "rot": 180,
-          "chaise": "+x",
-          "note": "L-sofa facing GL-5; chaise on the kitchen side"
-        },
-        {
-          "id": "GF-F02",
-          "room": "GF-DRW",
-          "type": "coffee_table",
-          "pos": [7100, 6800],
-          "size": [1300, 600, 380],
-          "rot": 180
-        },
-        {
-          "id": "GF-F03",
-          "room": "GF-DRW",
-          "type": "rug",
-          "pos": [6900, 7150],
-          "size": [3400, 2600, 10],
-          "rot": 0
-        },
-        {
-          "id": "GF-F04",
-          "room": "GF-DRW",
-          "type": "accent_chair",
-          "pos": [8650, 6400],
-          "size": [760, 800, 780],
-          "rot": 90
-        },
-        {
-          "id": "GF-F05",
-          "room": "GF-DRW",
-          "type": "accent_chair",
-          "pos": [8650, 7250],
-          "size": [760, 800, 780],
-          "rot": 90
-        },
-        {
-          "id": "GF-F06",
-          "room": "GF-DRW",
-          "type": "side_table",
-          "pos": [4950, 8100],
-          "size": [450, 450, 500],
-          "rot": 0
-        },
-        {
-          "id": "GF-F08",
-          "room": "GF-DRW",
-          "type": "floor_lamp",
-          "pos": [4900, 6300],
-          "size": [400, 400, 1650],
-          "rot": 0
-        },
-        {
-          "id": "GF-F09",
-          "room": "GF-DRW",
-          "type": "planter",
-          "pos": [8950, 5900],
-          "size": [450, 450, 1400],
-          "rot": 0
-        },
-        {
-          "id": "GF-F10",
-          "room": "GF-DRW",
-          "type": "planter",
-          "pos": [3600, 5950],
-          "size": [450, 450, 1400],
-          "rot": 0
-        },
         {
           "id": "GF-F11",
           "room": "GF-DIN",
@@ -1304,22 +1193,13 @@
           "note": "linear statement pendant, bottom at +2000 FFL"
         },
         {
-          "id": "GF-F19",
-          "room": "GF-DIN",
-          "type": "crockery_unit",
-          "pos": [3750, 11140],
-          "size": [900, 450, 2100],
-          "rot": 180,
-          "note": "in the niche between the kitchen and lobby walls"
-        },
-        {
           "id": "GF-K01",
           "room": "GF-KIT",
           "type": "counter",
           "pos": [1240, 5965],
           "size": [2020, 600, 900],
           "rot": 0,
-          "note": "rear run under GL-4, sink at x=1460"
+          "note": "rear run: prep counter (R1-B4: sink moved to the north wash nook)"
         },
         {
           "id": "GF-K02",
@@ -1340,15 +1220,6 @@
           "note": "left run 4185 incl. tall units"
         },
         {
-          "id": "GF-K04",
-          "room": "GF-KIT",
-          "type": "tall_unit",
-          "pos": [530, 9851],
-          "size": [1200, 600, 2250],
-          "rot": 270,
-          "note": "fridge + oven tower"
-        },
-        {
           "id": "GF-K05",
           "room": "GF-KIT",
           "type": "wall_cabinet",
@@ -1367,15 +1238,6 @@
           "z": 1600
         },
         {
-          "id": "GF-K07",
-          "room": "GF-KIT",
-          "type": "sink",
-          "pos": [1460, 5965],
-          "size": [800, 450, 200],
-          "rot": 0,
-          "z": 700
-        },
-        {
           "id": "GF-K08",
           "room": "GF-KIT",
           "type": "hob",
@@ -1392,15 +1254,6 @@
           "size": [2600, 350, 750],
           "rot": 90,
           "z": 1500
-        },
-        {
-          "id": "GF-K10",
-          "room": "GF-KIT",
-          "type": "storage_tall",
-          "pos": [2090, 11140],
-          "size": [2100, 450, 2400],
-          "rot": 180,
-          "note": "pantry in the former 915 strip"
         },
         {
           "id": "GF-F20",
@@ -1530,72 +1383,6 @@
           "z": 2150
         },
         {
-          "id": "GF-M01",
-          "room": "GF-MND",
-          "type": "storage_tall",
-          "pos": [8851, 16084],
-          "size": [1620, 600, 2700],
-          "rot": 90
-        },
-        {
-          "id": "GF-M02",
-          "room": "GF-MND",
-          "type": "mandir_jaali",
-          "pos": [8851, 17495],
-          "size": [1200, 600, 2700],
-          "rot": 90,
-          "note": "backlit walnut jaali, warm LED strip behind"
-        },
-        {
-          "id": "GF-M03",
-          "room": "GF-MND",
-          "type": "storage_tall",
-          "pos": [8851, 18905],
-          "size": [1620, 600, 2700],
-          "rot": 90
-        },
-        {
-          "id": "GF-M04",
-          "room": "GF-MND",
-          "type": "puja_chowki",
-          "pos": [8150, 17495],
-          "size": [600, 400, 150],
-          "rot": 90
-        },
-        {
-          "id": "GF-M05",
-          "room": "GF-MND",
-          "type": "rug",
-          "pos": [7900, 17495],
-          "size": [1400, 2000, 10],
-          "rot": 0
-        },
-        {
-          "id": "GF-J01",
-          "room": "GF-JAN",
-          "type": "electrical_panel",
-          "pos": [9076, 13500],
-          "size": [600, 150, 900],
-          "rot": 90,
-          "z": 1200
-        },
-        {
-          "id": "GF-J02",
-          "room": "GF-JAN",
-          "type": "mop_sink",
-          "pos": [6500, 14899],
-          "size": [500, 450, 600],
-          "rot": 180
-        },
-        {
-          "id": "GF-J03",
-          "room": "GF-JAN",
-          "type": "shelf",
-          "pos": [8500, 14899],
-          "size": [1200, 450, 1800],
-          "rot": 180
-        },
-        {
           "id": "GF-O01",
           "room": "GF-DECK",
           "type": "outdoor_sofa",
@@ -1636,25 +1423,6 @@
           "rot": 0
         },
         {
-          "id": "GF-O06",
-          "room": "GF-UTIL",
-          "type": "utility_counter",
-          "pos": [530, 4214],
-          "size": [2400, 600, 900],
-          "rot": 270,
-          "sink": true,
-          "washer": true,
-          "note": "utensil-wash sink + washing machine"
-        },
-        {
-          "id": "GF-O08",
-          "room": "GF-UTIL",
-          "type": "drying_rack",
-          "pos": [2750, 3900],
-          "size": [1500, 600, 1500],
-          "rot": 90
-        },
-        {
           "id": "GF-O07",
           "room": "GF-PARK",
           "type": "car_model",
@@ -1666,6 +1434,245 @@
           "model": "Maruti Suzuki Baleno (2022), Grandeur Grey",
           "credit": "\"2022 Maruti Suzuki Baleno\" by BHP3D (sketchfab.com/BHP3D), CC BY 4.0",
           "note": "reversed in; the bay is 2.38 m deep inside the plot, so the nose sits over the drain and ramp"
+        },
+        {
+          "id": "GF-F01",
+          "room": "GF-DRW",
+          "type": "sofa_l",
+          "pos": [6000, 7083],
+          "size": [2600, 1500, 800],
+          "rot": 270,
+          "chaise": "+x",
+          "note": "faces the TV; chaise toward the lawn glass"
+        },
+        {
+          "id": "GF-F02",
+          "room": "GF-DRW",
+          "type": "coffee_table",
+          "pos": [7350, 7083],
+          "size": [1100, 600, 380],
+          "rot": 270
+        },
+        {
+          "id": "GF-F03",
+          "room": "GF-DRW",
+          "type": "rug",
+          "pos": [7000, 7083],
+          "size": [2800, 2400, 10],
+          "rot": 0
+        },
+        {
+          "id": "GF-F04",
+          "room": "GF-DRW",
+          "type": "tv_unit",
+          "pos": [8926, 7083],
+          "size": [1800, 400, 450],
+          "rot": 90,
+          "note": "TV + data on the west wall (electrical Rev A, A2)"
+        },
+        {
+          "id": "GF-F08",
+          "room": "GF-DRW",
+          "type": "floor_lamp",
+          "pos": [4900, 5950],
+          "size": [400, 400, 1650],
+          "rot": 0
+        },
+        {
+          "id": "GF-F09",
+          "room": "GF-DRW",
+          "type": "planter",
+          "pos": [8950, 5880],
+          "size": [450, 450, 1400],
+          "rot": 0
+        },
+        {
+          "id": "GF-F10",
+          "room": "GF-DRW",
+          "type": "planter",
+          "pos": [3600, 5950],
+          "size": [450, 450, 1400],
+          "rot": 0
+        },
+        {
+          "id": "GF-F19",
+          "room": "GF-DIN",
+          "type": "crockery_unit",
+          "pos": [3525, 8600],
+          "size": [1400, 450, 2100],
+          "rot": 270,
+          "note": "R1-B3: on the kitchen wall, freeing the niche for the basin"
+        },
+        {
+          "id": "GF-F24",
+          "room": "GF-DIN",
+          "type": "vanity",
+          "pos": [3750, 11140],
+          "size": [700, 450, 850],
+          "rot": 180,
+          "mirror": true,
+          "note": "R1-B3 hand-wash basin by the dining; drains into the GF toilet line behind the wall"
+        },
+        {
+          "id": "GF-K10",
+          "room": "GF-KIT",
+          "type": "counter",
+          "pos": [2090, 11065],
+          "size": [2100, 600, 900],
+          "rot": 180,
+          "note": "R1-B4 wash nook: double-bowl sink + drainer"
+        },
+        {
+          "id": "GF-K07",
+          "room": "GF-KIT",
+          "type": "sink",
+          "pos": [1700, 11065],
+          "size": [1000, 450, 200],
+          "rot": 180,
+          "z": 700,
+          "note": "double bowl; DW point beside it"
+        },
+        {
+          "id": "GF-K13",
+          "room": "GF-KIT",
+          "type": "wall_cabinet",
+          "pos": [2090, 11190],
+          "size": [2100, 350, 700],
+          "rot": 180,
+          "z": 1500,
+          "note": "dish rack / drainer cabinet"
+        },
+        {
+          "id": "GF-M01",
+          "room": "GF-MND",
+          "type": "study_desk",
+          "pos": [6380, 18850],
+          "size": [1400, 600, 750],
+          "rot": 270,
+          "note": "desk on the east wall: user faces east"
+        },
+        {
+          "id": "GF-M02",
+          "room": "GF-MND",
+          "type": "study_chair",
+          "pos": [6980, 18850],
+          "size": [550, 550, 900],
+          "rot": 90
+        },
+        {
+          "id": "GF-M03",
+          "room": "GF-MND",
+          "type": "sofa",
+          "pos": [6505, 17300],
+          "size": [1600, 850, 800],
+          "rot": 270,
+          "note": "2-seater facing the TV"
+        },
+        {
+          "id": "GF-M04",
+          "room": "GF-MND",
+          "type": "tv_unit",
+          "pos": [8951, 17300],
+          "size": [1500, 400, 450],
+          "rot": 90,
+          "note": "TV on the west wall"
+        },
+        {
+          "id": "GF-M05",
+          "room": "GF-MND",
+          "type": "settee",
+          "pos": [8200, 15650],
+          "size": [1800, 750, 450],
+          "rot": 0,
+          "note": "sethi / diwan with bolsters"
+        },
+        {
+          "id": "GF-M06",
+          "room": "GF-MND",
+          "type": "coffee_table",
+          "pos": [7650, 17300],
+          "size": [900, 500, 380],
+          "rot": 270
+        },
+        {
+          "id": "GF-M07",
+          "room": "GF-MND",
+          "type": "rug",
+          "pos": [7700, 17100],
+          "size": [2200, 1800, 10],
+          "rot": 0
+        },
+        {
+          "id": "GF-M08",
+          "room": "GF-MND",
+          "type": "planter",
+          "pos": [8900, 19400],
+          "size": [450, 450, 1300],
+          "rot": 0
+        },
+        {
+          "id": "GF-G08",
+          "room": "GF-GST",
+          "type": "mandir_wall",
+          "pos": [405, 18630],
+          "size": [600, 350, 1100],
+          "rot": 270,
+          "z": 800,
+          "note": "R1-B6 small mandir, NE corner; devotee faces east"
+        },
+        {
+          "id": "GF-J01",
+          "room": "GF-JAN",
+          "type": "storage_tall",
+          "pos": [6480, 14824],
+          "size": [800, 600, 2250],
+          "rot": 180,
+          "note": "full-height cupboard"
+        },
+        {
+          "id": "GF-J02",
+          "room": "GF-JAN",
+          "type": "storage_tall",
+          "pos": [7280, 14824],
+          "size": [800, 600, 1600],
+          "rot": 180,
+          "note": "cupboard under the lower soffit"
+        },
+        {
+          "id": "GF-J03",
+          "room": "GF-JAN",
+          "type": "shelf",
+          "pos": [8525, 13090],
+          "size": [1100, 450, 1400],
+          "rot": 0,
+          "note": "inverter + battery + network rack (ventilated)"
+        },
+        {
+          "id": "GF-J04",
+          "room": "GF-JAN",
+          "type": "storage_tall",
+          "pos": [8525, 14824],
+          "size": [1100, 600, 1400],
+          "rot": 180,
+          "note": "low cupboard under the landing"
+        },
+        {
+          "id": "GF-K04",
+          "room": "GF-KIT",
+          "type": "tall_unit",
+          "pos": [530, 10051],
+          "size": [800, 600, 2250],
+          "rot": 270,
+          "note": "fridge + oven tower"
+        },
+        {
+          "id": "GF-K12",
+          "room": "GF-KIT",
+          "type": "storage_tall",
+          "pos": [530, 9451],
+          "size": [400, 600, 2250],
+          "rot": 270,
+          "note": "DB-1, enclosed cabinet (electrical Rev A A3, red-line 4)"
         }
       ],
       "pergola": {
@@ -1674,15 +1681,15 @@
         "status": "proposed",
         "z_top": 3000,
         "material": "walnut-stain hardwood / black metal",
-        "posts": [[3600, 2964], [5400, 2964], [7200, 2964], [9001, 2964]],
+        "posts": [[2489, 2964], [4659, 2964], [6830, 2964], [9001, 2964]],
         "post_size": 150,
         "beam": {
-          "a": [3525, 2964],
+          "a": [2414, 2964],
           "b": [9151, 2964],
           "size": [100, 250]
         },
         "ledger": {
-          "a": [3450, 5490],
+          "a": [2339, 5490],
           "b": [9151, 5490]
         },
         "rafters": {

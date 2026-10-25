@@ -101,6 +101,18 @@ function sofaStraight(p, w, d, h, frame = 'walnut', fab = 'linen') {
   cushionsRow(p, fab, -w / 2 + 0.09, w / 2 - 0.09, 0.54, -d / 2 + 0.2, 0.4, 0.14, Math.max(1, Math.round(w / 0.7)), 0.06);
 }
 B.outdoor_sofa = (p, w, d, h) => sofaStraight(p, w, d, h, 'walnut', 'linen_white');
+B.sofa = (p, w, d, h) => sofaStraight(p, w, d, h, 'fabric_taupe', 'linen');
+// settee / diwan (sethi): low walnut platform, mattress, round bolsters at both ends, cushions against the wall
+B.settee = (p, w, d, h) => {
+  box(p, 'walnut', w, h - 0.14, d, 0, 0, 0, 0.012);
+  box(p, 'fabric_rust', w - 0.04, 0.14, d - 0.04, 0, h - 0.14, 0, 0.04);
+  for (const s of [-1, 1]) {
+    const g = new THREE.CylinderGeometry(0.11, 0.11, d - 0.12, 20);
+    g.rotateX(Math.PI / 2); g.translate(s * (w / 2 - 0.13), h + 0.1, 0.02);
+    p.push({ g, m: 'fabric_olive' });
+  }
+  cushionsRow(p, 'linen', -w / 2 + 0.3, w / 2 - 0.3, h, -d / 2 + 0.12, 0.38, 0.14, Math.max(1, Math.round((w - 0.6) / 0.5)), 0.06);
+};
 
 function armchair(p, w, d, h, fab, legsMat = 'walnut') {
   legs4(p, legsMat, w, d, 0.16, 0.08, 0.035);
@@ -333,6 +345,24 @@ B.mandir_jaali = (p, w, d, h) => {
   cyl(p, 'brass', 0.07, 0.09, 0.03, 0, 0.76, zf - 0.25, 24);           // idol base
   sphere(p, 'brass', 0.06, 0, 0.88, zf - 0.25, 1.4, 2);
   for (const sx of [-0.3, 0.3]) { cyl(p, 'brass', 0.04, 0.03, 0.03, sx, 0.76, zf - 0.12, 16); sphere(p, 'lamp', 0.012, sx, 0.8, zf - 0.12, 1.6, 1); }
+};
+// small floating wall mandir: drawer ledge, marble shelf, niche with a backlit jaali, stepped walnut crown, brass diya
+B.mandir_wall = (p, w, d, h) => {
+  box(p, 'walnut', w, 0.16, d, 0, 0, 0, 0.006);
+  box(p, 'marble_white', w + 0.02, 0.025, d + 0.01, 0, 0.16, 0.005, 0.004);
+  const nh = h - 0.38;                                   // niche height
+  box(p, 'walnut', 0.035, nh, d, -w / 2 + 0.0175, 0.185, 0, 0.004);
+  box(p, 'walnut', 0.035, nh, d, w / 2 - 0.0175, 0.185, 0, 0.004);
+  box(p, 'walnut', w, 0.015, d, 0, 0.185 + nh - 0.015, 0, 0);
+  box(p, 'walnut', w, nh, 0.015, 0, 0.185, -d / 2 + 0.0075, 0);
+  plateZ(p, 'jaali_glow', w - 0.1, nh - 0.08, 0, 0.225, -d / 2 + 0.02, 0.008);
+  for (let i = 0; i < 3; i++) {                          // stepped shikhar-like crown
+    const s = 1 - i * 0.22;
+    box(p, 'walnut', w * s, 0.065, d * (0.95 - i * 0.12), 0, 0.185 + nh + i * 0.065, -d * i * 0.04, 0.006);
+  }
+  cyl(p, 'brass', 0.035, 0.025, 0.03, -0.12, 0.185, 0.05, 16);       // diya
+  sphere(p, 'lamp', 0.012, -0.12, 0.23, 0.05, 1.5, 1);
+  box(p, 'cove', w - 0.08, 0.008, 0.015, 0, 0.185 + nh - 0.03, d / 2 - 0.03, 0);   // LED strip in the niche head
 };
 B.puja_chowki = (p, w, d, h) => { box(p, 'walnut', w, 0.03, d, 0, h - 0.03, 0, 0.008); legs4(p, 'walnut', w, d, h - 0.03, 0.04, 0.04); };
 B.electrical_panel = (p, w, d, h) => box(p, 'appliance', w, h, d, 0, 0, 0, 0.006);

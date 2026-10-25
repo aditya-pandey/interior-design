@@ -99,8 +99,6 @@ Openings vs door/window schedule
   GF-D3a     D3     height model  2400  schedule  2400     +0  OK
   GF-D3b     D3     width  model   800  schedule   800     +0  OK
   GF-D3b     D3     height model  2400  schedule  2400     +0  OK
-  GF-D3d     D3     width  model   800  schedule   800     +0  OK
-  GF-D3d     D3     height model  2400  schedule  2400     +0  OK
   GF-GL1     GL-1   width  model  2400  schedule  2400     +0  OK
   GF-GL1     GL-1   sill   model   100  schedule   100     +0  OK
   GF-GL1     GL-1   height model  2300  schedule  2300     +0  OK

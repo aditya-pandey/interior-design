@@ -343,11 +343,11 @@ All three drawings are mark-ups on the architect's R0 plan, so their positions a
 |---|---|---|
 | A1 | North is the road side, as in all three consultant drawings. The left side wall is east (party wall with GH-17); the right side is west (GH-19). This replaces the "entrance faces East" default of A-02. | done |
 | A2 | Dimensions shown in feet-inches with metres in brackets. The model stays in mm. | done |
-| B3 | Drawing room becomes a Family Lounge: TV on the west (fluted walnut) wall, dining kept, small hand-wash basin in the niche by the kitchen wall | to do |
-| B4 | No construction outside (rear setback): walled wash area removed; utensil washing in a wash nook inside the kitchen; main sink on the north side (red-line 7) | to do |
-| B5 | Mandir + Store becomes a guest lounge / study: work table on the east wall, sofa + settee, TV | to do |
-| B6 | Small mandir in the NE corner of the guest room (red-line 2) | to do |
-| B7 | Under-stair storage; electrical panel moved to an enclosed kitchen east-wall cabinet (red-line 4); inverter / battery / network bay | to do |
+| B3 | Drawing room becomes a Family Lounge. The TV sits on the west (fluted walnut) wall and the L-sofa is turned to face it, with the chaise toward the lawn glass. The crockery unit moves to the kitchen wall. A hand-wash basin with mirror goes in the niche by the dining; it drains into the GF toilet line behind. | done |
+| B4 | No construction outside: the wash yard's walls, gate and kitchen back door are removed, and GL-4 returns to its R0 position. The deck is paving only, full width, and the pergola returns to its original extent. The kitchen's north strip becomes a wash nook (double sink, drainer, dish-rack cabinet) with a vent window and exhaust into the OTS (KW-1). This puts the sink on the north side (red-line 7). The south counter becomes the prep counter; the hob stays on the east wall. | done |
+| B5 | Mandir + Store becomes a Guest Lounge / Study: a desk on the east wall (user faces east), a 2-seater sofa facing a TV on the west wall, a settee (sethi) with bolsters on the south wall, coffee table and rug. | done |
+| B6 | Small floating walnut mandir (600 × 350 × 1100 mm) in the NE corner of the guest room, on the east wall, with a backlit jaali, a brass diya and a niche light. The devotee faces east. | done |
+| B7 | Under-stair storage: cupboards cut to the stair soffit, a low cupboard under the landing, and a ventilated inverter / battery / network rack. The store door now opens out to the lobby. DB-1 moves to a 400 mm enclosed cabinet beside the fridge tower on the kitchen east wall (SE zone). | done |
 | C8 | First-floor lobby cupboard becomes a pantry counter with storage above | to do |
 | C9 | D-03 reverted: kids-room toilet back beside the stair (plumbing SS-3, red-line 15) | to do |
 | C10 | Master suite: washroom and dresser swapped, bath tub added. Conflicts with red-line 11 (new sunken floor over the kitchen, SS-2 moves): hold point for the architect | to do |
