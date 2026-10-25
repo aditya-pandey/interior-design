@@ -4,7 +4,7 @@ name: Deploy viewer to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/zen-shannon-ilvm07]
+    branches: [main]            # the live site is main; work happens on house-design-v1 and is merged in
     paths: ['gh18-house/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
