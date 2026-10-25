@@ -2,6 +2,8 @@
 
 To-scale model of GH-18, Celebrity Homes, Palam Vihar, Gurugram (client: Mr. Praveen Kumar Yadav), built from the architect's GF/FF plan, plus a proposed second floor.
 
+**New to the project (human or AI agent)? Start with `HANDOVER.md` (also `HANDOVER.pdf`).**
+
 **`house.json` is the single source of truth.** The plans, the dimension check, and later the 3D viewer and the Blender renders are all generated from it.
 
 ## Status
