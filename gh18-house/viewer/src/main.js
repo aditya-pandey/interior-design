@@ -14,6 +14,7 @@ import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
 import { buildContext } from './context.js';
+import { buildServices } from './services.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import './style.css';
@@ -108,12 +109,12 @@ const TIMES = {
 };
 
 // ------------------------------------------------------------------ state
-const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false };
+const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false, services: false };
 let M, data, walker;
 const floorGroups = {};
 const ghost = new Map();
 const pointLights = [];
-let composer, gtao, context = null;
+let composer, gtao, context = null, services = null;
 
 async function init() {
   M = await createMaterials(renderer);
@@ -146,6 +147,7 @@ async function init() {
     floorGroups[l.floor].add(pl);
     pointLights.push(pl);
   }
+  if (house.services) setupServices();
   // room labels
   for (const lb of data.labels) {
     const div = document.createElement('div');
@@ -191,17 +193,23 @@ function setupPost() {
 // ------------------------------------------------------------------ view logic
 const ORDER = { GF: 0, FF: 1, SF: 2, ROOF: 3 };
 
-function ghostOf(mat) {
-  if (!ghost.has(mat)) {
+function ghostOf(mat, opacity = 0.12) {
+  const key = mat.uuid + opacity;
+  if (!ghost.has(key)) {
     const g = mat.clone();
-    g.transparent = true; g.opacity = 0.12; g.depthWrite = false;
-    ghost.set(mat, g);
+    g.transparent = true; g.opacity = Math.min(opacity, mat.opacity); g.depthWrite = false;
+    ghost.set(key, g);
   }
-  return ghost.get(mat);
+  return ghost.get(key);
 }
+// Services view: the whole building goes to glass so the pipes read; the ground stays half there
+// for the below-ground runs and chambers, floor slabs a touch firmer than the walls.
+const SERVICE_GHOST = { site: 0.4, floor: 0.16, slabcap: 0.16, furn: 0.16 };
 
 function applyView() {
   const walk = state.mode === 'walk';
+  const svc = state.services && !walk;
+  if (svc) state.explode = 0;
   const lim = state.floor === 'ALL' ? 3 : ORDER[state.floor];
   for (const fid of FLOOR_IDS) {
     const g = floorGroups[fid];
@@ -212,22 +220,35 @@ function applyView() {
         const cat = o.userData.cat;
         if (cat === 'ceiling') o.visible = walk;
         if (cat === 'glassUpper') o.visible = walk || !state.cutaway;
-        if (cat === 'upper') {
+        if (cat === 'upper' && !svc) {
           const top = !walk && state.cutaway;
-          if (!o.userData.orig) o.userData.orig = o.material;
+          if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
           o.material = top ? ghostOf(o.userData.orig) : o.userData.orig;
           o.castShadow = !top;
         }
       }
-      if (o.userData.isLabel) o.visible = state.labels && !walk && (state.floor === fid || (state.floor === 'ALL' && fid === 'GF'));
+      if (o.userData.isLabel) o.visible = state.labels && !svc && !walk && (state.floor === fid || (state.floor === 'ALL' && fid === 'GF'));
     });
+  }
+  if (services) {
+    for (const [fid, g] of Object.entries(services.groups)) g.visible = svc && ORDER[fid] <= lim;
+    scene.traverse((o) => {
+      const cat = o.userData.cat;
+      if (!o.isMesh || !cat || (cat === 'upper' && !svc)) return;
+      if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
+      const op = SERVICE_GHOST[cat] || 0.1;
+      if (svc) o.material = Array.isArray(o.userData.orig) ? o.userData.orig.map((m) => ghostOf(m, op)) : ghostOf(o.userData.orig, op);
+      else if (cat !== 'upper') o.material = o.userData.orig;
+      if (cat !== 'upper' || svc) o.castShadow = svc ? false : o.userData.cast;
+    });
+    document.getElementById('svc-legend').hidden = !svc;
   }
   document.querySelectorAll('[data-floor]').forEach((b) => b.classList.toggle('on', b.dataset.floor === state.floor));
   document.querySelectorAll('[data-time]').forEach((b) => b.classList.toggle('on', b.dataset.time === state.time));
   const ck = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
-  ck('cutaway', state.cutaway); ck('labels', state.labels);
+  ck('cutaway', state.cutaway); ck('labels', state.labels); ck('services', state.services);
   const ex = document.getElementById('explode');
-  if (ex) ex.value = state.explode;
+  if (ex) { ex.value = state.explode; ex.disabled = svc; }
   document.body.classList.toggle('walking', walk);
 }
 
@@ -297,6 +318,7 @@ function overviewPresets() {
     { id: 'sf', name: 'Second floor — PROPOSED (cutaway)', group: 'Overview', floor: 'SF', cut: true, pos: [cx + 14, 28, cz + 16], target: [cx, 7.1, cz] },
     { id: 'front', name: `Exterior — front (${compass(0, 1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx + 6, 3.5, D + 16], target: [cx, 4.5, D - 4] },
     { id: 'rear', name: `Exterior — rear lawn (${compass(0, -1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx - 5, 5.5, -14], target: [cx, 3.5, 6] },
+    ...(house.services ? [{ id: 'services', name: 'Services — plumbing', group: 'Overview', floor: 'ALL', cut: false, svc: true, pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] }] : []),
   ];
 }
 
@@ -315,6 +337,7 @@ function goPreset(id, instant = false) {
   if (!p) return false;
   if (state.mode === 'walk') exitWalk();
   state.floor = p.floor; state.cutaway = p.cut; state.explode = p.explode || 0;
+  if (p.svc) state.services = true;
   applyView();
   flyTo(...framed(p), instant ? 0 : 1.1);
   document.getElementById('preset').value = id;
@@ -389,6 +412,7 @@ function buildUI() {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
     if (e.code === 'KeyC') { state.cutaway = !state.cutaway; applyView(); }
     if (e.code === 'KeyL') { state.labels = !state.labels; applyView(); }
+    if (e.code === 'KeyP' && services) { state.services = !state.services; applyView(); }
     if (e.code === 'KeyN') setTime(state.time === 'day' ? 'dusk' : 'day');
     if (e.code === 'Digit1') { state.floor = 'GF'; applyView(); }
     if (e.code === 'Digit2') { state.floor = 'FF'; applyView(); }
@@ -396,6 +420,44 @@ function buildUI() {
     if (e.code === 'Digit0') { state.floor = 'ALL'; applyView(); }
     if (e.code === 'KeyQ' && state.mode === 'walk') exitWalk();
   });
+}
+
+// ------------------------------------------------------------------ services (R1 plumbing)
+function setupServices() {
+  services = buildServices(house.services);
+  services.tags = [];
+  for (const [fid, g] of Object.entries(services.groups)) { g.name = 'services-' + fid; g.visible = false; scene.add(g); }
+  for (const lb of services.labels) {
+    const div = document.createElement('div');
+    div.className = 'svc-label';
+    div.innerHTML = `<b>${lb.id}</b><span> ${lb.text}</span>`;
+    services.tags.push(div);
+    const obj = new CSS2DObject(div);
+    obj.position.set(...lb.pos);
+    services.groups[lb.floor].add(obj);
+  }
+  const legend = document.getElementById('svc-legend');
+  const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+  legend.innerHTML = `<b>Plumbing — design intent</b>` + services.legend.map((k) =>
+    `<p><i class="${k.shape}" style="background:${hex(k.color)}"></i><span>${k.name}${k.more ? `<em> (${k.more})</em>` : ''}</span></p>`).join('') +
+    `<small>${house.services.plumbing.source}. Not for construction: sizing, falls and the sewer connection by the licensed plumber.</small>`;
+  document.getElementById('svc-row').hidden = false;
+  document.querySelector('.svc-key').hidden = false;
+  document.getElementById('services').addEventListener('change', (e) => { state.services = e.target.checked; applyView(); });
+}
+
+// Service tags are listed most important first (stacks, then chambers); any tag that would land on
+// one already shown is hidden for this frame, so the tags never pile up whatever the camera does.
+function declutterTags() {
+  const shown = [];
+  for (const el of services.tags) {
+    el.style.visibility = '';
+    if (el.parentElement === null || el.style.display === 'none') continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width) continue;
+    if (shown.some((q) => r.left < q.right + 3 && r.right > q.left - 3 && r.top < q.bottom + 2 && r.bottom > q.top - 2)) el.style.visibility = 'hidden';
+    else shown.push(r);
+  }
 }
 
 // glTF props (the Baleno in the parking bay): native scale across and up, stretched to the
@@ -517,6 +579,7 @@ function frame() {
   else if (!CINEMA) controls.update();
   composer.render();
   labelRenderer.render(scene, camera);
+  if (services && state.services && state.mode !== 'walk') declutterTags();
 }
 
 // ------------------------------------------------------------------ scripting API (screenshots, console)
@@ -530,6 +593,7 @@ window.viewer = {
   setCutaway: (v) => { state.cutaway = v; applyView(); },
   setExplode: (v) => { state.explode = v; applyView(); },
   setLabels: (v) => { state.labels = v; applyView(); },
+  setServices: (v) => { state.services = v; applyView(); },
   setTime,
   walkAt: (roomId, yawDeg = 180, pitchDeg = -5) => {
     enterWalk(roomId);

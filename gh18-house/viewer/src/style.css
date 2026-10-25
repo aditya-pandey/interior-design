@@ -44,6 +44,20 @@ body.walking::after { content: ''; position: absolute; left: 50%; top: 50%; widt
 .room-label.proposed { border-color: var(--prop); }
 .room-label.proposed b { color: var(--prop); }
 
+#svc-row[hidden], #svc-legend[hidden] { display: none; }
+#svc-legend { position: absolute; right: 12px; bottom: 12px; width: 236px; padding: 10px 12px; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; backdrop-filter: blur(8px); font-size: 11px; }
+#svc-legend b { display: block; margin-bottom: 6px; font-size: 12px; }
+#svc-legend p { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+#svc-legend i { flex: none; width: 22px; height: 5px; border-radius: 3px; }
+#svc-legend i.box { width: 12px; height: 12px; margin: 0 5px; border-radius: 2px; opacity: .8; }
+#svc-legend small { display: block; margin-top: 6px; color: var(--muted); font-size: 10px; }
+#svc-legend em { font-style: normal; color: var(--muted); }
+.svc-label { padding: 2px 5px; background: rgba(255,255,255,.9); border: 1px solid rgba(0,0,0,.18); border-radius: 4px;
+  font-size: 10px; white-space: nowrap; color: var(--muted); }
+.svc-label b { color: var(--ink); }
+body.walking #svc-legend { display: none; }
+
 #panel .head { display: flex; align-items: flex-start; justify-content: space-between; }
 #menu { display: none; }
 .touch { display: none; }
@@ -78,8 +92,17 @@ body.walking::after { content: ''; position: absolute; left: 50%; top: 50%; widt
   /* top of the screen, so both thumbs have the bottom half */
   #walkhud { left: 8px; right: 8px; transform: none; top: calc(8px + env(safe-area-inset-top)); bottom: auto; justify-content: space-between; }
   #walkhud button { padding: 9px 14px; }
+  #svc-legend { left: 8px; right: 8px; top: calc(8px + env(safe-area-inset-top)); bottom: auto; width: auto;
+    display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; column-gap: 6px; padding: 6px 10px; font-size: 10px; }
+  #svc-legend b { grid-column: 1 / -1; margin-bottom: 2px; font-size: 11px; }
+  #svc-legend small, #svc-legend em { display: none; }
+  #svc-legend p { gap: 5px; margin: 1px 0; }
+  #svc-legend i { width: 14px; height: 4px; }
+  #svc-legend i.box { width: 9px; height: 9px; margin: 0 2px; }
+  .svc-label { font-size: 9px; padding: 1px 4px; }
+  .svc-label span { display: none; }
 }
 
 /* film render: no UI at all */
-body.cinema #panel, body.cinema #walkhud, body.cinema .labels { display: none !important; }
+body.cinema #panel, body.cinema #walkhud, body.cinema .labels, body.cinema #svc-legend { display: none !important; }
 body.cinema.walking::after { display: none; }

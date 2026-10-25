@@ -103,9 +103,10 @@ To rebuild R1:
 
 ```bash
 python3 tools/build_r1.py && python3 tools/check_dims.py house_r1.json && python3 tools/plans.py house_r1.json plans/r1
+python3 tools/check_services.py house_r1.json   # plumbing rules -> plans/r1/services_report.txt
 ```
 
-R1 changes are listed in ASSUMPTIONS.md section E. All the extra pages come from one viewer build; locally, use `?rev=r1` (and `?art`).
+R1 changes are listed in ASSUMPTIONS.md section E. R1 also carries the services (`services.plumbing`), which the viewer draws when *Services* is ticked (key P) or the *Services — plumbing* view is picked. All the extra pages come from one viewer build; locally, use `?rev=r1` (and `?art`).
 
 ## house.json conventions
 
