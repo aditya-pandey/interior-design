@@ -13,31 +13,30 @@ This document is meant to be pasted into a new Claude (or other agent) session a
 
 ---
 
-## 0. Read this first: the ten rules
+## 0. Read this first: the nine rules
 
 1. **`house.json` and `house_r1.json` are the single sources of truth.** Plans, checks, the 3D viewer and the film are all generated from them. Never hand-edit the generated outputs (`plans/*.svg`, reports, `dist/`).
 2. **Neither JSON is hand-edited either.**
    - `house.json` is written by `tools/build_house.py`.
    - `house_r1.json` is written by `tools/build_r1.py`, which deep-copies the main model and applies tagged patch functions.
    - To change the main site, edit `build_house.py`. To change Revision R1, add or edit a patch in `build_r1.py`. Then regenerate.
-3. **Never change the main site (`/`, `/withpainting/`) unless the user explicitly asks.** The owner's Oct 2026 changes live only in R1 (`/v1/`, `/v1/withpainting/`). After any tool or viewer change, check that the main outputs come out byte-identical; `git status` should show nothing changed under `plans/` (main).
-4. **Paintings live only on the `/withpainting/` pages.** The user said: "Do not push the painting version to main URL."
-5. **Units are mm in the model.**
+3. **Never change the main site (`/`) unless the user explicitly asks.** The owner's Oct 2026 changes live only in R1 (`/v1/`). After any tool or viewer change, check that the main outputs come out byte-identical; `git status` should show nothing changed under `plans/` (main).
+4. **Units are mm in the model.**
    - R1 displays feet-inches with metres in brackets, e.g. `9'-1" (2.77 m)`. Use that style in anything the user reads about R1.
    - The main site displays metres.
-6. **Orientation differs between the versions.**
+5. **Orientation differs between the versions.**
    - Main site: the front (+y, street) faces EAST (`meta.north_vector [1,0]`; an early assumption).
    - R1: the front faces NORTH (`north_vector [0,1]`), confirmed by the user and by all consultant drawings. In R1, **east is −x** (the left, small-x side wall) and **west is +x**.
    - Vastu reasoning in R1 must use this frame.
-7. **"No compromise on quality."** The user's words. Verify every visual change by rendering it (headless Chromium, see §9) and looking at the images before you push. Re-run every check script.
-8. **Big changes are proposed first, then built step by step.**
+6. **"No compromise on quality."** The user's words. Verify every visual change by rendering it (headless Chromium, see §9) and looking at the images before you push. Re-run every check script.
+7. **Big changes are proposed first, then built step by step.**
    - The user often says "Do not implement anything. We will brainstorm first". Write a clear proposal, wait for "go ahead", then build in steps (A, B, C…), showing each one.
    - When a request is ambiguous or self-contradictory (for example "mandir near the lift in the north-east", when the lift is on the west), ask one crisp question with the options and the trade-offs.
-9. **Commit and push to `claude/zen-shannon-ilvm07`.**
+8. **Commit and push to `claude/zen-shannon-ilvm07`.**
    - Write descriptive commit messages.
    - Do not open a PR unless asked.
    - A push to this branch (or `main`) that touches `gh18-house/**` triggers the GitHub Pages deploy.
-10. **Keep the records in step with the model.**
+9. **Keep the records in step with the model.**
     - Every change gets a row in `ASSUMPTIONS.md` (sections A–E).
     - For R1, also update `CHANGE_REGISTER.md`, which maps every owner, consultant and Vastu item to what R1 does.
 
@@ -53,7 +52,6 @@ This document is meant to be pasted into a new Claude (or other agent) session a
      - first-person walk with collision, phone touch controls
      - day/dusk lighting, room labels
      - glTF props (the family's car)
-     - the family's paintings (variant pages)
      - Revision R1 with plumbing and electrical services in 3D
   3. **A 54-second cinematic film**, rendered headless from the viewer.
 - Phase 3 (Blender renders) was planned in the original brief but never started.
@@ -70,11 +68,9 @@ This document is meant to be pasted into a new Claude (or other agent) session a
    - D-02 separate wash area
    - D-03 bedroom-3 toilet on the outer wall
    - D-04 kids room and bedroom 3 swapped (study desk faces east)
-   - D-05 the family's paintings
    - D-06 the family's car
 5. **Site polish:**
    - site name, favicon set, Open Graph preview image
-   - `/withpainting/` page
    - mobile UX: bottom-sheet menu and touch joystick
    - Baleno car model, recoloured grey and optimised
 6. **Revision R1 (Oct 2026, section E):**
@@ -122,9 +118,8 @@ interior-design/                      (repo root)
       pdf_extract.py                  re-reads dimension strings from the PDF (needs pdfplumber)
       gen_textures.py                 procedural CC0 PBR textures (used because Poly Haven was blocked)
       fetch_polyhaven.py              optional: swap in real Poly Haven textures/HDRIs where internet allows
-      prep_art.py                     builds painting textures from the client's photos (photos NOT in repo)
     assets/                           served as the viewer's public dir
-      textures/ (+manifest.json)  art/ (paintings, gallery.json)  models/baleno.glb (3.7 MB)
+      textures/ (+manifest.json)  models/baleno.glb (3.7 MB)
       site/ (favicon.svg, PNG icons, og.jpg, site.webmanifest)    LICENSES.md
     viewer/                           Vite 5.4.11 + three 0.170.0 (Node 20)
       index.html  vite.config.js  package.json
@@ -158,8 +153,8 @@ python3 tools/check_services.py house_r1.json    # -> plans/r1/services_report.t
 
 # Viewer (Node 18+, 20 used in CI)
 cd viewer && npm install
-npm run dev          # http://localhost:5173  (?rev=r1 for R1, ?art for paintings, ?low for weak GPUs)
-npm run build        # dist/ with /, /withpainting/, /v1/, /v1/withpainting/
+npm run dev          # http://localhost:5173  (?rev=r1 for R1, ?low for weak GPUs)
+npm run build        # dist/ with the main site at / and R1 at /v1/
 npm run preview      # serve dist
 npm run shots        # screenshots of every preset into viewer/screenshots/
 PUBLIC_BUILD=1 npm run build   # what CI does: strips the client name/address from the JSON in the bundle
@@ -200,7 +195,7 @@ The R1 checks pass at handover:
 - `meta`: project, client, source, units, origin, axes, pdf_scale_mm_per_pt 28.53, north_vector, plot, revision (R1), display_units.
 - `floors[]`: one entry each for GF, FF and SF:
   - `walls[]`, `rooms[]`, `outdoor[]`, `furniture[]`
-  - optional `art[]` (FF paintings), `joinery[]`, `pergola` (GF), `canopy` (SF)
+  - optional `joinery[]`, `pergola` (GF), `canopy` (SF)
 
 ### 4.3 Walls and openings
 
@@ -230,18 +225,12 @@ The R1 checks pass at handover:
   - Front vector in plan: `(−sin rot, cos rot)`.
   - The user (or devotee) stands in front and faces the opposite way.
 - **Extras in use:**
-  - `variant: 'art' | 'no_art'`: the piece appears only with or without paintings.
   - `src: 'models/x.glb'` with `model_front: '-z'`: a glTF prop. The car `GF-O07`, type `car_model`, has an empty builder.
   - `on_roof: true` with `z` = roof height above the SF: drawn in the ROOF layer, and dashed "ON ROOF" on the SF plan.
   - `chaise`, `sink: true` (utility counter), `credit`.
 - **Furniture placed in an outdoor area** stands at that area's `z`.
 
-### 4.6 Paintings (`floors[].art`, FF only)
-
-- Framed canvases and a gallery wall, built from `assets/art/*` with `gallery.json`.
-- They are filtered out unless the page has art enabled.
-
-### 4.7 Services (R1 only): `services.plumbing` and `services.electrical`
+### 4.6 Services (R1 only): `services.plumbing` and `services.electrical`
 
 - **Common:** points are `[x, y, z]` with z ABSOLUTE in mm (GF FFL = 450).
 
@@ -354,7 +343,6 @@ The R1 checks pass at handover:
   - overlays: floor above, roof items dashed
   - a title block with north arrow, scale bar, legend and room-area table
 - **Units:** R1 labels are in feet-inches with metres in brackets.
-- **Variants:** plans show the `/withpainting` furniture variant.
 
 ### 5.5 `check_services.py`
 
@@ -396,14 +384,13 @@ It runs three sections and writes `plans/r1/services_report.txt`.
 
 ### 6.1 Pages and flags (`vite.config.js`)
 
-- **One build serves four pages:** `/`, `/withpainting/`, `/v1/`, `/v1/withpainting/`.
+- **One build serves the main site (`/`) and R1 (`/v1/`).**
 - **The `extraPages` plugin** copies `dist/index.html` into each subfolder and adds three things:
   1. a script that redirects to the trailing-slash URL
   2. `<base href="../">` (or `"../../"`), so assets resolve from the root and nothing is duplicated
-  3. `window.GH18_ART` and `window.GH18_REV` flags
+  3. a `window.GH18_REV` flag
 - **`main.js` picks the version from:**
   - `REV`: `window.GH18_REV`, or `?rev=r1`, or a `/v1/` path
-  - `WITH_ART`: `GH18_ART`, or `?art`, or a `/withpainting` path
 - **Why `<base>` and not copying assets:** an earlier version 404'd on assets (the preload scanner resolved relative paths against the subfolder). The static `<base>` plus slash redirect fixed it.
 - **`stripPrivate`:** with PUBLIC_BUILD=1 it removes `meta.client` and `meta.source` and sets `meta.project='GH-18'` in both JSON files.
 - **`siteUrl`:** fills `__SITE_URL__` in the Open Graph tags (from SITE_URL, or Netlify's URL).
@@ -465,7 +452,7 @@ It runs three sections and writes `plans/r1/services_report.txt`.
   - `furn`
   - `emissive`: cove, lamp, jaali_glow and downlight materials; no shadows
   - `site`: ground, street
-- **Builds:** walls with openings, frames, glass, doors (hinged doors shown open about 90°, sliders closed but walkable), room floors and ceilings (POP + cove + downlights), tile skins in wet rooms, stair, slabs, pergola, canopy, outdoor areas, furniture (`buildFurniture`), backsplashes, paintings (`buildArt`), and the lights list (rooms; the pendant; `mandir_wall` / `mandir_open` / `tulsi_platform` glow).
+- **Builds:** walls with openings, frames, glass, doors (hinged doors shown open about 90°, sliders closed but walkable), room floors and ceilings (POP + cove + downlights), tile skins in wet rooms, stair, slabs, pergola, canopy, outdoor areas, furniture (`buildFurniture`), backsplashes, and the lights list (rooms; the pendant; `mandir_wall` / `mandir_open` / `tulsi_platform` glow).
 - **Returns:** `{meshes, labels, presets, lights, models, colliders, …}`.
 
 ### 6.4 `furniture.js` conventions
@@ -478,8 +465,8 @@ It runs three sections and writes `plans/r1/services_report.txt`.
 - **Raw geometry:** push `{g, m}` with any THREE geometry.
 - **Material keys:**
   - textured: marble_beige, marble_white, walnut, walnut_fluted, plaster, plaster_ext, tile_matte_lg, tile_matte_dark, vitrified, deck_tile, granite_flamed, cobble, grass, pebbles, concrete
-  - flat: boundary, pop_white, slab_edge, black_metal, brass, steel, ceramic, linen, linen_white, fabric_taupe, fabric_olive, fabric_rust, fabric_blue, leather, rug, rug_dark, lacquer_white, lacquer_greige, terracotta, foliage, foliage_dark, mattress, appliance, car_paint, tyre, asphalt, ground, lift_steel, mirror, trunk, art_frame_*
-  - special / emissive: glass, glass_frosted, polycarbonate, cove, downlight, lamp, jaali_glow, window_lit, window_dark, art_glass
+  - flat: boundary, pop_white, slab_edge, black_metal, brass, steel, ceramic, linen, linen_white, fabric_taupe, fabric_olive, fabric_rust, fabric_blue, leather, rug, rug_dark, lacquer_white, lacquer_greige, terracotta, foliage, foliage_dark, mattress, appliance, car_paint, tyre, asphalt, ground, lift_steel, mirror, trunk
+  - special / emissive: glass, glass_frosted, polycarbonate, cove, downlight, lamp, jaali_glow, window_lit, window_dark
 - **To add a new furniture type:**
   1. Add a builder in `furniture.js`.
   2. Add a plan symbol branch in `plans.py` `furniture_symbol()` (otherwise it draws as a plain rectangle).
@@ -705,7 +692,6 @@ Hold points and open questions:
 - **The previous agent's render scripts** (`r1_walk.mjs`, `el_shot.mjs`, `svc_ui.mjs`, …) lived in a session scratchpad and are NOT in the repo. Recreate them from the snippet above, or add a `scripts/render.mjs` to the repo.
 - **Client privacy:**
   - The client's name and address are in the JSON `meta` and are stripped from public builds (PUBLIC_BUILD=1).
-  - The client's painting photos are not in the repo; only the processed textures are.
   - Don't publish personal data elsewhere.
 - **Licences:** Baleno CC BY 4.0 (credit must stay); procedural textures CC0; see `assets/LICENSES.md`.
 
