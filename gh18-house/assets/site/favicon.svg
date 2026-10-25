@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#2b2622"/>
-  <!-- GH-18 massing: ground floor, cantilevered first floor, set-back second floor + terrace rail -->
-  <path d="M9 52V37.5h33V52z" fill="#e9dfcf"/>
-  <path d="M15 35.5V22.5h41v13z" fill="#e9dfcf"/>
-  <path d="M15 20.5V12h17v8.5z" fill="#d3c6b1"/>
-  <path d="M35 17h21" stroke="#d3c6b1" stroke-width="2"/>
-  <rect x="21" y="40.5" width="17" height="11.5" fill="#ffc27a"/>
-  <rect x="29" y="40.5" width="1.5" height="11.5" fill="#e9dfcf"/>
-  <rect x="20" y="26" width="31" height="6" fill="#ffc27a"/>
-  <path d="M7 52.5h50" stroke="#e9dfcf" stroke-width="2.5" stroke-linecap="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2b2622" rx="14"/><path fill="#e9dfcf" d="M9 52V37.5h33V52z"/><path fill="#e9dfcf" d="M15 35.5V22.5h41v13z"/><path fill="#d3c6b1" d="M15 20.5V12h17v8.5z"/><path stroke="#d3c6b1" stroke-width="2" d="M35 17h21"/><rect width="17" height="11.5" x="21" y="40.5" fill="#ffc27a"/><rect width="1.5" height="11.5" x="29" y="40.5" fill="#e9dfcf"/><rect width="31" height="6" x="20" y="26" fill="#ffc27a"/><path stroke="#e9dfcf" stroke-linecap="round" stroke-width="2.5" d="M7 52.5h50"/></svg>
