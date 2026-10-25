@@ -486,15 +486,15 @@ const MAT_CATS = [
   { key: 'paint', color: 0xc5e0b4, name: 'Paint', more: 'walls; exterior lighter', keys: ['plaster', 'plaster_ext', 'boundary', 'slab_edge', 'concrete'] },
   { key: 'granite', color: 0x55575c, name: 'Granite', more: 'counters, paving, sills', keys: ['granite_flamed', 'granite_black', 'cobble'] },
   { key: 'stone', color: 0xf3eee4, name: 'White marble', more: 'vanity tops, backsplash, mandir', keys: ['marble_white'] },
-  { key: 'timber', color: 0xa76b3c, name: 'Timber & veneer', more: 'cladding, fluted walls, doors', keys: ['walnut', 'walnut_fluted'] },
-  { key: 'mdf', color: 0xf0a04b, name: 'MDF joinery', more: 'wardrobes, cabinets', keys: ['lacquer_greige', 'lacquer_white'] },
+  { key: 'timber', color: 0xa76b3c, name: 'Timber & veneer', more: 'cladding, fluted walls, doors', keys: ['walnut', 'walnut_fluted', 'lacquer_white#door'] },
+  { key: 'mdf', color: 0xf0a04b, name: 'MDF joinery', more: 'wardrobes, cabinets', keys: ['lacquer_greige#joinery', 'lacquer_white#joinery'] },
   { key: 'pop', color: 0xfbfbfb, name: 'POP ceilings', more: 'seen in walk mode', keys: ['pop_white'] },
 ];
 const MAT_OF = Object.fromEntries(MAT_CATS.flatMap((c) => c.keys.map((k) => [k, c])));
 const overlays = new Map();
 function overlayOf(mat, key, cat) {
   if (Array.isArray(mat)) return mat.map((m) => overlayOf(m, key, cat));
-  if (['emissive', 'glass', 'glassUpper', 'site'].includes(cat)) return mat;
+  if (['emissive', 'glass', 'glassUpper', 'site'].includes(cat) || key === 'model') return mat;   // glTF props (the car) keep their own look
   const c = MAT_OF[key];
   const id = c ? c.key + (key === 'plaster_ext' || key === 'boundary' ? '_ext' : '') : 'other';
   if (!overlays.has(id)) {

@@ -128,6 +128,11 @@ function normalise(g) {
 
 // ------------------------------------------------------------------ batching
 
+// built-in joinery (the MDF / ply items of the materials schedule): its lacquer parts batch separately so the
+// Materials view can tell a wardrobe from a lacquered appliance or door
+const JOINERY = new Set(['wardrobe', 'storage_tall', 'tall_unit', 'crockery_unit', 'storage_bench', 'wall_cabinet', 'counter', 'tv_unit',
+  'shoe_console', 'dresser', 'dressing_table', 'study_desk', 'desk', 'vanity', 'utility_counter', 'ironing_station']);
+
 class Batch {
   constructor() { this.map = new Map(); }
   add(floor, cat, mat, g) {
@@ -143,7 +148,7 @@ class Batch {
       const geo = mergeGeometries(list, false);
       if (!geo) { console.warn('merge failed', key); continue; }
       geo.computeBoundingSphere();
-      const material = M[mat] || M.plaster;
+      const material = M[mat.split('#')[0]] || M.plaster;     // 'key#tag': same material, own batch (Materials view)
       const mesh = new THREE.Mesh(geo, material);
       const transparent = material.transparent || cat === 'glass';
       mesh.castShadow = !transparent && !['ceiling', 'emissive', 'floor'].includes(cat);
@@ -229,9 +234,10 @@ export function buildHouse(house, M) {
       const outdoor = (fl.outdoor || []).find((a) => a.id === f.room);
       const baseY = outdoor ? mm(outdoor.z || 0) : fy;
       if (f.src) models.push({ floor: fid, src: f.src, front: f.model_front || '+z', pos: f.pos, rot: f.rot || 0, baseY, size: f.size });
+      const joinery = JOINERY.has(f.type);
       for (const part of buildFurniture(f, baseY)) {
         const cat = part.m === 'glass' || part.m === 'glass_frosted' ? 'glass' : ['cove', 'lamp', 'jaali_glow', 'downlight'].includes(part.m) ? 'emissive' : 'furn';
-        batch.add(fid, cat, part.m, part.g);
+        batch.add(fid, cat, joinery && /^lacquer/.test(part.m) ? part.m + '#joinery' : part.m, part.g);
       }
       if (!NO_COLLIDE_FURN.has(f.type) && f.size[2] > 300 && !(f.z > 900)) {
         colliders.push({ poly: furnitureCorners(f), y0: baseY + mm(f.z || 0), y1: baseY + mm(f.z || 0) + mm(f.size[2]) });
@@ -410,12 +416,12 @@ function buildOpening(batch, colliders, surfaces, fid, w, o, y0, y1, fy) {
   // jamb lining and head casing (hinged doors, glass doors, pivot, gates)
   const glassy = type === 'glass_door' || type === 'pivot_door' || type === 'gate';
   if (!glassy) {
-    const lin = o.mark === 'D1' ? 'walnut' : 'lacquer_white';
+    const lin = o.mark === 'D1' ? 'walnut' : 'lacquer_white#door';
     addStrip(batch, fid, 'struct', lin, w, t0, t0 + 25, y0, head, T + 20, 0, fy);
     addStrip(batch, fid, 'struct', lin, w, t1 - 25, t1, y0, head, T + 20, 0, fy);
     addStrip(batch, fid, 'struct', lin, w, t0, t1, head - 0.025, head, T + 20, 0, fy);
   }
-  const leafMat = glassy ? 'glass' : o.mark === 'D1' ? 'walnut' : 'lacquer_white';
+  const leafMat = glassy ? 'glass' : o.mark === 'D1' ? 'walnut' : 'lacquer_white#door';
   const leafT = glassy ? 0.012 : 0.04;
   const s = o.swing ? swingSign(w, o.swing) : 1;
   const leaves = o.hinge === 'both' || o.leaves === 2 ? [[t0, (t0 + t1) / 2], [t1, (t0 + t1) / 2]]
