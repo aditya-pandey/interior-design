@@ -243,9 +243,9 @@ B.crockery_unit = (p, w, d, h) => {
   box(p, 'glass_frosted', w - 0.06, h - 1.4, 0.01, 0, 1.38, d / 2 + 0.005, 0);
   box(p, 'cove', w - 0.1, 0.01, 0.03, 0, 1.34, 0, 0);
 };
-B.counter = (p, w, d, h) => {
+B.counter = (p, w, d, h, f) => {
   cabinet(p, w, d - 0.02, h - 0.03, 'lacquer_greige', 0, 0.6, 0.1);
-  box(p, 'marble_white', w, 0.03, d, 0, h - 0.03, 0.01, 0.004);
+  box(p, (f && f.top) || 'marble_white', w, 0.03, d, 0, h - 0.03, 0.01, 0.004);
 };
 B.utility_counter = (p, w, d, h) => {
   cabinet(p, w, d - 0.02, h - 0.03, 'lacquer_white', 0, 0.6, 0.1);

@@ -64,6 +64,7 @@ export async function createMaterials(renderer) {
   textured('concrete', { normal: 0.4 });
   textured('boundary', { color: 0xd9d4cc, normal: 0.4 }, 'plaster');
 
+  textured('granite_black', { color: 0x3a3a3c, roughness: 0.35, normal: 0.15 }, 'granite_flamed');   // polished black counter tops (R1-F16)
   flat('pop_white', 0xfbfaf6, { roughness: 0.95, side: THREE.DoubleSide });
   flat('slab_edge', 0xece7df, { roughness: 0.9 });
   flat('black_metal', 0x1c1c1c, { roughness: 0.45, metalness: 0.6 });

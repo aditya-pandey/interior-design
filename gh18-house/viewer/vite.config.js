@@ -57,6 +57,12 @@ const extraPages = {
       fs.mkdirSync(path.join(dist, pg.dir), { recursive: true });
       fs.writeFileSync(path.join(dist, pg.dir, 'index.html'), html);
     }
+    // R1 materials schedule (tools/boq.py), linked from the Materials view's legend
+    fs.mkdirSync(path.join(dist, 'files'), { recursive: true });
+    for (const f of ['GH-18_R1_materials.pdf', 'GH-18_R1_materials.xlsx']) {
+      const src = path.resolve(__dirname, '../plans/r1', f);
+      if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dist, 'files', f));
+    }
   },
 };
 

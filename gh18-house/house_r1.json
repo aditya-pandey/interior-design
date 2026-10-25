@@ -1199,7 +1199,8 @@
           "pos": [1240, 5965],
           "size": [2020, 600, 900],
           "rot": 0,
-          "note": "rear run: prep counter (R1-B4: sink moved to the north wash nook)"
+          "note": "rear run: prep counter (R1-B4: sink moved to the north wash nook)",
+          "top": "granite_black"
         },
         {
           "id": "GF-K02",
@@ -1208,7 +1209,8 @@
           "pos": [2850, 7800],
           "size": [2600, 600, 900],
           "rot": 90,
-          "note": "right run on the new kitchen wall"
+          "note": "right run on the new kitchen wall",
+          "top": "granite_black"
         },
         {
           "id": "GF-K03",
@@ -1217,7 +1219,8 @@
           "pos": [530, 7757],
           "size": [2986, 600, 900],
           "rot": 270,
-          "note": "left run 4185 incl. tall units"
+          "note": "left run 4185 incl. tall units",
+          "top": "granite_black"
         },
         {
           "id": "GF-K05",
@@ -1520,7 +1523,8 @@
           "pos": [2090, 11065],
           "size": [2100, 600, 900],
           "rot": 180,
-          "note": "R1-B4 wash nook: double-bowl sink + drainer"
+          "note": "R1-B4 wash nook: double-bowl sink + drainer",
+          "top": "granite_black"
         },
         {
           "id": "GF-K07",
@@ -2708,7 +2712,8 @@
           "pos": [6200, 11149],
           "size": [1500, 600, 900],
           "rot": 0,
-          "note": "R1-C8 pantry counter (kettle / microwave points)"
+          "note": "R1-C8 pantry counter (kettle / microwave points)",
+          "top": "granite_black"
         },
         {
           "id": "FF-L05",

@@ -41,6 +41,7 @@
     <label class="row">Explode <input id="explode" type="range" min="0" max="1" step="0.01" value="0" /></label>
     <label class="row check"><input id="cutaway" type="checkbox" /> Cutaway (walls above 1.2 m)</label>
     <label class="row check"><input id="labels" type="checkbox" /> Room names &amp; sizes</label>
+    <label class="row check" id="mat-row" hidden><input id="materials" type="checkbox" /> Materials &amp; quantities</label>
     <div class="row seg" id="svc-row" role="group" aria-label="Services in 3D" hidden>
       <span>Services</span>
       <button data-svc="">Off</button><button data-svc="plumbing" hidden>Plumbing</button><button data-svc="electrical" hidden>Electrical</button>
@@ -50,7 +51,7 @@
       <button data-time="day">Day</button><button data-time="dusk">Dusk</button>
     </div>
     <button id="walk" class="primary">Walk (first person)</button>
-    <p class="hint"><span class="desk">Orbit: drag · pan: right-drag · zoom: scroll<br />Keys: 0–3 floors · C cutaway · L labels<span class="svc-key" hidden> · P plumbing · E electrical</span> · N day/dusk<br /></span><span class="touch">Drag to orbit · pinch to zoom · two-finger drag to pan<br /></span>Second floor is <b class="prop">PROPOSED</b>.</p>
+    <p class="hint"><span class="desk">Orbit: drag · pan: right-drag · zoom: scroll<br />Keys: 0–3 floors · C cutaway · L labels<span class="svc-key" hidden> · P plumbing · E electrical</span><span class="mat-key" hidden> · M materials</span> · N day/dusk<br /></span><span class="touch">Drag to orbit · pinch to zoom · two-finger drag to pan<br /></span>Second floor is <b class="prop">PROPOSED</b>.</p>
       <p class="credit">Car: <a href="https://sketchfab.com/3d-models/2022-maruti-suzuki-baleno-438c1b0c1a4e4732aa1a3cbb505d19e5" target="_blank" rel="noopener">“2022 Maruti Suzuki Baleno”</a> by <a href="https://sketchfab.com/BHP3D" target="_blank" rel="noopener">BHP3D</a>, <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> (recoloured)</p>
     </div>
   </aside>

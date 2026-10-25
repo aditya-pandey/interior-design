@@ -10,6 +10,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import houseMain from '../../house.json';
 import houseR1 from '../../house_r1.json';
+import boqR1 from '../../boq_r1.json';
 import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
@@ -109,12 +110,12 @@ const TIMES = {
 };
 
 // ------------------------------------------------------------------ state
-const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false, services: null };   // services: null | 'plumbing' | 'electrical'
+const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false, services: null, materials: false };   // services: null | 'plumbing' | 'electrical'
 let M, data, walker;
 const floorGroups = {};
 const ghost = new Map();
 const pointLights = [];
-let composer, gtao, context = null, services = null;
+let composer, gtao, context = null, services = null, matView = null;
 
 async function init() {
   M = await createMaterials(renderer);
@@ -148,6 +149,7 @@ async function init() {
     pointLights.push(pl);
   }
   if (house.services) setupServices();
+  if (REV === 'r1') setupMaterials();
   // room labels
   for (const lb of data.labels) {
     const div = document.createElement('div');
@@ -209,6 +211,7 @@ const SERVICE_GHOST = { site: 0.4, floor: 0.16, slabcap: 0.16, furn: 0.16 };
 function applyView() {
   const walk = state.mode === 'walk';
   const svc = !!state.services && !walk;
+  const mats = !!state.materials && !!matView && !walk;
   if (svc) state.explode = 0;
   const lim = state.floor === 'ALL' ? 3 : ORDER[state.floor];
   for (const fid of FLOOR_IDS) {
@@ -220,14 +223,10 @@ function applyView() {
         const cat = o.userData.cat;
         if (cat === 'ceiling') o.visible = walk;
         if (cat === 'glassUpper') o.visible = walk || !state.cutaway;
-        if (cat === 'upper' && !svc) {
-          const top = !walk && state.cutaway;
-          if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
-          o.material = top ? ghostOf(o.userData.orig) : o.userData.orig;
-          o.castShadow = !top;
-        }
       }
-      if (o.userData.isLabel) o.visible = state.labels && !svc && !walk && (state.floor === fid || (state.floor === 'ALL' && fid === 'GF'));
+      const here = state.floor === fid || (state.floor === 'ALL' && fid === 'GF');
+      if (o.userData.isLabel) o.visible = state.labels && !svc && !mats && !walk && here;
+      if (o.userData.isMatLabel) o.visible = mats && here;
     });
   }
   if (services) {
@@ -235,24 +234,28 @@ function applyView() {
       // one floor at a time when a floor is picked (the roof goes with the SF), all of them otherwise
       for (const [fid, g] of Object.entries(layer.groups)) g.visible = svc && state.services === name && (state.floor === 'ALL' || ORDER[fid] === lim || (fid === 'ROOF' && lim === 2));
     }
-    scene.traverse((o) => {
-      const cat = o.userData.cat;
-      if (!o.isMesh || !cat || (cat === 'upper' && !svc)) return;
-      if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
-      const op = SERVICE_GHOST[cat] || 0.1;
-      if (svc) o.material = Array.isArray(o.userData.orig) ? o.userData.orig.map((m) => ghostOf(m, op)) : ghostOf(o.userData.orig, op);
-      else if (cat !== 'upper') o.material = o.userData.orig;
-      if (cat !== 'upper' || svc) o.castShadow = svc ? false : o.userData.cast;
-    });
-    const legend = document.getElementById('svc-legend');
-    legend.hidden = !svc;
-    if (svc) legend.innerHTML = services[state.services].legendHTML;
     document.querySelectorAll('[data-svc]').forEach((b) => b.classList.toggle('on', b.dataset.svc === (state.services || '')));
   }
+  // every building mesh: its own material, or the Materials-view colour; then ghosted for the services
+  // view (whole building) or the cutaway (walls above 1.2 m)
+  scene.traverse((o) => {
+    const cat = o.userData.cat;
+    if (!o.isMesh || !cat) return;
+    if (!o.userData.orig) { o.userData.orig = o.material; o.userData.cast = o.castShadow; }
+    const base = mats ? overlayOf(o.userData.orig, o.userData.mat, cat) : o.userData.orig;
+    const op = svc ? SERVICE_GHOST[cat] || 0.1 : cat === 'upper' && !walk && state.cutaway ? 0.12 : null;
+    o.material = op === null ? base : Array.isArray(base) ? base.map((m) => ghostOf(m, op)) : ghostOf(base, op);
+    o.castShadow = op === null ? o.userData.cast : false;
+  });
+  const legend = document.getElementById('svc-legend');
+  legend.hidden = !(svc || mats);
+  if (svc) legend.innerHTML = services[state.services].legendHTML;
+  else if (mats) legend.innerHTML = matView.legendHTML;
+  document.body.classList.toggle('materials', mats);
   document.querySelectorAll('[data-floor]').forEach((b) => b.classList.toggle('on', b.dataset.floor === state.floor));
   document.querySelectorAll('[data-time]').forEach((b) => b.classList.toggle('on', b.dataset.time === state.time));
   const ck = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
-  ck('cutaway', state.cutaway); ck('labels', state.labels);
+  ck('cutaway', state.cutaway); ck('labels', state.labels); ck('materials', state.materials);
   const ex = document.getElementById('explode');
   if (ex) { ex.value = state.explode; ex.disabled = svc; }
   document.body.classList.toggle('walking', walk);
@@ -328,6 +331,10 @@ function overviewPresets() {
       { id: 'services', name: 'Services — plumbing', group: 'Overview', floor: 'ALL', cut: false, svc: 'plumbing', pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] },
       { id: 'electrical', name: 'Services — electrical', group: 'Overview', floor: 'ALL', cut: false, svc: 'electrical', pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] },
     ] : []),
+    ...(REV === 'r1' ? [
+      { id: 'materials', name: 'Materials — ground floor', group: 'Overview', floor: 'GF', cut: true, mats: true, pos: [cx + 14, 22, cz + 16], target: [cx, 0.5, cz] },
+      { id: 'materials-ff', name: 'Materials — first floor', group: 'Overview', floor: 'FF', cut: true, mats: true, pos: [cx + 14, 25, cz + 16], target: [cx, 3.8, cz] },
+    ] : []),
   ];
 }
 
@@ -346,7 +353,8 @@ function goPreset(id, instant = false) {
   if (!p) return false;
   if (state.mode === 'walk') exitWalk();
   state.floor = p.floor; state.cutaway = p.cut; state.explode = p.explode || 0;
-  if (p.svc) state.services = p.svc;
+  if (p.svc) { state.services = p.svc; state.materials = false; }
+  if (p.mats) { state.materials = true; state.services = null; }
   applyView();
   flyTo(...framed(p), instant ? 0 : 1.1);
   document.getElementById('preset').value = id;
@@ -421,8 +429,9 @@ function buildUI() {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
     if (e.code === 'KeyC') { state.cutaway = !state.cutaway; applyView(); }
     if (e.code === 'KeyL') { state.labels = !state.labels; applyView(); }
-    if (e.code === 'KeyP' && services) { state.services = state.services === 'plumbing' ? null : 'plumbing'; applyView(); }
-    if (e.code === 'KeyE' && services && state.mode !== 'walk') { state.services = state.services === 'electrical' ? null : 'electrical'; applyView(); }
+    if (e.code === 'KeyP' && services) { state.services = state.services === 'plumbing' ? null : 'plumbing'; state.materials = false; applyView(); }
+    if (e.code === 'KeyE' && services && state.mode !== 'walk') { state.services = state.services === 'electrical' ? null : 'electrical'; state.materials = false; applyView(); }
+    if (e.code === 'KeyM' && matView) { state.materials = !state.materials; state.services = null; applyView(); }
     if (e.code === 'KeyN') setTime(state.time === 'day' ? 'dusk' : 'day');
     if (e.code === 'Digit1') { state.floor = 'GF'; applyView(); }
     if (e.code === 'Digit2') { state.floor = 'FF'; applyView(); }
@@ -465,14 +474,97 @@ function setupServices() {
   }
   document.getElementById('svc-row').hidden = false;
   document.querySelector('.svc-key').hidden = false;
-  document.querySelectorAll('[data-svc]').forEach((b) => b.addEventListener('click', () => { state.services = b.dataset.svc || null; applyView(); }));
+  document.querySelectorAll('[data-svc]').forEach((b) => b.addEventListener('click', () => { state.services = b.dataset.svc || null; if (state.services) state.materials = false; applyView(); }));
+}
+
+// ------------------------------------------------------------------ Materials view (R1): surfaces coloured by material, quantities per room
+// Colours by the material key of each merged mesh; quantities come from boq_r1.json (tools/boq.py).
+const MAT_CATS = [
+  { key: 'marble', color: 0xe3cf9f, name: 'Italian marble floors', keys: ['marble_beige'] },
+  { key: 'tiles', color: 0x7fb0dc, name: 'Tiles', more: 'washrooms, service rooms', keys: ['tile_matte_lg', 'tile_matte_dark', 'vitrified'] },
+  { key: 'deck', color: 0x79b19c, name: 'Deck tiles', more: 'balcony, terraces, deck', keys: ['deck_tile'] },
+  { key: 'paint', color: 0xc5e0b4, name: 'Paint', more: 'walls; exterior lighter', keys: ['plaster', 'plaster_ext', 'boundary', 'slab_edge', 'concrete'] },
+  { key: 'granite', color: 0x55575c, name: 'Granite', more: 'counters, paving, sills', keys: ['granite_flamed', 'granite_black', 'cobble'] },
+  { key: 'stone', color: 0xf3eee4, name: 'White marble', more: 'vanity tops, backsplash, mandir', keys: ['marble_white'] },
+  { key: 'timber', color: 0xa76b3c, name: 'Timber & veneer', more: 'cladding, fluted walls, doors', keys: ['walnut', 'walnut_fluted'] },
+  { key: 'mdf', color: 0xf0a04b, name: 'MDF joinery', more: 'wardrobes, cabinets', keys: ['lacquer_greige', 'lacquer_white'] },
+  { key: 'pop', color: 0xfbfbfb, name: 'POP ceilings', more: 'seen in walk mode', keys: ['pop_white'] },
+];
+const MAT_OF = Object.fromEntries(MAT_CATS.flatMap((c) => c.keys.map((k) => [k, c])));
+const overlays = new Map();
+function overlayOf(mat, key, cat) {
+  if (Array.isArray(mat)) return mat.map((m) => overlayOf(m, key, cat));
+  if (['emissive', 'glass', 'glassUpper', 'site'].includes(cat)) return mat;
+  const c = MAT_OF[key];
+  const id = c ? c.key + (key === 'plaster_ext' || key === 'boundary' ? '_ext' : '') : 'other';
+  if (!overlays.has(id)) {
+    const color = c ? (id === 'paint_ext' ? 0xe1eed8 : c.color) : 0xd2cfc9;
+    overlays.set(id, new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0, side: mat.side }));
+  }
+  return overlays.get(id);
+}
+
+function setupMaterials() {
+  const rooms = boqR1.rooms || {};
+  const sqft = (m2) => Math.round(m2 * 10.7639).toLocaleString('en-IN');
+  const tags = [];
+  for (const fl of house.floors) {
+    for (const r of fl.rooms) {
+      const q = rooms[r.id];
+      if (!q || q.area_m2 === undefined) continue;
+      const lines = [];
+      if (q.floor_optA) lines.push(`Floor ${sqft(q.area_m2)} sq ft: marble <em>or ${q.floor_optB.boxes} boxes tiles</em>`);
+      else if (q.floor_tile) lines.push(`Floor ${sqft(q.area_m2)} sq ft: tiles, ${q.floor_tile.boxes} boxes`);
+      else if (q.floor_granite_m2) lines.push(`Floor ${sqft(q.area_m2)} sq ft: granite`);
+      else lines.push(`Floor ${sqft(q.area_m2)} sq ft`);
+      const w = [];
+      if (q.paint_walls_m2) w.push(`paint ${sqft(q.paint_walls_m2)} sq ft`);
+      if (q.wall_tile) w.push(`tiles ${sqft(q.wall_tile.net_m2)} sq ft (${q.wall_tile.boxes} boxes)`);
+      if (q.wall_cladding_m2) w.push(`veneer ${sqft(q.wall_cladding_m2)} sq ft`);
+      if (q.fluted_m2) w.push(`fluted ${sqft(q.fluted_m2)} sq ft`);
+      if (q.backsplash_m2) w.push(`backsplash ${sqft(q.backsplash_m2)} sq ft`);
+      if (w.length) lines.push('Walls: ' + w.join(' · '));
+      const c = [];
+      if (q.pop) c.push(`POP ${sqft(q.pop.area_m2)} sq ft` + (q.pop.cove_m ? ` · cove ${Math.round(q.pop.cove_m * 3.28084)} ft` : ''));
+      const L = q.lights || {};
+      if (L.downlights) c.push(`${L.downlights} downlights`);
+      if (L.fan) c.push(`${L.fan} fan`);
+      if (c.length) lines.push(c.join(' · '));
+      const div = document.createElement('div');
+      div.className = 'mat-label';
+      div.innerHTML = `<b>${r.name}</b>` + lines.map((t) => `<span>${t}</span>`).join('');
+      const xs = r.polygon.map((p) => p[0]), ys = r.polygon.map((p) => p[1]);
+      const at = r.label_at || [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+      const obj = new CSS2DObject(div);
+      obj.position.set(at[0] / 1000, house.levels[fl.id].ffl / 1000 + 0.05, at[1] / 1000);
+      obj.userData.isMatLabel = true;
+      obj.visible = false;
+      floorGroups[fl.id].add(obj);
+      tags.push(div);
+    }
+  }
+  tags.sort((a, b) => b.textContent.length - a.textContent.length);
+  const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+  const sum = Object.fromEntries((boqR1.summary || []).map(([k, v]) => [k.trim(), v]));
+  matView = {
+    tags,
+    legendHTML: '<b>Materials &amp; quantities</b>' + MAT_CATS.map((k) =>
+      `<p><i class="box" style="background:${hex(k.color)}"></i><span>${k.name}${k.more ? `<em> (${k.more})</em>` : ''}</span></p>`).join('') +
+      `<small><span class="sum">${['Living floors', '2. Pipes', '3. Wires', '9. Lights'].filter((k) => sum[k]).map((k) => `<b class="k">${k.replace(/^\d\. /, '')}:</b> ${sum[k]}`).join('<br>')}` +
+      '<br>Pipes and wires are drawn in the Services views. </span>Full schedule: <a href="files/GH-18_R1_materials.pdf" target="_blank" rel="noopener">PDF</a> · ' +
+      '<a href="files/GH-18_R1_materials.xlsx">Excel</a>. Quantities only, design stage.</small>',
+  };
+  document.getElementById('mat-row').hidden = false;
+  document.querySelector('.mat-key').hidden = false;
+  document.getElementById('materials').addEventListener('change', (e) => { state.materials = e.target.checked; if (state.materials) state.services = null; applyView(); });
 }
 
 // Service tags are listed most important first (stacks, then chambers); any tag that would land on
 // one already shown is hidden for this frame, so the tags never pile up whatever the camera does.
 function declutterTags() {
   const shown = [];
-  for (const el of services[state.services].tags) {
+  const tags = state.materials && matView ? matView.tags : services[state.services].tags;
+  for (const el of tags) {
     el.style.visibility = '';
     if (el.parentElement === null || el.style.display === 'none') continue;
     const r = el.getBoundingClientRect();
@@ -601,7 +693,7 @@ function frame() {
   else if (!CINEMA) controls.update();
   composer.render();
   labelRenderer.render(scene, camera);
-  if (services && state.services && state.mode !== 'walk') declutterTags();
+  if (((services && state.services) || (matView && state.materials)) && state.mode !== 'walk') declutterTags();
 }
 
 // ------------------------------------------------------------------ scripting API (screenshots, console)
@@ -615,7 +707,8 @@ window.viewer = {
   setCutaway: (v) => { state.cutaway = v; applyView(); },
   setExplode: (v) => { state.explode = v; applyView(); },
   setLabels: (v) => { state.labels = v; applyView(); },
-  setServices: (v) => { state.services = v === true ? 'plumbing' : v || null; applyView(); },
+  setServices: (v) => { state.services = v === true ? 'plumbing' : v || null; if (state.services) state.materials = false; applyView(); },
+  setMaterials: (v) => { state.materials = !!v; if (v) state.services = null; applyView(); },
   setTime,
   walkAt: (roomId, yawDeg = 180, pitchDeg = -5) => {
     enterWalk(roomId);

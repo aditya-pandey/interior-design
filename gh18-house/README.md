@@ -106,6 +106,8 @@ To rebuild R1:
 ```bash
 python3 tools/build_r1.py && python3 tools/check_dims.py house_r1.json && python3 tools/plans.py house_r1.json plans/r1
 python3 tools/check_services.py house_r1.json   # plumbing + electrical rules, schedules -> plans/r1/services_report.txt
+python3 tools/boq.py house_r1.json              # materials and quantities -> boq_r1.json, plans/r1/GH-18_R1_materials.xlsx, materials.html
+(cd viewer && node scripts/html2pdf.mjs ../plans/r1/materials.html ../plans/r1/GH-18_R1_materials.pdf)
 ```
 
 R1 changes are listed in ASSUMPTIONS.md section E; `CHANGE_REGISTER.md` maps every owner item and consultant cloud to them. R1 also carries the services (`services.plumbing`, `services.electrical`). The viewer draws them under *Services: Plumbing / Electrical* (keys P / E) or the *Services —* views. All the extra pages come from one viewer build; locally, use `?rev=r1` (and `?art`).

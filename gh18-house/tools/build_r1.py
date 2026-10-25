@@ -783,8 +783,18 @@ def e13_electrical(h):
         points=pts, circuits=circuits, routes=routes, submains=sub, refrigerant=ref)
 
 
+def f16_materials(h):
+    """F16 materials (owner, Oct 2026: tiles, pipes, wires, paint, POP, granite, timber, MDF in wardrobes, lights).
+    Quantities come from tools/boq.py; the only model change is the counter tops: kitchen, wash nook and pantry
+    tops are 20 mm black granite (the schedule's granite), shown as such in the 3D. Vanity tops stay white marble."""
+    for fl in h['floors']:
+        for f in fl['furniture']:
+            if f['type'] == 'counter' and f['room'] in ('GF-KIT', 'FF-LOB'):
+                f['top'] = 'granite_black'
+
+
 PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
-           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, b15_tulsi, e12_plumbing, e13_electrical]
+           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, b15_tulsi, e12_plumbing, e13_electrical, f16_materials]
 
 
 def build():
