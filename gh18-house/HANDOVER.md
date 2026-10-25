@@ -4,14 +4,16 @@
 **Client / owner:** Mr. Praveen Kumar Yadav. The person giving instructions in the build sessions is the owner's side (the repository owner, `aditya-pandey`).
 **Repository:** `github.com/aditya-pandey/interior-design`.
 **Branches:**
-- `main` is the live branch. GitHub Pages deploys from it.
+- `main` is the repository's default branch and the live branch. GitHub Pages and Netlify both deploy from it.
 - `house-design-v1` is the working branch. Changes are made there and merged into `main` to go live.
-- All history up to this handover is on both. The earlier auto-named branch `claude/zen-shannon-ilvm07` was renamed to `house-design-v1`.
+- All history up to this handover is on both. The first Claude session worked on an auto-named branch, `claude/zen-shannon-ilvm07`, which was then the default. It was renamed to `house-design-v1` and `main` was created from it.
+- The old branch is identical to `main`. The owner is deleting it in the GitHub UI, because the agent's git connection could not delete it.
+- An open Imgbot pull request (image compression) targeted the old branch and closes with it. It isn't needed.
 **Live sites:**
 - GitHub Pages: https://aditya-pandey.github.io/interior-design/
-- Netlify, from the same repository. Netlify sometimes lags behind GitHub Pages.
+- Netlify, from the same repository's `main` branch (production branch set to `main`). Netlify sometimes lags behind GitHub Pages.
 
-**State at handover (25 Oct 2026):** everything described here is committed and pushed. The last commit is `R1 B15: tulsi moved to the back garden`. All automated checks pass.
+**State at handover (25 Oct 2026):** everything described here is committed and pushed, on both `main` and `house-design-v1`. The last model change is `R1 B15: tulsi moved to the back garden`; the commits after it are this handover and the branch setup. All automated checks pass, and GitHub Pages deployed successfully from `main`.
 
 This document is meant to be pasted into a new Claude (or other agent) session as the opening context. It tries to carry everything the previous sessions learned: the goal, the data model, the code, the design decisions and why they were made, the user's preferences, the traps, and the open items. If anything here disagrees with the code, trust the code and fix this document.
 
@@ -67,6 +69,7 @@ This document is meant to be pasted into a new Claude (or other agent) session a
 3. **Deployment:**
    - Netlify initially failed because the app is not at the repo root; `netlify.toml` fixed this.
    - GitHub Pages via an Actions workflow.
+   - At the end, the branches were reorganised: `main` became the live default branch and `house-design-v1` the working branch (see the top of this document and §9).
 4. **Client feedback round 1** (section D, main site):
    - D-01 closed kitchen
    - D-02 separate wash area
@@ -693,6 +696,10 @@ Hold points and open questions:
   - deploys can't be checked from the sandbox (use the GitHub Actions run list instead)
 - **Don't use `pkill -f` with broad patterns.** It killed the agent's own shell once. Kill by PID.
 - **Netlify vs GitHub Pages:** both build from the repo's `main` branch. GitHub Pages deploys on each push to `main` (Actions). If the user sees an older version on Netlify, ask them to check Netlify → Deploys, use "Clear cache and deploy site" if needed, and hard-refresh.
+- **Deploying from a new branch:**
+  - **Path filter:** the workflow only runs when files under `gh18-house/**` (or the workflow itself) change. A branch pushed with no new changes (e.g. a freshly created `main` identical to the default) triggers nothing. Start it by hand with the workflow's *Run workflow* button (`workflow_dispatch`).
+  - **Environment rule:** the `github-pages` environment has a deployment-branch rule. When `main` was created, its deploy job was rejected within a second, with no log, until the owner allowed `main` under Settings → Environments → `github-pages` (and made `main` the default branch). If a deploy job fails instantly with no log, check that rule first.
+- **Branch housekeeping from the agent sandbox:** pushing new branches works. Deleting a remote branch was refused (the connection dropped twice), so ask the user to delete branches in the GitHub UI (Branches page → bin icon).
 - **The previous agent's render scripts** (`r1_walk.mjs`, `el_shot.mjs`, `svc_ui.mjs`, …) lived in a session scratchpad and are NOT in the repo. Recreate them from the snippet above, or add a `scripts/render.mjs` to the repo.
 - **Client privacy:**
   - The client's name and address are in the JSON `meta` and are stripped from public builds (PUBLIC_BUILD=1).
