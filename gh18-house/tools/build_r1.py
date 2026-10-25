@@ -132,12 +132,35 @@ def b5_guest_lounge(h):
 
 
 def b6_mandir(h):
-    """B6: a small mandir per Vastu: NE corner of the guest room (red-line 2), on the east wall so the devotee
-    faces east; a floating walnut unit with a backlit jaali, clear of the bed's side table."""
+    """B6 (revised by the owner): a small open mandir in the family lounge, not in a bedroom. It sits on the lounge's
+    east (kitchen) wall at its north-east corner, so the deity faces west and the devotee faces east; no toilet on
+    that wall or above it (master bedroom over). Marble back panel with a backlit cusped arch, floating fluted
+    cabinet with a marble top, brass diyas, a pouf and a rug in front. The crockery unit moves south along the wall.
+    First version (guest room NE corner, red-line 2) withdrawn."""
     gf = floor(h, 'GF')
-    gf['furniture'].append(F('GF-G08', 'GF-GST', 'mandir_wall', (405, 18630), (600, 350, 1100), 270, z=800,
-                             note='R1-B6 small mandir, NE corner; devotee faces east'))
-    find(gf['rooms'], 'GF-GST')['note'] = 'R1-B6: small mandir in the NE corner; wardrobe on the south wall (red-line 2)'
+    find(gf['furniture'], 'GF-F19').update(pos=[3525, 7000], room='GF-DRW', note='R1-B3/B6: on the kitchen wall, south of the mandir')
+    gf['furniture'] += [
+        F('GF-F25', 'GF-DRW', 'mandir_open', (3525, 8350), (1100, 450, 2400), 270,
+          note='R1-B6 open mandir, NE corner of the family lounge on the east wall; devotee faces east'),
+        F('GF-F26', 'GF-DRW', 'pouf', (4300, 8350), (450, 450, 420), 0),
+        F('GF-F27', 'GF-DRW', 'rug', (4350, 8350), (1100, 1300, 10), 0, note='prayer rug'),
+    ]
+    find(gf['rooms'], 'GF-DRW')['note'] = 'R1-B3: TV on the west wall, sofa facing it; R1-B6: open mandir in the NE corner (east wall)'
+    find(gf['rooms'], 'GF-GST')['note'] = 'Wardrobe on the south wall (red-line 2); no mandir here (owner, R1-B6 revised)'
+
+
+def b15_tulsi(h):
+    """B15 (owner): a tulsi vrindavan in the NE garden: the front lawn's north edge, against the front boundary wall,
+    between the UGT (east) and the RWH pit (west); open sky. Floating marble plinth with an LED line, carved marble
+    pedestal + planter, brass diyas, bamboo planters either side, fluted walnut cladding with a brass Om on the
+    inside face of the existing boundary wall (cladding only, no new construction, kept below the wall top)."""
+    gf = floor(h, 'GF')
+    gf['furniture'] += [
+        F('GF-O09', 'GF-LAWN-F', 'tulsi_platform', (2775, 21550), (1300, 750, 1300), 180, note='R1-B15 tulsi, NE garden; faces the house'),
+        F('GF-O10', 'GF-LAWN-F', 'bamboo_planter', (1925, 21700), (450, 450, 2400), 0),
+        F('GF-O11', 'GF-LAWN-F', 'bamboo_planter', (3625, 21700), (450, 450, 2400), 0),
+        F('GF-O12', 'GF-LAWN-F', 'fluted_panel', (2775, 21955), (2100, 40, 1450), 180, note='cladding on the boundary wall, brass Om'),
+    ]
 
 
 def b7_under_stair(h):
@@ -470,10 +493,11 @@ def e13_electrical(h):
     P('sd', L, 6000, 8400, note='smoke detector (A2)')
     P('ac', L, 9131, 7083, note='2 TR, west wall above the TV (A2)', tr=2.0)
     P('tv', L, 9131, 7083, note='TV + 5 A + data, west wall (A2)')
-    P('s6', L, 9131, 8100); P('s6', L, 3320, 6600)
+    P('s6', L, 9131, 8100); P('s6', L, 3320, 6200)
     P('sb2w', L, 3320, 5900, z=1200, note='2-way, lounge end by the lawn door (A2)')
     P('sb2w', D, 7400, 10746, z=1200, note='2-way, dining end on the lift wall (A2)')
     P('ml', D, 3750, 11345, note='mirror light over the dining basin (R1-B3)')
+    P('wl', L, 3320, 8350, z=2350, note='mandir arch backlight + cove LEDs (R1-B6)')
     T = 'GF-TLT'
     P('light', T, 3300, 12800); P('light', T, 1700, 12800)
     P('ef', T, 630, 12985, note='on the OTS wall (A4)')
@@ -501,7 +525,6 @@ def e13_electrical(h):
     P('sb', G, 4180, 15850, note='by the door')
     P('sd', G, 1900, 16000, note='smoke detector (R1 addition)')
     bedside(G, 250, 15785); bedside(G, 250, 17905)
-    P('wl', G, 250, 18630, z=1700, note='mandir niche light (R1-B6)')
     S = 'GF-MND'
     P('light', S, 7600, 16300); P('light', S, 7600, 18500); P('fan', S, 7600, 17300)
     P('ac', S, 8500, 15294, note='1.5 TR, south wall above the settee; refrigerant up the SS-3 duct', tr=1.5)
@@ -515,7 +538,8 @@ def e13_electrical(h):
     for x in (1200, 3600, 5900, 8200):
         P('gl', 'GF-LAWN-B', x, 1300, note='garden light')
     P('wl', 'GF-DECK', 250, 4200, note='pergola wall light'); P('wl', 'GF-DECK', 9131, 4200, note='pergola wall light')
-    P('gl', 'GF-COURT', 2400, 21800, note='garden light'); P('gl', 'GF-COURT', 3900, 21300, note='garden light')
+    P('gl', 'GF-COURT', 2000, 20300, note='garden light')
+    P('wl', 'GF-LAWN-F', 2775, 21950, z=1300, note='tulsi: plinth LED + panel cove, IP65 (R1-B15)'); P('gl', 'GF-COURT', 3900, 21300, note='garden light')
     P('wl', 'GF-COURT', 6000, 20750, note='gate light (A8)'); P('wl', 'GF-COURT', 6000, 21950, note='gate light (A8)')
     P('ip65', 'GF-LAWN-B', 9131, 3000, note='weatherproof socket, rear lawn (A1)')
     P('pump', 'GF-LAWN-B', 300, 2700, note='irrigation pump point (A1)', kw=0.75)
@@ -670,8 +694,8 @@ def e13_electrical(h):
             circuit(next_id('L'), 'lighting', db, grp, mcb='10A', cable='1.5 sq mm', rcd=any(rooms[p['serves']]['name'].lower().find(w) >= 0 for p in grp for w in ('toilet', 'washroom')), backup=True)
         for grp in chunk([p for p in inside if p['kind'] in SOCK], 8):
             circuit(next_id('S'), 'sockets', db, grp, mcb='16A', cable='2.5 sq mm', rcd=True)
-        if [p for p in out if p['kind'] in LIGHT]:
-            circuit(next_id('L'), 'lighting', db, [p for p in out if p['kind'] in LIGHT], mcb='10A', cable='1.5 sq mm', rcd=True, backup=False, note='outdoor')
+        for grp in chunk([p for p in out if p['kind'] in LIGHT], 10):
+            circuit(next_id('L'), 'lighting', db, grp, mcb='10A', cable='1.5 sq mm', rcd=True, backup=False, note='outdoor')
         if [p for p in out if p['kind'] in SOCK]:
             circuit(next_id('S'), 'sockets', db, [p for p in out if p['kind'] in SOCK], mcb='16A', cable='2.5 sq mm', rcd=True, note='outdoor')
         for p in mine:
@@ -759,7 +783,7 @@ def e13_electrical(h):
 
 
 PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
-           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, e12_plumbing, e13_electrical]
+           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, b15_tulsi, e12_plumbing, e13_electrical]
 
 
 def build():

@@ -239,6 +239,8 @@ export function buildHouse(house, M) {
       if (f.type === 'pendant_statement') lights.push({ floor: fid, pos: [mm(f.pos[0]), baseY + mm(f.z || 2000) - 0.05, mm(f.pos[1])], area: 6, warm: true, kind: 'pendant' });
       if (f.type === 'mandir_jaali') lights.push({ floor: fid, pos: [mm(f.pos[0]), baseY + 1.3, mm(f.pos[1])], area: 3, kind: 'mandir' });
       if (f.type === 'mandir_wall') lights.push({ floor: fid, pos: [mm(f.pos[0]), baseY + mm(f.z || 0) + 0.5, mm(f.pos[1])], area: 1.5, kind: 'mandir' });
+      if (f.type === 'mandir_open') lights.push({ floor: fid, pos: [mm(f.pos[0]), baseY + 1.6, mm(f.pos[1])], area: 2, kind: 'mandir' });
+      if (f.type === 'tulsi_platform') lights.push({ floor: fid, pos: [mm(f.pos[0]), baseY + 1.0, mm(f.pos[1])], area: 2, kind: 'mandir' });
       if (f.type === 'counter' || f.type === 'utility_counter') buildBacksplash(f, fl, baseY, batch);
     }
     for (const j of fl.joinery || []) for (const part of buildJoinery(j, fy)) batch.add(fid, 'furn', part.m, part.g);

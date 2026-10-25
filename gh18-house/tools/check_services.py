@@ -444,6 +444,54 @@ def electrical(h, rule, out):
         out.append('%-7s -> %-7s %5.1f m  %s' % (r['ac'], r['odu'], r['length'] / 1000, r['note']))
 
 
+# ------------------------------------------------------------------ Vastu placements (red-line register + owner items)
+def vastu(h, rule):
+    fls = {f['id']: f for f in h['floors']}
+    fur = [(fl['id'], f) for fl in h['floors'] for f in fl['furniture']]
+    rooms = {r['id']: r for f in h['floors'] for r in f['rooms']}
+    ext = [w for w in fls['GF']['walls'] if w.get('kind') == 'external' and 'a' in w]
+    box = (0, min(min(w['a'][1], w['b'][1]) for w in ext), h['meta']['plot']['width_outer'], max(max(w['a'][1], w['b'][1]) for w in ext))
+    nv = h['meta']['north_vector']
+    ev = [-nv[1], nv[0]]
+    def facing(v):          # plan vector -> compass word (R1: north = +y, east = -x)
+        n, e = v[0] * nv[0] + v[1] * nv[1], v[0] * ev[0] + v[1] * ev[1]
+        return ('north' if n > 0 else 'south') if abs(n) > abs(e) else ('east' if e > 0 else 'west')
+    wet = [r for r in rooms.values() if any(w in r['name'].lower() for w in ('toilet', 'washroom'))]
+    for fid, m in [(i, f) for i, f in fur if f['type'] in ('mandir_open', 'mandir_wall', 'mandir_jaali')]:
+        a = math.radians(m.get('rot', 0))
+        front = (-math.sin(a), math.cos(a))
+        dev = facing((-front[0], -front[1]))
+        rule('%s mandir: devotee faces east or north' % m['id'], 'PASS' if dev in ('east', 'north') else 'FAIL', 'faces ' + dev)
+        r = rooms[m['room']]
+        xs, ys = [p[0] for p in r['polygon']], [p[1] for p in r['polygon']]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        q = facing((m['pos'][0] - cx, 0)) if abs(m['pos'][0] - cx) > 1 else '', facing((0, m['pos'][1] - cy))
+        rule('%s mandir in the NE quarter of %s' % (m['id'], r['name']), 'PASS' if set(q) == {'east', 'north'} else 'WARN', '-'.join(reversed(q)))
+        corners = hl.furniture_corners(m)
+        near = [w['name'] for w in wet if w['id'][:2] == fid and min(poly_dist(c, w['polygon']) for c in corners) < 400]
+        rule('%s mandir: no toilet behind or beside it' % m['id'], 'FAIL' if near else 'PASS', ', '.join(near) or 'kitchen wall behind' if 'KIT' in str([rid for rid, rr in rooms.items() if rid[:2] == fid and min(poly_dist(c, rr['polygon']) for c in corners) < 300]) else '')
+        up = {'GF': 'FF', 'FF': 'SF'}.get(fid)
+        above = [rr['name'] for rr in rooms.values() if up and rr['id'][:2] == up and hl.point_in_poly(m['pos'], rr['polygon'])]
+        bad = [n for n in above if any(w in n.lower() for w in ('toilet', 'washroom'))]
+        rule('%s mandir: no toilet above' % m['id'], 'FAIL' if bad else 'PASS', ', '.join(above) or 'open above')
+    for fid, t in [(i, f) for i, f in fur if f['type'] == 'tulsi_platform']:
+        z = zone(t['pos'], (0, box[1], box[2], h['meta']['plot']['depth_to_front_boundary']))
+        rule('%s tulsi in the NE (N / E) of the plot' % t['id'], 'PASS' if z in ('NE', 'N', 'E') else 'FAIL', z + ' zone')
+        covered = [rr['name'] for f2 in h['floors'] if f2['id'] != 'GF' for rr in f2['rooms'] if hl.point_in_poly(t['pos'], rr['polygon'])]
+        rule('%s tulsi open to the sky' % t['id'], 'FAIL' if covered else 'PASS', ', '.join(covered) or 'nothing above')
+    pl = h.get('services', {}).get('plumbing', {})
+    for c in pl.get('chambers', []):
+        if c['type'] == 'tank':
+            rule('%s underground tank in the NE' % c['id'], 'PASS' if zone(c['at'], (0, box[1], box[2], h['meta']['plot']['depth_to_front_boundary'])) == 'NE' else 'WARN', 'red-line 6 / plumbing P4')
+    for fid, f in fur:
+        if f['type'] == 'water_tank':
+            z = zone(f['pos'], box)
+            rule('%s overhead tank in the S / SW / W' % f['id'], 'PASS' if z in ('SW', 'S', 'W') else 'WARN', z + ' zone (red-line T)')
+        if f['type'] == 'hob':
+            a = math.radians(f.get('rot', 0))
+            rule('%s cook faces east (red-line 7)' % f['id'], 'PASS' if facing((math.sin(a), -math.cos(a))) == 'east' else 'WARN', facing((math.sin(a), -math.cos(a))))
+
+
 def main():
     src = sys.argv[1] if len(sys.argv) > 1 else 'house_r1.json'
     h = hl.load(os.path.join(hl.ROOT, src))
@@ -454,7 +502,8 @@ def main():
     out = ['GH-18 services check (%s)' % src]
     tables = []
     n = {'PASS': 0, 'WARN': 0, 'FAIL': 0}
-    for name, fn, part in (('PLUMBING', plumbing, sv.get('plumbing')), ('ELECTRICAL', electrical, sv.get('electrical'))):
+    for name, fn, part in (('PLUMBING', plumbing, sv.get('plumbing')), ('ELECTRICAL', electrical, sv.get('electrical')),
+                           ('VASTU PLACEMENTS', vastu, {'source': 'red-line register + owner items (mandir, tulsi, tanks, hob)', 'status': 'checked against the model; the Vastu consultant re-checks R1 before freeze'})):
         if not part:
             continue
         rows = []

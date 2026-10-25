@@ -107,11 +107,11 @@ PLUMBING: PASS  (97 pass, 1 warn, 0 fail)
 == ELECTRICAL: Electrical Layout Rev A (Oct 2026) re-placed for the R1 layout; SF points added (SF not on R0)
 design intent - final design, cable sizes, load sanction and test certificate by the licensed electrical contractor
 
-PASS  sheet schedule: GF Drawing / Dining                  R1 adds lights +1
+PASS  sheet schedule: GF Drawing / Dining                  R1 adds lights +2
 PASS  sheet schedule: GF Kitchen                           R1 adds ef +1, lights +2
 PASS  sheet schedule: GF Toilet                            as the sheet
 PASS  sheet schedule: GF Lobby / Stair / Panel rm          R1 adds lights +1
-PASS  sheet schedule: GF Guest room                        R1 adds lights +1
+PASS  sheet schedule: GF Guest room                        as the sheet
 PASS  sheet schedule: GF Foyer                             as the sheet
 PASS  sheet schedule: GF Study -> R1 guest lounge / study  as the sheet
 PASS  sheet schedule: External / Parking                   R1 adds pump +1
@@ -128,11 +128,11 @@ PASS  sheet schedule: Terrace                              R1 adds s6 +1
 PASS  GF-KIT lit and switched                              5 light(s), 1 switchboard(s)
 PASS  GF-KIT switchboard at a door                         0.7 m from the door centre
 PASS  GF-DIN lit and switched                              4 light(s), 1 switchboard(s)
-PASS  GF-DRW lit and switched                              2 light(s), 1 switchboard(s)
+PASS  GF-DRW lit and switched                              3 light(s), 1 switchboard(s)
 PASS  GF-LOB lit and switched                              2 light(s), 1 switchboard(s)
 PASS  GF-TLT lit and switched                              2 light(s), 1 switchboard(s)
 PASS  GF-TLT switchboard at a door                         0.6 m from the door centre
-PASS  GF-GST lit and switched                              3 light(s), 3 switchboard(s)
+PASS  GF-GST lit and switched                              2 light(s), 3 switchboard(s)
 PASS  GF-GST switchboard at a door                         0.7 m from the door centre
 PASS  GF-FOY lit and switched                              2 light(s), 1 switchboard(s)
 PASS  GF-FOY switchboard at a door                         0.8 m from the door centre
@@ -162,7 +162,7 @@ PASS  SF-WSH lit and switched                              1 light(s), 1 switchb
 PASS  SF-WSH switchboard at a door                         0.5 m from the door centre
 PASS  SF-SRV lit and switched                              1 light(s), 1 switchboard(s)
 PASS  SF-SRV switchboard at a door                         0.5 m from the door centre
-PASS  GF-TLT switches outside                              GF-E35 in GF-LOB
+PASS  GF-TLT switches outside                              GF-E36 in GF-LOB
 PASS  GF-TLT exhaust to the outside                        on shaft wall GF-OTS3
 PASS  GF-TLT geyser high, out of the splash zone           1.90 m up, 0.7 m from the shower / tub
 PASS  FF-MTL switches outside                              FF-E27 in FF-DRS
@@ -191,9 +191,9 @@ PASS  FF-K05 bedside (FF-KID)                              s6, sb2w
 PASS  GF-E23 AC (GF-DRW) off the glazing, high             2.15 m on GF-W04
 PASS  GF-E23 AC route to SF-AC3                            10.0 m (standard charge to 15 m)
 PASS  GF-E23 AC route clear of the party walls             out above the GL-5 head, up the balcony west wall (inside the plot), over the parapet
-PASS  GF-E51 AC (GF-GST) off the glazing, high             2.45 m on GF-W16
-PASS  GF-E51 AC route to GF-O08                            4.2 m (standard charge to 15 m)
-PASS  GF-E51 AC route clear of the party walls             through the north wall, down to the front-lawn unit (A6)
+PASS  GF-E52 AC (GF-GST) off the glazing, high             2.45 m on GF-W16
+PASS  GF-E52 AC route to GF-O08                            4.2 m (standard charge to 15 m)
+PASS  GF-E52 AC route clear of the party walls             through the north wall, down to the front-lawn unit (A6)
 PASS  GF-E64 AC (GF-MND) off the glazing, high             2.15 m on GF-W23
 PASS  GF-E64 AC route to SF-AC6                            6.9 m (standard charge to 15 m)
 PASS  GF-E64 AC route clear of the party walls             up the SS-3 boxed duct to the front terrace
@@ -240,6 +240,7 @@ PASS  L4 lighting <= 10 points                             4
 PASS  S1 sockets <= 8 points, RCD                          8, RCD True
 PASS  S2 sockets <= 8 points, RCD                          5, RCD True
 PASS  L5 lighting <= 10 points                             10
+PASS  L6 lighting <= 10 points                             1
 PASS  S3 sockets <= 8 points, RCD                          1, RCD True
 PASS  P1 dedicated, RCD                                    s16 20A
 PASS  P2 dedicated, RCD                                    s16 20A
@@ -251,13 +252,13 @@ PASS  AC3 dedicated                                        ac 20A
 PASS  PUMP1 dedicated, RCD                                 pump as maker
 PASS  PUMP2 dedicated, RCD                                 pump as maker
 PASS  EV dedicated, RCD                                    ev 40A (maker)
-PASS  L6 lighting <= 10 points                             10
 PASS  L7 lighting <= 10 points                             10
-PASS  L8 lighting <= 10 points                             8
+PASS  L8 lighting <= 10 points                             10
+PASS  L9 lighting <= 10 points                             8
 PASS  S4 sockets <= 8 points, RCD                          8, RCD True
 PASS  S5 sockets <= 8 points, RCD                          8, RCD True
 PASS  S6 sockets <= 8 points, RCD                          2, RCD True
-PASS  L9 lighting <= 10 points                             4
+PASS  L10 lighting <= 10 points                            4
 PASS  S7 sockets <= 8 points, RCD                          2, RCD True
 PASS  AC4 dedicated                                        ac 25A
 PASS  G2 dedicated, RCD                                    gy 20A
@@ -265,39 +266,55 @@ PASS  G3 dedicated, RCD                                    gy 20A
 PASS  AC5 dedicated                                        ac 20A
 PASS  AC6 dedicated                                        ac 20A
 PASS  G4 dedicated, RCD                                    gy 20A
-PASS  L10 lighting <= 10 points                            9
+PASS  L11 lighting <= 10 points                            9
 PASS  S8 sockets <= 8 points, RCD                          2, RCD True
-PASS  L11 lighting <= 10 points                            2
+PASS  L12 lighting <= 10 points                            2
 PASS  S9 sockets <= 8 points, RCD                          2, RCD True
 PASS  LIFT dedicated                                       iso as vendor (3-phase)
 PASS  G5 dedicated, RCD                                    gy 20A
 PASS  P4 dedicated, RCD                                    s16 20A
 PASS  SPARE dedicated                                      spare as maker
 PASS  PUMP3 dedicated, RCD                                 pump as maker
-PASS  lighting circuits with wet-room points on an RCD     L2, L6, L7, L8, L10
-PASS  every point on a circuit                             188 points
+PASS  lighting circuits with wet-room points on an RCD     L2, L7, L8, L9, L11
+PASS  every point on a circuit                             189 points
 PASS  circuits fed from their own floor DB                 DB-1 GF + outside, DB-2 FF, DB-3 SF + roof
 PASS  no exhaust or outdoor units on the E / W party walls 
 PASS  connected load and supply                            45.9 kW connected (sheet ~41), ~25 kW max demand at 0.55 -> 3-phase, as the sheet
 
-ELECTRICAL: PASS  (170 pass, 2 warn, 0 fail)
+ELECTRICAL: PASS  (171 pass, 2 warn, 0 fail)
 
-RESULT: PASS  (267 pass, 3 warn, 0 fail)
+== VASTU PLACEMENTS: red-line register + owner items (mandir, tulsi, tanks, hob)
+checked against the model; the Vastu consultant re-checks R1 before freeze
+
+PASS  GF-F25 mandir: devotee faces east or north           faces east
+PASS  GF-F25 mandir in the NE quarter of Family Lounge     north-east
+PASS  GF-F25 mandir: no toilet behind or beside it         kitchen wall behind
+PASS  GF-F25 mandir: no toilet above                       Master Bedroom
+PASS  GF-O09 tulsi in the NE (N / E) of the plot           NE zone
+PASS  GF-O09 tulsi open to the sky                         nothing above
+PASS  UGT underground tank in the NE                       red-line 6 / plumbing P4
+PASS  GF-K08 cook faces east (red-line 7)                  east
+PASS  SF-R01 overhead tank in the S / SW / W               W zone (red-line T)
+
+VASTU PLACEMENTS: PASS  (9 pass, 0 warn, 0 fail)
+
+RESULT: PASS  (277 pass, 3 warn, 0 fail)
 
 POINT SCHEDULE (R1)  rooms x points; L = lights, F = fans, 6A = sockets (incl. counter / IP65), 16A, AC, GY = geyser, EF, TV, D = data
 room                       light   fan    s6   usb   s16    ac    gy    ef    tv  data    sd    hd    sb  sb2w
 GF-KIT Kitchen                 5     .     1     .     3     .     .     2     .     .     .     1     1     .
-GF-DRW Family Lounge           2     1     2     .     .     1     .     .     1     .     1     .     .     1
+GF-DRW Family Lounge           3     1     2     .     .     1     .     .     1     .     1     .     .     1
 GF-DIN Dining                  4     .     .     .     .     .     .     .     .     .     .     .     .     1
 GF-TLT Toilet                  2     .     1     .     .     .     1     1     .     .     .     .     .     .
 GF-LOB Lobby                   2     .     .     .     .     .     .     .     .     .     1     .     1     1
 GF-JAN Under-stair Storage     1     .     .     .     .     .     .     .     .     .     .     .     1     .
 GF-FOY Entrance Foyer          2     .     .     .     .     .     .     .     .     .     .     .     1     .
-GF-GST Guest Room              3     1     3     .     .     1     .     .     1     .     1     .     1     2
+GF-GST Guest Room              2     1     3     .     .     1     .     .     1     .     1     .     1     2
 GF-MND Guest Lounge / Stud     2     1     2     .     .     1     .     .     1     1     1     .     1     .
 GF-LAWN-B Back Lawn            4     .     1     .     .     .     .     .     .     .     .     .     .     .
 GF-DECK Deck + Pergola         2     .     .     .     .     .     .     .     .     .     .     .     .     .
 GF-COURT Entrance Court        4     .     .     .     .     .     .     .     .     .     .     .     .     .
+GF-LAWN-F Front Lawn           1     .     .     .     .     .     .     .     .     .     .     .     .     .
 GF-PARK Parking                .     .     .     .     .     .     .     .     .     .     .     .     .     .
 FF-MST Master Bedroom          3     1     3     2     .     1     .     .     1     .     1     .     1     2
 FF-BAL Balcony                 4     .     2     .     .     .     .     .     .     .     .     .     .     .
@@ -318,12 +335,13 @@ ROOF SF roof                   .     .     .     .     .     .     .     .     .
 CIRCUITS
 id     DB    class      pts  MCB                  cable            RCD      kW  serves
 L1     DB-1  lighting    11  10A                  1.5 sq mm        -      0.26  Family Lounge, Kitchen
-L2     DB-1  lighting    13  10A                  1.5 sq mm        yes    0.33  Dining, Family Lounge, Lobby, Toilet
-L3     DB-1  lighting    16  10A                  1.5 sq mm        -      0.26  Entrance Foyer, Guest Room, Lobby, Under-stair Storage
+L2     DB-1  lighting    13  10A                  1.5 sq mm        yes    0.32  Dining, Family Lounge, Lobby, Toilet
+L3     DB-1  lighting    16  10A                  1.5 sq mm        -      0.27  Entrance Foyer, Guest Room, Lobby, Under-stair Storage
 L4     DB-1  lighting     5  10A                  1.5 sq mm        -      0.12  Guest Lounge / Study
 S1     DB-1  sockets      8  16A                  2.5 sq mm        yes    0.90  Family Lounge, Guest Room, Kitchen, Toilet
 S2     DB-1  sockets      5  16A                  2.5 sq mm        yes    0.50  Guest Lounge / Study, Guest Room
-L5     DB-1  lighting    10  10A                  1.5 sq mm        yes    0.17  Back Lawn, Deck + Pergola, Entrance Court
+L5     DB-1  lighting    10  10A                  1.5 sq mm        yes    0.17  Back Lawn, Deck + Pergola, Entrance Court, Front Lawn
+L6     DB-1  lighting     1  10A                  1.5 sq mm        yes    0.02  Entrance Court
 S3     DB-1  sockets      1  16A                  2.5 sq mm        yes    0.10  Back Lawn
 P1     DB-1  power        1  20A                  4 sq mm          yes    1.50  Kitchen
 P2     DB-1  power        1  20A                  4 sq mm          yes    1.50  Kitchen
@@ -335,13 +353,13 @@ AC3    DB-1  ac           1  20A                  4 sq mm          -      1.50  
 PUMP1  DB-1  power        1  as maker             as maker         yes    0.75  Back Lawn
 PUMP2  DB-1  power        1  as maker             as maker         yes    0.75  Entrance Court
 EV     DB-1  power        1  40A (maker)          6 sq mm (maker)  yes    7.40  Parking
-L6     DB-2  lighting    15  10A                  1.5 sq mm        yes    0.28  Dresser, Master Bedroom, Master Washroom
-L7     DB-2  lighting    12  10A                  1.5 sq mm        yes    0.27  Bedroom 3, Bedroom 3 Toilet, Lobby, Master Washroom
-L8     DB-2  lighting    15  10A                  1.5 sq mm        yes    0.25  Bedroom 3, Kids Room, Kids Toilet
+L7     DB-2  lighting    15  10A                  1.5 sq mm        yes    0.28  Dresser, Master Bedroom, Master Washroom
+L8     DB-2  lighting    12  10A                  1.5 sq mm        yes    0.27  Bedroom 3, Bedroom 3 Toilet, Lobby, Master Washroom
+L9     DB-2  lighting    15  10A                  1.5 sq mm        yes    0.25  Bedroom 3, Kids Room, Kids Toilet
 S4     DB-2  sockets      8  16A                  2.5 sq mm        yes    0.64  Dresser, Master Bedroom, Master Washroom
 S5     DB-2  sockets      8  16A                  2.5 sq mm        yes    0.80  Bedroom 3, Kids Room, Lobby
 S6     DB-2  sockets      2  16A                  2.5 sq mm        yes    0.20  Kids Room
-L9     DB-2  lighting     4  10A                  1.5 sq mm        yes    0.07  Balcony
+L10    DB-2  lighting     4  10A                  1.5 sq mm        yes    0.07  Balcony
 S7     DB-2  sockets      2  16A                  2.5 sq mm        yes    0.20  Balcony
 AC4    DB-2  ac           1  25A                  4 sq mm          -      2.20  Master Bedroom
 G2     DB-2  geyser       1  20A                  4 sq mm          yes    2.00  Master Washroom
@@ -349,9 +367,9 @@ G3     DB-2  geyser       1  20A                  4 sq mm          yes    2.00  
 AC5    DB-2  ac           1  20A                  4 sq mm          -      1.50  Bedroom 3
 AC6    DB-2  ac           1  20A                  4 sq mm          -      1.50  Kids Room
 G4     DB-2  geyser       1  20A                  4 sq mm          yes    2.00  Kids Toilet
-L10    DB-3  lighting    13  10A                  1.5 sq mm        yes    0.25  Lobby, Servant Room, Servant Washroom, Store
+L11    DB-3  lighting    13  10A                  1.5 sq mm        yes    0.25  Lobby, Servant Room, Servant Washroom, Store
 S8     DB-3  sockets      2  16A                  2.5 sq mm        yes    0.20  Servant Room
-L11    DB-3  lighting     2  10A                  1.5 sq mm        yes    0.04  Back Terrace + Utility (covered)
+L12    DB-3  lighting     2  10A                  1.5 sq mm        yes    0.04  Back Terrace + Utility (covered)
 S9     DB-3  sockets      2  16A                  2.5 sq mm        yes    0.20  Back Terrace + Utility (covered)
 LIFT   DB-1  power        1  as vendor (3-phase)  as vendor        -      4.00  Lobby
 G5     DB-3  geyser       1  20A                  4 sq mm          yes    2.00  Servant Washroom
@@ -367,4 +385,4 @@ FF-E06  -> SF-AC4    2.4 m  straight up through the slab to the back terrace
 FF-E50  -> SF-AC1   14.3 m  in the ceiling void, through the toilet ceiling into the OTS, up to the back terrace (drains via the OTS)
 FF-E62  -> SF-AC5    3.2 m  up through the slab to the front terrace
 GF-E64  -> SF-AC6    6.9 m  up the SS-3 boxed duct to the front terrace
-GF-E51  -> GF-O08    4.2 m  through the north wall, down to the front-lawn unit (A6)
+GF-E52  -> GF-O08    4.2 m  through the north wall, down to the front-lawn unit (A6)

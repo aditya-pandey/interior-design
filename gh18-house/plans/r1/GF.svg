@@ -52,6 +52,7 @@
 <polygon points="700,15345 3100,15345 3100,18345 700,18345" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
 <polygon points="5600,5883 8400,5883 8400,8283 5600,8283" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
 <polygon points="6600,16200 8800,16200 8800,18000 6600,18000" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
+<polygon points="3800,7700 4900,7700 4900,9000 3800,9000" fill="#f5efe4" stroke="#c9b99a" stroke-width="8" stroke-dasharray="60 40"/>
 <polygon points="4800,9375 6600,9375 6600,10325 4800,10325" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="5060,8940 5540,8940 5540,9460 5060,9460" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polyline points="5100,9030 5500,9030" fill="none" stroke="#8a7a5c" stroke-width="8" />
@@ -120,10 +121,10 @@
 <circle cx="4900" cy="5950" r="200" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10"/>
 <circle cx="8950" cy="5880" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
 <circle cx="3600" cy="5950" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<polygon points="3300,9300 3300,7900 3750,7900 3750,9300" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="3710,9300 3710,7900" fill="none" stroke="#8a7a5c" stroke-width="6" />
-<polyline points="3300,9300 3750,7900" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polyline points="3750,9300 3300,7900" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="3300,7700 3300,6300 3750,6300 3750,7700" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="3710,7700 3710,6300" fill="none" stroke="#8a7a5c" stroke-width="6" />
+<polyline points="3300,7700 3750,6300" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polyline points="3750,7700 3300,6300" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polygon points="4100,11365 3400,11365 3400,10915 4100,10915" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <ellipse cx="3750" cy="11140" rx="144" ry="99" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
 <polygon points="3140,11365 1040,11365 1040,10765 3140,10765" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
@@ -138,7 +139,14 @@
 <polygon points="7300,15275 9100,15275 9100,16025 7300,16025" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="7400,17750 7400,16850 7900,16850 7900,17750" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <circle cx="8900" cy="19400" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<polygon points="230,18930 230,18330 580,18330 580,18930" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="3300,8900 3300,7800 3750,7800 3750,8900" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="3690,8796.7 3570,8716.7 3690,8636.7" fill="none" stroke="#b08d57" stroke-width="8" />
+<polyline points="3690,8613.3 3570,8533.3 3690,8453.3" fill="none" stroke="#b08d57" stroke-width="8" />
+<polyline points="3690,8430 3570,8350 3690,8270" fill="none" stroke="#b08d57" stroke-width="8" />
+<polyline points="3690,8246.7 3570,8166.7 3690,8086.7" fill="none" stroke="#b08d57" stroke-width="8" />
+<polyline points="3690,8063.3 3570,7983.3 3690,7903.3" fill="none" stroke="#b08d57" stroke-width="8" />
+<text x="3525" y="8390" font-size="95" fill="#b08d57" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" transform="rotate(90 3525 8390)" >MANDIR</text>
+<circle cx="4300" cy="8350" r="225" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10"/>
 <polygon points="6880,15124 6080,15124 6080,14524 6880,14524" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polyline points="6880,14564 6080,14564" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polyline points="6880,15124 6080,14524" fill="none" stroke="#8a7a5c" stroke-width="5" />
@@ -160,6 +168,12 @@
 <polyline points="790,9651 790,9251" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polyline points="230,9651 830,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polyline points="830,9651 230,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="3425,21925 2125,21925 2125,21175 3425,21175" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<circle cx="2775" cy="21590" r="220" fill="#e6efd9" stroke="#8a7a5c" stroke-width="8"/>
+<text x="2775" y="21065" font-size="95" fill="#5d7a3a" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >TULSI</text>
+<circle cx="1925" cy="21700" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<circle cx="3625" cy="21700" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<polygon points="3825,21975 1725,21975 1725,21935 3825,21935" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="2325,19550 3075,19550 3075,19850 2325,19850" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 </g>
 <g id="stair">

@@ -375,6 +375,135 @@ B.mandir_wall = (p, w, d, h) => {
   sphere(p, 'lamp', 0.012, -0.12, 0.23, 0.05, 1.5, 1);
   box(p, 'cove', w - 0.08, 0.008, 0.015, 0, 0.185 + nh - 0.03, d / 2 - 0.03, 0);   // LED strip in the niche head
 };
+// Open mandir (R1-B6 revised): marble back panel with a backlit cusped arch, gold lotus motifs, the deity on a
+// marble ledge, a floating fluted cabinet with a marble top, brass diya stands, cove LEDs up both sides.
+B.mandir_open = (p, w, d, h) => {
+  const zb = -d / 2;
+  box(p, 'marble_white', w, h, 0.03, 0, 0, zb + 0.015, 0);
+  const aw = 0.62, a0 = 1.0, ah = 1.0;                  // arch: width, springing, straight part + crown
+  const sh = new THREE.Shape();
+  sh.moveTo(-aw / 2, a0);
+  sh.lineTo(-aw / 2, a0 + ah * 0.55);
+  for (let i = 0; i <= 40; i++) {                       // multi-cusped (Mughal) crown
+    const t = Math.PI * (1 - i / 40);
+    const r = aw / 2 * (1 + 0.1 * Math.abs(Math.sin(t * 4.5)));
+    sh.lineTo(Math.cos(t) * r, a0 + ah * 0.55 + Math.sin(t) * r * 1.25 + (i === 20 ? 0.06 : 0));
+  }
+  sh.lineTo(aw / 2, a0);
+  sh.lineTo(-aw / 2, a0);
+  const g = new THREE.ShapeGeometry(sh, 24);
+  g.translate(0, 0, zb + 0.032);
+  p.push({ g, m: 'jaali_glow' });
+  const lotus = (x, y, s) => {                          // gold lotus relief: five petals fanned on a short stem
+    for (let k = -2; k <= 2; k++) {
+      const g = new THREE.SphereGeometry(0.03 * s, 10, 8);
+      g.scale(0.55, 1.5, 0.35);
+      g.translate(0, 0.035 * s, 0);
+      g.rotateZ(k * 0.42);
+      g.translate(x, y, zb + 0.04);
+      p.push({ g, m: 'brass' });
+    }
+    box(p, 'brass', 0.006, 0.12 * s, 0.006, x, y - 0.12 * s, zb + 0.036, 0);
+  };
+  lotus(0, a0 + 0.8, 1.3); lotus(-0.2, a0 + 0.58, 1); lotus(0.2, a0 + 0.58, 1);
+  box(p, 'marble_white', 0.42, 0.04, 0.2, 0, a0 + 0.02, zb + 0.13, 0.004);       // deity ledge
+  // Ganesha (simplified): brass lotus seat, broad seated body, head with fan ears, trunk curling down, crown
+  cyl(p, 'brass', 0.11, 0.08, 0.035, 0, a0 + 0.06, zb + 0.13, 20);
+  sphere(p, 'marble_white', 0.1, 0, a0 + 0.13, zb + 0.14, 0.45, 2);              // crossed legs
+  sphere(p, 'marble_white', 0.075, 0, a0 + 0.22, zb + 0.13, 1.15, 2);            // belly / torso
+  sphere(p, 'marble_white', 0.058, 0, a0 + 0.34, zb + 0.13, 1, 2);               // head
+  for (const sx of [-1, 1]) {
+    const e = new THREE.CylinderGeometry(0.055, 0.045, 0.012, 20);
+    e.rotateX(Math.PI / 2); e.rotateY(sx * 0.35);
+    e.translate(sx * 0.07, a0 + 0.34, zb + 0.12);
+    p.push({ g: e, m: 'marble_white' });
+    sphere(p, 'marble_white', 0.025, sx * 0.085, a0 + 0.24, zb + 0.15, 1.6, 1);   // arms
+  }
+  cyl(p, 'marble_white', 0.016, 0.024, 0.09, 0.008, a0 + 0.24, zb + 0.19, 10);   // trunk
+  sphere(p, 'marble_white', 0.017, 0.03, a0 + 0.245, zb + 0.2, 1, 1);
+  cyl(p, 'brass', 0.012, 0.045, 0.07, 0, a0 + 0.385, zb + 0.13, 14);            // crown
+  const c0 = 0.28, ch = 0.47;                                                       // floating fluted cabinet
+  box(p, 'walnut_fluted', w - 0.04, ch, d - 0.05, 0, c0, 0.0, 0.004);
+  box(p, 'marble_white', w, 0.035, d, 0, c0 + ch, 0, 0.004);
+  box(p, 'cove', w - 0.12, 0.01, 0.02, 0, c0 - 0.012, 0.05, 0);
+  for (const sx of [-1, 1]) {                                                       // brass diya stands
+    const x = sx * (w / 2 - 0.12), y = c0 + ch + 0.035;
+    cyl(p, 'brass', 0.05, 0.06, 0.02, x, y, 0.08, 18);
+    cyl(p, 'brass', 0.01, 0.014, 0.28, x, y + 0.02, 0.08, 10);
+    cyl(p, 'brass', 0.045, 0.02, 0.03, x, y + 0.3, 0.08, 18);
+    sphere(p, 'lamp', 0.012, x, y + 0.35, 0.08, 1.7, 1);
+  }
+  cyl(p, 'brass', 0.13, 0.12, 0.015, 0, c0 + ch + 0.035, 0.07, 28);               // thali with flowers
+  for (let i = 0; i < 7; i++) sphere(p, i % 2 ? 'fabric_rust' : 'brass', 0.022, Math.cos(i) * 0.08, c0 + ch + 0.065, 0.07 + Math.sin(i) * 0.05, 0.8, 1);
+  for (const sx of [-1, 1]) box(p, 'cove', 0.012, h - 0.9, 0.012, sx * (w / 2 - 0.02), 0.85, zb + 0.04, 0);
+  box(p, 'cove', w - 0.06, 0.012, 0.012, 0, h - 0.05, zb + 0.04, 0);
+};
+// Tulsi vrindavan (R1-B15): floating marble plinth with an LED line under it, a carved marble pedestal and
+// planter with the tulsi, a glowing niche with a diya, two brass diya stands.
+B.tulsi_platform = (p, w, d, h) => {
+  box(p, 'granite_flamed', w - 0.16, 0.09, d - 0.16, 0, 0, 0, 0.004);
+  box(p, 'marble_white', w, 0.2, d, 0, 0.09, 0, 0.008);
+  box(p, 'cove', w - 0.2, 0.01, 0.02, 0, 0.085, d / 2 - 0.09, 0);
+  const t = 0.29;
+  box(p, 'marble_white', 0.6, 0.05, 0.5, 0, t, -0.04, 0.006);
+  box(p, 'marble_white', 0.48, 0.26, 0.4, 0, t + 0.05, -0.04, 0.006);
+  plateZ(p, 'jaali_glow', 0.18, 0.15, 0, t + 0.09, 0.161, 0.006);                 // diya niche
+  cyl(p, 'brass', 0.03, 0.02, 0.025, 0, t + 0.06, 0.2, 14);
+  sphere(p, 'lamp', 0.01, 0, t + 0.1, 0.2, 1.6, 1);
+  box(p, 'marble_white', 0.6, 0.05, 0.5, 0, t + 0.31, -0.04, 0.006);
+  box(p, 'marble_white', 0.54, 0.18, 0.44, 0, t + 0.36, -0.04, 0.01);
+  box(p, 'marble_white', 0.6, 0.035, 0.5, 0, t + 0.54, -0.04, 0.006);
+  const top = t + 0.575;
+  cyl(p, 'trunk', 0.012, 0.018, 0.22, 0, top, -0.04, 8);
+  for (let i = 0; i < 90; i++) {                       // small-leaved bush: little clusters filling a low dome
+    const a = i * 2.399, u = ((i * 37) % 90) / 90, v = ((i * 53) % 90) / 90;
+    const r = 0.19 * Math.sqrt(v) * Math.sqrt(1 - u * u * 0.6);
+    sphere(p, i % 3 ? 'foliage' : 'foliage_dark', 0.032 + 0.012 * ((i * 7) % 3) / 2, Math.cos(a) * r, top + 0.1 + 0.26 * u, -0.04 + Math.sin(a) * r, 1, 0);
+  }
+  for (const sx of [-1, 1]) {
+    const x = sx * (w / 2 - 0.17);
+    cyl(p, 'brass', 0.06, 0.07, 0.025, x, t, 0.12, 18);
+    cyl(p, 'brass', 0.012, 0.018, 0.5, x, t + 0.025, 0.12, 10);
+    for (const k of [0.15, 0.32]) cyl(p, 'brass', 0.025, 0.025, 0.02, x, t + k, 0.12, 12);
+    cyl(p, 'brass', 0.055, 0.025, 0.04, x, t + 0.52, 0.12, 18);
+    sphere(p, 'lamp', 0.014, x, t + 0.58, 0.12, 1.7, 1);
+  }
+  sphere(p, 'brass', 0.07, w / 2 - 0.3, t + 0.07, 0.24, 1.0, 2);                   // kalash
+};
+B.bamboo_planter = (p, w, d, h) => {
+  const r = Math.min(w, d) / 2;
+  cyl(p, 'concrete', r, r * 0.8, 0.6, 0, 0, 0, 28);
+  for (let i = 0; i < 12; i++) {                       // thin culms with slender leaves along the upper part
+    const a = i * 2.39, rr = r * 0.55 * ((i * 7) % 6) / 6;
+    const x = Math.cos(a) * rr, z = Math.sin(a) * rr, hh = (h - 0.6) * (0.75 + 0.25 * ((i * 5) % 4) / 4);
+    cyl(p, 'foliage_dark', 0.009, 0.012, hh, x, 0.6, z, 6);
+    for (let k = 0; k < 14; k++) {
+      const g = new THREE.BoxGeometry(0.17, 0.004, 0.022);
+      g.translate(0.08, 0, 0);
+      g.rotateZ(-0.35 - 0.3 * ((k * 3) % 4) / 4);
+      g.rotateY(a + k * 2.1);
+      g.translate(x, 0.6 + hh * (0.38 + 0.6 * k / 14), z);
+      p.push({ g, m: k % 2 ? 'foliage' : 'foliage_dark' });
+    }
+  }
+};
+// Fluted walnut cladding on the inside of the boundary wall, with a brass Om and LED edges (R1-B15)
+B.fluted_panel = (p, w, d, h) => {
+  box(p, 'walnut_fluted', w, h, d, 0, 0, 0, 0.003);
+  for (const sx of [-1, 1]) box(p, 'cove', 0.012, h - 0.1, 0.012, sx * (w / 2 + 0.01), 0.05, 0, 0);
+  const om = (x, y, r, a0, a1, t = 0.016) => {
+    const g = new THREE.TorusGeometry(r, t, 8, 32, a1 - a0);
+    g.rotateZ(a0);
+    g.translate(x, y, d / 2 + 0.02);
+    p.push({ g, m: 'brass' });
+  };
+  const cy = h - 0.15;
+  om(-0.05, cy + 0.06, 0.055, -Math.PI * 0.5, Math.PI * 0.75);       // upper bowl of the 3
+  om(-0.04, cy - 0.07, 0.075, -Math.PI * 0.75, Math.PI * 0.5);       // lower bowl
+  om(0.1, cy - 0.04, 0.06, -Math.PI * 0.9, Math.PI * 0.6);           // tail
+  om(0.1, cy + 0.12, 0.05, Math.PI * 1.1, Math.PI * 1.9, 0.012);     // crescent
+  sphere(p, 'brass', 0.018, 0.1, cy + 0.14, d / 2 + 0.02, 1, 1);    // bindu
+};
 B.puja_chowki = (p, w, d, h) => { box(p, 'walnut', w, 0.03, d, 0, h - 0.03, 0, 0.008); legs4(p, 'walnut', w, d, h - 0.03, 0.04, 0.04); };
 B.electrical_panel = (p, w, d, h) => box(p, 'appliance', w, h, d, 0, 0, 0, 0.006);
 B.mop_sink = (p, w, d, h) => { box(p, 'ceramic', w, 0.25, d, 0, h - 0.25, 0, 0.03); legs4(p, 'steel', w, d, h - 0.25, 0.04, 0.03); };

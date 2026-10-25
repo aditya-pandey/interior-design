@@ -296,10 +296,10 @@ def furniture_symbol(svg, it):
         svg.poly("furn", c, fill="none", stroke="#777", sw=12, extra='stroke-dasharray="90 60"')
         svg.text("furn", cx, cy + d / 2 - 250, "ref. car 3.8 m", size=100, fill="#777")
         return
-    if typ in ("planter", "bean_bag", "pouf", "floor_lamp", "side_table") and typ != "side_table":
+    if typ in ("planter", "bamboo_planter", "bean_bag", "pouf", "floor_lamp", "side_table") and typ != "side_table":
         r = min(w, d) / 2
         svg.add("furn", '<circle cx="%s" cy="%s" r="%s" fill="%s" stroke="%s" stroke-width="10"/>' % (
-            f(cx), f(cy), f(r), "#e6efd9" if typ == "planter" else "#fffdf8", FURN))
+            f(cx), f(cy), f(r), "#e6efd9" if "planter" in typ else "#fffdf8", FURN))
         return
     if typ == "sofa_l":
         ch = 950
@@ -329,7 +329,10 @@ def furniture_symbol(svg, it):
         svg.pline("furn", [L(-w / 2, d / 2 - 40), L(w / 2, d / 2 - 40)], stroke=FURN, sw=6)
         svg.pline("furn", [L(-w / 2, -d / 2), L(w / 2, d / 2)], stroke=FURN, sw=5)
         svg.pline("furn", [L(-w / 2, d / 2), L(w / 2, -d / 2)], stroke=FURN, sw=5)
-    elif typ in ("mandir_jaali",):
+    elif typ == "tulsi_platform":
+        svg.add("furn", '<circle cx="%s" cy="%s" r="220" fill="#e6efd9" stroke="%s" stroke-width="8"/>' % (f(L(0, -40)[0]), f(L(0, -40)[1]), FURN))
+        svg.text("furn", cx, cy - (d / 2 + 140) * math.cos(math.radians(rot)) * -1 + 30, "TULSI", size=95, fill="#5d7a3a")
+    elif typ in ("mandir_jaali", "mandir_open"):
         for i in range(-2, 3):
             svg.pline("furn", [L(i * w / 6 - 80, d / 2 - 60), L(i * w / 6, d / 2 - 180), L(i * w / 6 + 80, d / 2 - 60)], stroke="#b08d57", sw=8)
         svg.text("furn", cx, cy + 40, "MANDIR", size=95, fill="#b08d57", rot=(90 if rot in (90, 270) else 0))
