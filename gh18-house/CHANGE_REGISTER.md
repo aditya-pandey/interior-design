@@ -12,7 +12,7 @@ R1 is a separate version of the model. Its data is in `house_r1.json`, its plans
 
 **Checks behind the "done" entries** (re-run with the commands in README.md):
 - `plans/r1/check_report.txt`: every PDF dimension still holds.
-- `plans/r1/services_report.txt`: plumbing, electrical and Vastu placements. 277 pass, 3 warnings, 0 fail.
+- `plans/r1/services_report.txt`: plumbing, electrical and Vastu placements. 278 pass, 4 warnings, 0 fail.
 
 **Status key:**
 - **Done**: in the model and checked.
@@ -39,7 +39,7 @@ R1 is a separate version of the model. Its data is in `house_r1.json`, its plans
 | 11 | Master: swap dresser and washroom, door on the dresser side | C10 | Washroom and dresser are swapped. The route is bedroom → dresser → washroom. The WC is on the OTS stack. | Done; **hold**: see red-line 11 |
 | 12 | SF washing area: washing machine, ironing, utility and clothes drying on the terrace | D11 | An open utility outside the SF lobby door: washer-dryer, utility sink, ironing counter and tall cupboard. Two drying racks go under the polycarbonate roof, and the washing room becomes a store. | Done |
 | — | Plumbing, electrical and wiring inputs shown in 3D | E12, E13 | Both are in the model, checked, and shown in the 3D tour under *Services: Plumbing / Electrical*. | Done |
-| — | Tulsi in the NE garden (follow-up request) | B15 | A tulsi vrindavan on the north edge of the front lawn, following the owner's reference photo. Marble plinth, carved pedestal, brass diyas and bamboo planters. The fluted cladding with a brass Om goes on the existing boundary wall (no new construction). | Done |
+| — | Tulsi (follow-up requests) | B15 | First placed in the front lawn's NE; **moved by the owner to the back garden**. It now stands in the back garden's north-east corner, against the east boundary wall just short of the deck. The devotee faces east and it is open to the sky. It follows the owner's reference photo: marble plinth, carved pedestal, brass diyas and bamboo planters. The fluted cladding with a brass Om goes on the existing boundary wall (no new construction). | Done; **warn**: SE zone of the plot (tulsi is usually N / NE / E), for the Vastu consultant |
 
 ## 2. Vastu red-line register (owner instruction to the architect, overlaid on R0)
 
@@ -49,7 +49,7 @@ R1 is a separate version of the model. Its data is in `house_r1.json`, its plans
 | 2 | GF guest room, NE / ENE | No heavy wardrobe on the NE wall (put it on the S or W wall); puja niche preferred in the NE corner | Wardrobe on the south wall. The mandir was in the NE corner, but the owner moved it to the family lounge (owner item 9). | Done, differs (owner) |
 | 3 | GF toilet, E / ESE | WC at the south (ESE) end, wash at the north end; soil stack aligned with the FF toilet; falls to a rear drain with chambers | WC at the south end. Its soil drains to IC-2 at the foot of stack SS-1 in the OTS, which also serves the FF toilet above. The drain runs to the front through chambers, not the rear (P3, P6). The vanity is still at the south end, as in R0. | Done, differs: vanity position for the architect |
 | 4 | GF electrical panel, centre | Move the DB / panel out of the Brahmasthan, preferably to the SE (kitchen side) | DB-1 is in a 400 mm cabinet on the kitchen east wall, SE zone. The check confirms it is outside the centre ninth. | Done |
-| 5 | GF rear lawn, S / SW | Tall trees / heavy planters on the S and SW boundary; no water body, bore well or soak pit | No pit, chamber, tank or pipe in the rear lawn (P1, P6). Tree planting is not modelled. | Done; trees to landscape |
+| 5 | GF rear lawn, S / SW | Tall trees / heavy planters on the S and SW boundary; no water body, bore well or soak pit | No pit, chamber, tank or pipe in the rear lawn (P1, P6). The tulsi stands in its NE corner (B15): a small planter, not a water body. Tree planting is not modelled. | Done; trees to landscape |
 | 6 | GF front lawn, NE | RWH pit / water feature in the NE front lawn, 1.5 m clear of footings, overflow to the storm drain | The NE corner holds the 5000 L underground tank (water in the NE). The RWH pit is in the entrance court (north), 2.2 m from the tank as the plumbing sheet requires. Its overflow goes to the storm drain. | Done, differs: RWH north, not NE |
 | 7 | GF kitchen, SE | Retain; hob on the SE wall (cook faces E); sink on the N side; grease trap before the drain | Hob on the east wall, so the cook faces east (checked). The sink is in the north wash nook (B4). Grease trap GT-1 is in the OTS. | Done |
 | 8 | GF study, NW / NNW | Desk facing N or E; light colours; no heavy storage | Guest Lounge / Study: the desk faces east, and there is no tall storage. | Done |
@@ -107,6 +107,7 @@ R1 is a separate version of the model. Its data is in `house_r1.json`, its plans
 | Item | For | Notes |
 |---|---|---|
 | Master washroom over the kitchen (C10, red-line 11) | Architect, structural, plumber | New sunken floor, waterproofing, flood test; SS-2 not needed |
+| Tulsi in the back garden: the SE zone of the plot (B15) | Vastu consultant | The owner's choice; it sits at the garden's NE corner and the devotee faces east |
 | Guest-room AC outdoor unit in the NE (A6) | Vastu consultant | The sheet's own choice. The alternative is a longer run to the terrace. |
 | DB-3 in the E zone (SF) | Vastu consultant | The SF has no indoor SE space |
 | Master headboard W vs red-line S (13) | Vastu consultant | The Electrical sheet assumes W |

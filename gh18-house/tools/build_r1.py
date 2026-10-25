@@ -150,16 +150,17 @@ def b6_mandir(h):
 
 
 def b15_tulsi(h):
-    """B15 (owner): a tulsi vrindavan in the NE garden: the front lawn's north edge, against the front boundary wall,
-    between the UGT (east) and the RWH pit (west); open sky. Floating marble plinth with an LED line, carved marble
-    pedestal + planter, brass diyas, bamboo planters either side, fluted walnut cladding with a brass Om on the
-    inside face of the existing boundary wall (cladding only, no new construction, kept below the wall top)."""
+    """B15 (owner): a tulsi vrindavan in the back garden, at its north-east corner: against the east boundary wall,
+    just short of the deck, so the devotee faces east; open to the sky. (First placed in the front lawn's NE;
+    the owner moved it to the back garden.) Floating marble plinth with an LED line, carved marble pedestal +
+    planter, brass diyas, bamboo planters either side, fluted walnut cladding with a brass Om on the inside face
+    of the existing boundary wall (cladding only, no new construction, kept below the wall top)."""
     gf = floor(h, 'GF')
     gf['furniture'] += [
-        F('GF-O09', 'GF-LAWN-F', 'tulsi_platform', (2775, 21550), (1300, 750, 1300), 180, note='R1-B15 tulsi, NE garden; faces the house'),
-        F('GF-O10', 'GF-LAWN-F', 'bamboo_planter', (1925, 21700), (450, 450, 2400), 0),
-        F('GF-O11', 'GF-LAWN-F', 'bamboo_planter', (3625, 21700), (450, 450, 2400), 0),
-        F('GF-O12', 'GF-LAWN-F', 'fluted_panel', (2775, 21955), (2100, 40, 1450), 180, note='cladding on the boundary wall, brass Om'),
+        F('GF-O09', 'GF-LAWN-B', 'tulsi_platform', (645, 1650), (1300, 750, 1300), 270, note='R1-B15 tulsi, NE corner of the back garden; devotee faces east'),
+        F('GF-O10', 'GF-LAWN-B', 'bamboo_planter', (500, 750), (450, 450, 2400), 0),
+        F('GF-O11', 'GF-LAWN-B', 'bamboo_planter', (500, 2550), (450, 450, 2400), 0),
+        F('GF-O12', 'GF-LAWN-B', 'fluted_panel', (250, 1650), (2100, 40, 1450), 270, note='cladding on the east boundary wall, brass Om'),
     ]
 
 
@@ -535,14 +536,14 @@ def e13_electrical(h):
     P('sb', S, 6100, 16600, note='by the door')
     P('sd', S, 7600, 16900, note='smoke detector (R1 addition)')
     # outside (DB-1, RCD)
-    for x in (1200, 3600, 5900, 8200):
+    for x in (2000, 3600, 5900, 8200):
         P('gl', 'GF-LAWN-B', x, 1300, note='garden light')
+    P('wl', 'GF-LAWN-B', 250, 1650, z=1300, note='tulsi: plinth LED + panel cove, IP65 (R1-B15)')
     P('wl', 'GF-DECK', 250, 4200, note='pergola wall light'); P('wl', 'GF-DECK', 9131, 4200, note='pergola wall light')
-    P('gl', 'GF-COURT', 2000, 20300, note='garden light')
-    P('wl', 'GF-LAWN-F', 2775, 21950, z=1300, note='tulsi: plinth LED + panel cove, IP65 (R1-B15)'); P('gl', 'GF-COURT', 3900, 21300, note='garden light')
+    P('gl', 'GF-COURT', 2400, 21800, note='garden light'); P('gl', 'GF-COURT', 3900, 21300, note='garden light')
     P('wl', 'GF-COURT', 6000, 20750, note='gate light (A8)'); P('wl', 'GF-COURT', 6000, 21950, note='gate light (A8)')
     P('ip65', 'GF-LAWN-B', 9131, 3000, note='weatherproof socket, rear lawn (A1)')
-    P('pump', 'GF-LAWN-B', 300, 2700, note='irrigation pump point (A1)', kw=0.75)
+    P('pump', 'GF-LAWN-B', 2600, 220, note='irrigation pump point (A1), on the rear boundary wall', kw=0.75)
     P('cctv', 'GF-DECK', 9100, 5540, note='rear CCTV (A1)')
     P('cctv', 'GF-COURT', 5700, 22000, note='gate + street CCTV')
     P('vdpo', 'GF-COURT', 5900, 22050, note='outdoor VDP unit at the gate (A8)')

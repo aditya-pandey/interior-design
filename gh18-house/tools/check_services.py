@@ -474,9 +474,18 @@ def vastu(h, rule):
         above = [rr['name'] for rr in rooms.values() if up and rr['id'][:2] == up and hl.point_in_poly(m['pos'], rr['polygon'])]
         bad = [n for n in above if any(w in n.lower() for w in ('toilet', 'washroom'))]
         rule('%s mandir: no toilet above' % m['id'], 'FAIL' if bad else 'PASS', ', '.join(above) or 'open above')
+    areas = {a['id']: a for f in h['floors'] for a in f.get('outdoor', [])}
     for fid, t in [(i, f) for i, f in fur if f['type'] == 'tulsi_platform']:
-        z = zone(t['pos'], (0, box[1], box[2], h['meta']['plot']['depth_to_front_boundary']))
-        rule('%s tulsi in the NE (N / E) of the plot' % t['id'], 'PASS' if z in ('NE', 'N', 'E') else 'FAIL', z + ' zone')
+        g = areas.get(t['room']) or rooms[t['room']]
+        xs, ys = [p[0] for p in g['polygon']], [p[1] for p in g['polygon']]
+        q = facing((t['pos'][0] - (min(xs) + max(xs)) / 2, 0)), facing((0, t['pos'][1] - (min(ys) + max(ys)) / 2))
+        rule('%s tulsi in the NE corner of %s' % (t['id'], g['name']), 'PASS' if set(q) == {'east', 'north'} else 'WARN', '-'.join(reversed(q)))
+        a = math.radians(t.get('rot', 0))
+        dev = facing((math.sin(a), -math.cos(a)))
+        rule('%s tulsi: devotee faces east or north' % t['id'], 'PASS' if dev in ('east', 'north') else 'WARN', 'faces ' + dev)
+        z = zone(t['pos'], (0, 0, box[2], h['meta']['plot']['depth_to_front_boundary']))
+        rule('%s tulsi zone of the plot (N / NE / E preferred)' % t['id'], 'PASS' if z in ('NE', 'N', 'E') else 'WARN',
+             z + ' zone' + ('' if z in ('NE', 'N', 'E') else ' - owner placed it in the back garden; Vastu consultant to confirm'))
         covered = [rr['name'] for f2 in h['floors'] if f2['id'] != 'GF' for rr in f2['rooms'] if hl.point_in_poly(t['pos'], rr['polygon'])]
         rule('%s tulsi open to the sky' % t['id'], 'FAIL' if covered else 'PASS', ', '.join(covered) or 'nothing above')
     pl = h.get('services', {}).get('plumbing', {})

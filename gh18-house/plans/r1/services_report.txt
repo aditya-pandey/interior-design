@@ -114,7 +114,7 @@ PASS  sheet schedule: GF Lobby / Stair / Panel rm          R1 adds lights +1
 PASS  sheet schedule: GF Guest room                        as the sheet
 PASS  sheet schedule: GF Foyer                             as the sheet
 PASS  sheet schedule: GF Study -> R1 guest lounge / study  as the sheet
-PASS  sheet schedule: External / Parking                   R1 adds pump +1
+PASS  sheet schedule: External / Parking                   R1 adds lights +1, pump +1
 PASS  sheet schedule: FF Master bedroom                    as the sheet
 PASS  sheet schedule: FF Master toilet -> R1 master washroom R1 adds lights +1
 PASS  sheet schedule: FF Dresser                           as the sheet
@@ -290,15 +290,17 @@ PASS  GF-F25 mandir: devotee faces east or north           faces east
 PASS  GF-F25 mandir in the NE quarter of Family Lounge     north-east
 PASS  GF-F25 mandir: no toilet behind or beside it         kitchen wall behind
 PASS  GF-F25 mandir: no toilet above                       Master Bedroom
-PASS  GF-O09 tulsi in the NE (N / E) of the plot           NE zone
+PASS  GF-O09 tulsi in the NE corner of Back Lawn           north-east
+PASS  GF-O09 tulsi: devotee faces east or north            faces east
+WARN  GF-O09 tulsi zone of the plot (N / NE / E preferred) SE zone - owner placed it in the back garden; Vastu consultant to confirm
 PASS  GF-O09 tulsi open to the sky                         nothing above
 PASS  UGT underground tank in the NE                       red-line 6 / plumbing P4
 PASS  GF-K08 cook faces east (red-line 7)                  east
 PASS  SF-R01 overhead tank in the S / SW / W               W zone (red-line T)
 
-VASTU PLACEMENTS: PASS  (9 pass, 0 warn, 0 fail)
+VASTU PLACEMENTS: PASS  (10 pass, 1 warn, 0 fail)
 
-RESULT: PASS  (277 pass, 3 warn, 0 fail)
+RESULT: PASS  (278 pass, 4 warn, 0 fail)
 
 POINT SCHEDULE (R1)  rooms x points; L = lights, F = fans, 6A = sockets (incl. counter / IP65), 16A, AC, GY = geyser, EF, TV, D = data
 room                       light   fan    s6   usb   s16    ac    gy    ef    tv  data    sd    hd    sb  sb2w
@@ -311,10 +313,9 @@ GF-JAN Under-stair Storage     1     .     .     .     .     .     .     .     .
 GF-FOY Entrance Foyer          2     .     .     .     .     .     .     .     .     .     .     .     1     .
 GF-GST Guest Room              2     1     3     .     .     1     .     .     1     .     1     .     1     2
 GF-MND Guest Lounge / Stud     2     1     2     .     .     1     .     .     1     1     1     .     1     .
-GF-LAWN-B Back Lawn            4     .     1     .     .     .     .     .     .     .     .     .     .     .
+GF-LAWN-B Back Lawn            5     .     1     .     .     .     .     .     .     .     .     .     .     .
 GF-DECK Deck + Pergola         2     .     .     .     .     .     .     .     .     .     .     .     .     .
 GF-COURT Entrance Court        4     .     .     .     .     .     .     .     .     .     .     .     .     .
-GF-LAWN-F Front Lawn           1     .     .     .     .     .     .     .     .     .     .     .     .     .
 GF-PARK Parking                .     .     .     .     .     .     .     .     .     .     .     .     .     .
 FF-MST Master Bedroom          3     1     3     2     .     1     .     .     1     .     1     .     1     2
 FF-BAL Balcony                 4     .     2     .     .     .     .     .     .     .     .     .     .     .
@@ -340,7 +341,7 @@ L3     DB-1  lighting    16  10A                  1.5 sq mm        -      0.27  
 L4     DB-1  lighting     5  10A                  1.5 sq mm        -      0.12  Guest Lounge / Study
 S1     DB-1  sockets      8  16A                  2.5 sq mm        yes    0.90  Family Lounge, Guest Room, Kitchen, Toilet
 S2     DB-1  sockets      5  16A                  2.5 sq mm        yes    0.50  Guest Lounge / Study, Guest Room
-L5     DB-1  lighting    10  10A                  1.5 sq mm        yes    0.17  Back Lawn, Deck + Pergola, Entrance Court, Front Lawn
+L5     DB-1  lighting    10  10A                  1.5 sq mm        yes    0.17  Back Lawn, Deck + Pergola, Entrance Court
 L6     DB-1  lighting     1  10A                  1.5 sq mm        yes    0.02  Entrance Court
 S3     DB-1  sockets      1  16A                  2.5 sq mm        yes    0.10  Back Lawn
 P1     DB-1  power        1  20A                  4 sq mm          yes    1.50  Kitchen

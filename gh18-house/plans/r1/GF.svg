@@ -168,12 +168,12 @@
 <polyline points="790,9651 790,9251" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polyline points="230,9651 830,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polyline points="830,9651 230,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polygon points="3425,21925 2125,21925 2125,21175 3425,21175" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<circle cx="2775" cy="21590" r="220" fill="#e6efd9" stroke="#8a7a5c" stroke-width="8"/>
-<text x="2775" y="21065" font-size="95" fill="#5d7a3a" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >TULSI</text>
-<circle cx="1925" cy="21700" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<circle cx="3625" cy="21700" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
-<polygon points="3825,21975 1725,21975 1725,21935 3825,21935" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="270,2300 270,1000 1020,1000 1020,2300" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<circle cx="605" cy="1650" r="220" fill="#e6efd9" stroke="#8a7a5c" stroke-width="8"/>
+<text x="645" y="1680" font-size="95" fill="#5d7a3a" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >TULSI</text>
+<circle cx="500" cy="750" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<circle cx="500" cy="2550" r="225" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<polygon points="230,2700 230,600 270,600 270,2700" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="2325,19550 3075,19550 3075,19850 2325,19850" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 </g>
 <g id="stair">
