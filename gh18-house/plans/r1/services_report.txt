@@ -1,0 +1,103 @@
+GH-18 services check (house_r1.json, Plumbing Layout Rev A (Oct 2026) re-applied to the R1 layout; SS-2 dropped (R1-C10 master washroom on SS-1))
+design intent - sizing, falls and municipal connection by the licensed plumbing consultant
+
+PASS  GF-T01 wc_wall_hung drained                          GF-S1
+PASS  GF-T03 vanity drained                                GF-W1
+PASS  GF-T03 vanity supplied                               DT-1, DT-1a
+PASS  GF-T04 shower_head drained                           GF-W1
+PASS  GF-T04 shower_head supplied                          DT-1, DT-1a, DT-1b
+PASS  GF-F24 vanity drained                                GF-W2
+PASS  GF-F24 vanity supplied                               DT-1, DT-1a, DT-1b
+PASS  GF-K07 sink drained                                  GF-W3
+PASS  GF-K07 sink supplied                                 DT-1, DT-1a, DT-1b
+PASS  FF-T21 wc_wall_hung drained                          FF-S2
+PASS  FF-T22 vanity drained                                FF-W2
+PASS  FF-T22 vanity supplied                               DT-1c, DT-1d
+PASS  FF-T23 shower_head drained                           FF-W2
+PASS  FF-T23 shower_head supplied                          DT-1c, DT-1d
+PASS  FF-T11 vanity drained                                FF-W3
+PASS  FF-T11 vanity supplied                               DT-2
+PASS  FF-T12 wc_wall_hung drained                          FF-S3
+PASS  FF-T13 shower_head drained                           FF-W3
+PASS  FF-T13 shower_head supplied                          DT-2
+PASS  FF-T01 bathtub drained                               FF-W1
+PASS  FF-T01 bathtub supplied                              DT-1c, DT-1d
+PASS  FF-T03 shower_head drained                           over the tub FF-T01: drains through the tub waste
+PASS  FF-T02 wc_wall_hung drained                          FF-S1
+PASS  FF-T04 vanity drained                                FF-W1b
+PASS  FF-T04 vanity supplied                               DT-1c, DT-1d
+PASS  SF-S05 wc_wall_hung drained                          SF-S1
+PASS  SF-S06 basin drained                                 SF-W1
+PASS  SF-S06 basin supplied                                DT-1e, DT-1f
+PASS  SF-S07 shower_head drained                           SF-W1
+PASS  SF-S07 shower_head supplied                          DT-1e, DT-1f
+PASS  SF-U01 washer_dryer drained                          SF-W2
+PASS  SF-U01 washer_dryer supplied                         DT-1e, DT-1f
+PASS  SF-U02 utility_counter drained                       SF-W2
+PASS  SF-U02 utility_counter supplied                      DT-1e, DT-1f
+PASS  GF-S1 ends at a stack / chamber / drain              IC-2
+PASS  GF-W1 ends at a stack / chamber / drain              IC-2
+PASS  GF-W2 ends at a stack / chamber / drain              GF-W1
+PASS  GF-W3 ends at a stack / chamber / drain              GT-1
+PASS  GF-W4 ends at a stack / chamber / drain              IC-2
+PASS  FF-S1 ends at a stack / chamber / drain              SS-1
+PASS  FF-W1 ends at a stack / chamber / drain              SS-1
+PASS  FF-W1b ends at a stack / chamber / drain             FF-W1
+PASS  FF-S2 ends at a stack / chamber / drain              SS-1
+PASS  FF-W2 ends at a stack / chamber / drain              SS-1
+PASS  FF-S3 ends at a stack / chamber / drain              SS-3
+PASS  FF-W3 ends at a stack / chamber / drain              SS-3
+PASS  SF-S1 ends at a stack / chamber / drain              SS-1
+PASS  SF-W1 ends at a stack / chamber / drain              SS-1
+PASS  SF-W2 ends at a stack / chamber / drain              SS-1
+PASS  SW-1 ends at a stack / chamber / drain               IC-3
+PASS  SW-2 ends at a stack / chamber / drain               IC-5
+PASS  SW-3 ends at a stack / chamber / drain               IC-4
+PASS  SW-4 ends at a stack / chamber / drain               IC-5
+PASS  SW-5 outfall                                         IC-5 -> municipal sewer (confirm connection with RWA / MCG)
+PASS  RW-C1 ends at a stack / chamber / drain              RWH
+PASS  RW-C2 ends at a stack / chamber / drain              RWH
+PASS  RW-OF outfall                                        RWH overflow -> 300 mm storm drain (no sewage)
+PASS  GF-S1 fall                                           1:36 (min 1:40)
+PASS  GF-W1 fall                                           1:45 (min 1:60)
+PASS  GF-W2 fall                                           1:45 (min 1:60)
+PASS  GF-W3 fall                                           1:45 (min 1:60)
+PASS  GF-W4 fall                                           1:43 (min 1:60)
+PASS  FF-S1 fall                                           1:36 (min 1:40)
+PASS  FF-W1 fall                                           1:44 (min 1:60)
+PASS  FF-W1b fall                                          1:45 (min 1:60)
+PASS  FF-S2 fall                                           1:36 (min 1:40)
+PASS  FF-W2 fall                                           1:45 (min 1:60)
+PASS  FF-S3 fall                                           1:36 (min 1:40)
+PASS  FF-W3 fall                                           1:45 (min 1:60)
+PASS  SF-S1 fall                                           1:35 (min 1:40)
+PASS  SF-W1 fall                                           1:45 (min 1:60)
+PASS  SF-W2 fall                                           1:44 (min 1:60)
+PASS  SW-1 fall                                            1:45 (min 1:60)
+PASS  SW-2 fall                                            1:45 (min 1:60)
+PASS  SW-3 fall                                            1:36 (min 1:40)
+PASS  SW-4 fall                                            1:45 (min 1:60)
+PASS  SW-5 fall                                            1:45 (min 1:60)
+PASS  RW-C1 fall                                           1:89 (min 1:100)
+PASS  RW-C2 fall                                           1:89 (min 1:100)
+PASS  RW-OF fall                                           1:90 (min 1:100)
+PASS  IC-2 not inside a room                               OTS
+PASS  GT-1 not inside a room                               OTS
+PASS  CO-1 sealed cleanout location                        inside Lobby (sealed double-seal cover)
+PASS  CO-2 sealed cleanout location                        inside Entrance Foyer (sealed double-seal cover)
+PASS  IC-3 not inside a room                               entrance court
+PASS  IC-4 not inside a room                               parking
+PASS  IC-5 not inside a room                               parking
+PASS  RWH not inside a room                                entrance court
+PASS  UGT not inside a room                                front lawn (NE)
+PASS  nothing under the guest room                         
+PASS  nothing in the east / west party walls               
+PASS  UGT >= 2 m from any sewer line or chamber            3.4 m
+PASS  UGT >= 2 m from the RWH pit                          2.2 m
+PASS  GF showers: head below the OHT                       8.05 m
+PASS  FF showers: head below the OHT                       4.75 m
+WARN  SF showers: head below the OHT                       1.45 m - fine at low flow; a small pressure pump for the SF washroom
+PASS  SS-1 vent >= 1 m above the finish                    1.00 m
+PASS  SS-3 vent >= 1 m above the finish                    1.30 m
+
+RESULT: PASS  (97 pass, 1 warn, 0 fail)

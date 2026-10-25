@@ -136,6 +136,15 @@ def poly_bbox(pts):
     return min(xs), min(ys), max(xs), max(ys)
 
 
+def point_in_poly(p, pts):
+    """Even-odd test: is plan point p (x, y) inside the polygon?"""
+    x, y, inside = p[0], p[1], False
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
+
 def poly_centroid(pts):
     a = 0.0
     cx = cy = 0.0

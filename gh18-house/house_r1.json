@@ -3807,5 +3807,390 @@
         "note": "temporary fitment: opal polycarbonate on 100x100 MS posts, falls to the rear"
       }
     }
-  ]
+  ],
+  "services": {
+    "plumbing": {
+      "stacks": [
+        {
+          "id": "SS-1",
+          "kind": "soil",
+          "dia": 110,
+          "at": [450, 11100],
+          "z": [-300, 11350],
+          "serves": "GF toilet, dining basin, kitchen wash nook (via GT-1), FF master washroom, FF bedroom-3 toilet, SF servant washroom, SF utility",
+          "note": "in the OTS (open to sky); 50 mm vent 1 m above the roof"
+        },
+        {
+          "id": "SS-3",
+          "kind": "soil",
+          "dia": 110,
+          "at": [8950, 15420],
+          "z": [-300, 8350],
+          "serves": "FF kids toilet",
+          "note": "boxed duct in the SW corner of the GF guest lounge; vent above the front terrace parapet"
+        }
+      ],
+      "chambers": [
+        {
+          "id": "IC-2",
+          "type": "inspection",
+          "at": [150, 11700],
+          "size": [600, 600],
+          "depth": 700,
+          "area": "OTS",
+          "note": "SS-1 + GT-1 discharge"
+        },
+        {
+          "id": "GT-1",
+          "type": "grease_trap",
+          "at": [150, 12350],
+          "size": [450, 450],
+          "depth": 500,
+          "area": "OTS",
+          "note": "kitchen wash-nook waste"
+        },
+        {
+          "id": "CO-1",
+          "type": "cleanout",
+          "at": [4800, 14200],
+          "size": [300, 300],
+          "depth": 500,
+          "area": "GF lobby",
+          "note": "sealed double-seal access cover"
+        },
+        {
+          "id": "CO-2",
+          "type": "cleanout",
+          "at": [4800, 18000],
+          "size": [300, 300],
+          "depth": 580,
+          "area": "GF lobby / foyer",
+          "note": "sealed double-seal access cover"
+        },
+        {
+          "id": "IC-3",
+          "type": "inspection",
+          "at": [5300, 20300],
+          "size": [600, 600],
+          "depth": 800,
+          "area": "entrance court"
+        },
+        {
+          "id": "IC-4",
+          "type": "inspection",
+          "at": [8700, 20300],
+          "size": [600, 600],
+          "depth": 700,
+          "area": "parking",
+          "note": "heavy-duty cover; SS-3"
+        },
+        {
+          "id": "IC-5",
+          "type": "inspection",
+          "at": [7600, 21900],
+          "size": [600, 600],
+          "depth": 900,
+          "area": "parking",
+          "note": "heavy-duty cover; the only connection to the municipal sewer"
+        },
+        {
+          "id": "RWH",
+          "type": "rwh_pit",
+          "at": [4500, 21400],
+          "size": [1200, 1200],
+          "depth": 2000,
+          "area": "entrance court",
+          "note": "rainwater harvesting + recharge; overflow to the storm drain"
+        },
+        {
+          "id": "UGT",
+          "type": "tank",
+          "at": [900, 21100],
+          "size": [1500, 1200],
+          "depth": 1500,
+          "area": "front lawn (NE)",
+          "note": "5000 L underground tank, sealed manhole; pump PP 0.5-1 HP"
+        }
+      ],
+      "runs": [
+        {
+          "id": "GF-S1",
+          "kind": "soil",
+          "dia": 110,
+          "pts": [[2850, 11946, 300], [900, 11900, 246], [150, 11700, 224]],
+          "serves": "GF toilet WC -> IC-2"
+        },
+        {
+          "id": "GF-W1",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[3751, 11816, 330], [3000, 12300, 310], [1300, 12200, 272], [900, 12000, 262], [150, 11700, 244]],
+          "serves": "GF toilet basin + shower -> IC-2"
+        },
+        {
+          "id": "GF-W2",
+          "kind": "waste",
+          "dia": 50,
+          "pts": [[3750, 11140, 380], [3750, 11600, 369], [3000, 12300, 346]],
+          "serves": "dining hand-wash basin -> GF toilet line"
+        },
+        {
+          "id": "GF-W3",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[1700, 11065, 380], [1031, 11000, 365], [500, 11600, 347], [150, 12350, 328]],
+          "serves": "kitchen wash nook -> GT-1"
+        },
+        {
+          "id": "GF-W4",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[150, 12350, -250], [150, 11700, -265]],
+          "serves": "GT-1 -> IC-2"
+        },
+        {
+          "id": "FF-S1",
+          "kind": "soil",
+          "dia": 110,
+          "pts": [[510, 10050, 3550], [500, 10700, 3532], [450, 11100, 3520]],
+          "serves": "FF master washroom WC -> SS-1"
+        },
+        {
+          "id": "FF-W1",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[2618, 9712, 3580], [1500, 9950, 3554], [700, 10400, 3533], [450, 11100, 3516]],
+          "serves": "FF master tub + basin -> SS-1"
+        },
+        {
+          "id": "FF-W1b",
+          "kind": "waste",
+          "dia": 50,
+          "pts": [[780, 9030, 3580], [1500, 9950, 3554]],
+          "serves": "FF master basin"
+        },
+        {
+          "id": "FF-S2",
+          "kind": "soil",
+          "dia": 110,
+          "pts": [[2920, 11129, 3550], [1500, 11150, 3510], [450, 11100, 3481]],
+          "serves": "FF bedroom-3 toilet WC -> SS-1"
+        },
+        {
+          "id": "FF-W2",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[3820, 11149, 3580], [3300, 11400, 3567], [1650, 11300, 3530], [900, 11200, 3513], [450, 11100, 3502]],
+          "serves": "FF bedroom-3 toilet basin + shower -> SS-1"
+        },
+        {
+          "id": "FF-S3",
+          "kind": "soil",
+          "dia": 110,
+          "pts": [[7562, 15586, 3550], [8700, 15500, 3518], [8950, 15420, 3510]],
+          "serves": "FF kids toilet WC -> SS-3"
+        },
+        {
+          "id": "FF-W3",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[6580, 15606, 3580], [7000, 15900, 3568], [8620, 15700, 3532], [8950, 15420, 3522]],
+          "serves": "FF kids toilet basin + shower -> SS-3"
+        },
+        {
+          "id": "SF-S1",
+          "kind": "soil",
+          "dia": 110,
+          "pts": [[1950, 11129, 6850], [1000, 11150, 6823], [450, 11100, 6807]],
+          "serves": "SF servant washroom WC -> SS-1"
+        },
+        {
+          "id": "SF-W1",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[1350, 11024, 6880], [1650, 12300, 6851], [900, 11500, 6826], [450, 11100, 6812]],
+          "serves": "SF servant basin + shower -> SS-1"
+        },
+        {
+          "id": "SF-W2",
+          "kind": "waste",
+          "dia": 75,
+          "pts": [[2131, 10369, 6900], [1331, 10369, 6882], [700, 10500, 6867], [450, 11100, 6852]],
+          "serves": "SF utility sink + washer -> SS-1"
+        },
+        {
+          "id": "SW-1",
+          "kind": "sewer",
+          "dia": 150,
+          "pts": [[150, 11700, -450], [1500, 12600, -486], [4600, 13900, -560], [4800, 14200, -568], [4800, 18000, -652], [4800, 18600, -666], [5300, 20300, -705]],
+          "serves": "IC-2 -> CO-1 -> CO-2 -> IC-3 (sleeved; nothing under the guest room)"
+        },
+        {
+          "id": "SW-2",
+          "kind": "sewer",
+          "dia": 150,
+          "pts": [[5300, 20300, -725], [7600, 21900, -787]],
+          "serves": "IC-3 -> IC-5"
+        },
+        {
+          "id": "SW-3",
+          "kind": "sewer",
+          "dia": 110,
+          "pts": [[8950, 15420, -300], [8950, 19000, -399], [8700, 20300, -436]],
+          "serves": "SS-3 -> IC-4 (sleeved under the guest lounge)"
+        },
+        {
+          "id": "SW-4",
+          "kind": "sewer",
+          "dia": 150,
+          "pts": [[8700, 20300, -456], [7600, 21900, -499]],
+          "serves": "IC-4 -> IC-5"
+        },
+        {
+          "id": "SW-5",
+          "kind": "sewer",
+          "dia": 150,
+          "pts": [[7600, 21900, -807], [7600, 23600, -845]],
+          "serves": "IC-5 -> municipal sewer (confirm connection with RWA / MCG)",
+          "outfall": true
+        },
+        {
+          "id": "W-IN",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[2500, 23600, -400], [2500, 22300, -400], [1400, 21700, -300]],
+          "serves": "municipal inlet with meter + check valve -> UGT (does not cross the sewer)"
+        },
+        {
+          "id": "R-1",
+          "kind": "pumped",
+          "dia": 32,
+          "pts": [[900, 21100, -200], [330, 20000, -200], [330, 19300, 700], [330, 12800, 700], [100, 12500, 700], [100, 12500, 10450], [5600, 11600, 10450], [5650, 11600, 11850]],
+          "serves": "pumped riser to the OHT, in a boxed chase on the inner face of the east wall (not in the party wall, not across the guest room)"
+        },
+        {
+          "id": "DT-1",
+          "kind": "cold",
+          "dia": 32,
+          "pts": [[6300, 11000, 10750], [6300, 11000, 10450], [300, 11000, 10450], [300, 11000, 900]],
+          "serves": "down-take in the OTS: GF, FF and SF wet areas west of the stair"
+        },
+        {
+          "id": "DT-1a",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 1200], [1300, 12200, 1200], [2850, 12000, 1200], [3750, 11400, 1150]],
+          "serves": "GF toilet + dining basin"
+        },
+        {
+          "id": "DT-1b",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 1100], [1700, 11000, 1100]],
+          "serves": "GF wash nook"
+        },
+        {
+          "id": "DT-1c",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 4500], [500, 10300, 4500], [700, 9300, 4500], [2618, 9450, 4500]],
+          "serves": "FF master washroom"
+        },
+        {
+          "id": "DT-1d",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 4600], [1650, 11300, 4600], [3820, 11300, 4600]],
+          "serves": "FF bedroom-3 toilet"
+        },
+        {
+          "id": "DT-1e",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 7900], [1650, 11300, 7900]],
+          "serves": "SF servant washroom"
+        },
+        {
+          "id": "DT-1f",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[300, 11000, 7850], [600, 10500, 7850], [2131, 10500, 7850]],
+          "serves": "SF utility"
+        },
+        {
+          "id": "DT-2",
+          "kind": "cold",
+          "dia": 25,
+          "pts": [[6900, 11600, 10750], [6900, 15300, 10450], [8950, 15300, 10450], [8950, 15300, 4600], [7562, 15400, 4600], [6580, 15400, 4600]],
+          "serves": "down-take in the SS-3 duct: FF kids toilet"
+        },
+        {
+          "id": "HW-1",
+          "kind": "hot",
+          "dia": 25,
+          "pts": [[3000, 10900, 11550], [3000, 10900, 10450], [400, 10900, 10450], [400, 10900, 4400], [700, 9600, 4400], [2618, 9600, 4400]],
+          "serves": "solar hot water -> FF master washroom"
+        },
+        {
+          "id": "HW-2",
+          "kind": "hot",
+          "dia": 25,
+          "pts": [[400, 10900, 4400], [400, 10900, 1250], [1700, 10950, 1250]],
+          "serves": "solar hot water -> GF kitchen wash nook"
+        },
+        {
+          "id": "RWP-1",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[300, 19300, 7050], [300, 19300, -300]],
+          "serves": "terrace / balcony rainwater"
+        },
+        {
+          "id": "RWP-2",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[2950, 19560, 7050], [2950, 19560, -300]],
+          "serves": "terrace / balcony rainwater"
+        },
+        {
+          "id": "RWP-3",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[6870, 21300, 7050], [6870, 21300, -300]],
+          "serves": "terrace / balcony rainwater"
+        },
+        {
+          "id": "RWP-4",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[9100, 21420, 7050], [9100, 21420, -300]],
+          "serves": "terrace / balcony rainwater"
+        },
+        {
+          "id": "RW-C1",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[300, 19300, -300], [2950, 19560, -330], [4100, 21000, -351], [4500, 21400, -358]],
+          "serves": "RWP-1/2 -> RWH"
+        },
+        {
+          "id": "RW-C2",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[9100, 21420, -300], [6870, 21300, -325], [5100, 21450, -345], [4500, 21400, -352]],
+          "serves": "RWP-3/4 -> RWH"
+        },
+        {
+          "id": "RW-OF",
+          "kind": "rain",
+          "dia": 100,
+          "pts": [[4900, 21800, -300], [6300, 22420, -317]],
+          "serves": "RWH overflow -> 300 mm storm drain (no sewage)",
+          "outfall": true
+        }
+      ],
+      "source": "Plumbing Layout Rev A (Oct 2026) re-applied to the R1 layout; SS-2 dropped (R1-C10 master washroom on SS-1)",
+      "status": "design intent - sizing, falls and municipal connection by the licensed plumbing consultant"
+    }
+  }
 }

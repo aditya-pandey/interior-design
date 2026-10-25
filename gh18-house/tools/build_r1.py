@@ -5,6 +5,7 @@ small function tagged with its item in the R1 brief (ASSUMPTIONS.md section E), 
 Run:  python3 tools/build_r1.py && python3 tools/check_dims.py house_r1.json && python3 tools/plans.py house_r1.json plans/r1
 """
 import copy
+import math
 import os
 import sys
 
@@ -288,8 +289,119 @@ def d11_utility_terrace(h):
     ]
 
 
+# ---------------------------------------------------------------- E: services (design intent; positions indicative)
+
+def e12_plumbing(h):
+    """E12 plumbing: the Plumbing Rev A intent re-applied to the R1 layout (it was drawn on R0).
+    Points are [x, y, z] in mm, z absolute from natural ground (GF FFL +450, FF +3750, SF +7050, roof +10350).
+    Kinds: soil, waste, vent, cold, hot, pumped, rain, sewer. Fixture ends come from the furniture in this file."""
+    fur = {f['id']: f for fl in h['floors'] for f in fl['furniture']}
+    at = lambda fid, z: [*fur[fid]['pos'], z]  # noqa: E731
+    SS1, SS3 = (450, 11100), (8950, 15420)
+    OHT = fur['SF-R01']['pos']
+    roof = h['levels']['ROOF']['ffl']
+    stacks = [
+        dict(id='SS-1', kind='soil', dia=110, at=list(SS1), z=[-300, roof + 1000],
+             serves='GF toilet, dining basin, kitchen wash nook (via GT-1), FF master washroom, FF bedroom-3 toilet, SF servant washroom, SF utility',
+             note='in the OTS (open to sky); 50 mm vent 1 m above the roof'),
+        dict(id='SS-3', kind='soil', dia=110, at=list(SS3), z=[-300, 7050 + 1300], serves='FF kids toilet',
+             note='boxed duct in the SW corner of the GF guest lounge; vent above the front terrace parapet'),
+    ]
+    chambers = [
+        dict(id='IC-2', type='inspection', at=[150, 11700], size=[600, 600], depth=700, area='OTS', note='SS-1 + GT-1 discharge'),
+        dict(id='GT-1', type='grease_trap', at=[150, 12350], size=[450, 450], depth=500, area='OTS', note='kitchen wash-nook waste'),
+        dict(id='CO-1', type='cleanout', at=[4800, 14200], size=[300, 300], depth=500, area='GF lobby', note='sealed double-seal access cover'),
+        dict(id='CO-2', type='cleanout', at=[4800, 18000], size=[300, 300], depth=580, area='GF lobby / foyer', note='sealed double-seal access cover'),
+        dict(id='IC-3', type='inspection', at=[5300, 20300], size=[600, 600], depth=800, area='entrance court'),
+        dict(id='IC-4', type='inspection', at=[8700, 20300], size=[600, 600], depth=700, area='parking', note='heavy-duty cover; SS-3'),
+        dict(id='IC-5', type='inspection', at=[7600, 21900], size=[600, 600], depth=900, area='parking', note='heavy-duty cover; the only connection to the municipal sewer'),
+        dict(id='RWH', type='rwh_pit', at=[4500, 21400], size=[1200, 1200], depth=2000, area='entrance court', note='rainwater harvesting + recharge; overflow to the storm drain'),
+        dict(id='UGT', type='tank', at=[900, 21100], size=[1500, 1200], depth=1500, area='front lawn (NE)', note='5000 L underground tank, sealed manhole; pump PP 0.5-1 HP'),
+    ]
+    runs = []
+
+    def run(rid, kind, dia, pts, serves=''):
+        runs.append(dict(id=rid, kind=kind, dia=dia, pts=[list(map(round, p)) for p in pts], serves=serves))
+
+    SLOPE = {'sewer': 1 / 50, 'soil': 1 / 40, 'waste': 1 / 50, 'rain': 1 / 100}   # minimum falls (110 mm sewer: 1:40)
+
+    def drain(rid, kind, dia, pts, serves='', outfall=False):
+        """Gravity run: the first point's z is the start invert; every later z is computed from the length run so far
+        at the kind's fall (any z given after the first point is ignored)."""
+        fall = (1 / 40 if (kind, dia) == ('sewer', 110) else SLOPE[kind]) * 1.1      # 10% margin over the minimum
+        out, z = [list(pts[0])], pts[0][2]
+        for p0, p1 in zip(pts, pts[1:]):
+            z = math.floor(z - math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * fall)      # round down per segment, never under the fall
+            out.append([p1[0], p1[1], z])
+        run(rid, kind, dia, out, serves)
+        if outfall:
+            runs[-1]['outfall'] = True
+        return out[-1][2]
+
+    s1 = lambda z: [*SS1, z]  # noqa: E731
+    s3 = lambda z: [*SS3, z]  # noqa: E731
+    # ---- GF (in the plinth, falling to IC-2 / GT-1)
+    drain('GF-S1', 'soil', 110, [at('GF-T01', 300), [900, 11900, 120], [150, 11700, -200]], 'GF toilet WC -> IC-2')
+    drain('GF-W1', 'waste', 75, [at('GF-T03', 330), [3000, 12300, 300], [1300, 12200, 260], [900, 12000, 130], [150, 11700, -180]], 'GF toilet basin + shower -> IC-2')
+    drain('GF-W2', 'waste', 50, [at('GF-F24', 380), [3750, 11600, 340], [3000, 12300, 300]], 'dining hand-wash basin -> GF toilet line')
+    drain('GF-W3', 'waste', 75, [at('GF-K07', 380), [1031, 11000, 300], [500, 11600, 100], [150, 12350, -150]], 'kitchen wash nook -> GT-1')
+    drain('GF-W4', 'waste', 75, [[150, 12350, -250], [150, 11700, -300]], 'GT-1 -> IC-2')
+    # ---- FF (in sunken floors, into SS-1 / SS-3)
+    drain('FF-S1', 'soil', 110, [at('FF-T02', 3550), [500, 10700, 3500], s1(3450)], 'FF master washroom WC -> SS-1')
+    drain('FF-W1', 'waste', 75, [at('FF-T01', 3580), [1500, 9950, 3560], [700, 10400, 3530], s1(3500)], 'FF master tub + basin -> SS-1')
+    drain('FF-W1b', 'waste', 50, [at('FF-T04', 3580), [1500, 9950, 3560]], 'FF master basin')
+    drain('FF-S2', 'soil', 110, [at('FF-T21', 3550), [1500, 11150, 3500], s1(3450)], 'FF bedroom-3 toilet WC -> SS-1')
+    drain('FF-W2', 'waste', 75, [at('FF-T22', 3580), [3300, 11400, 3570], at('FF-T23', 3560), [900, 11200, 3520], s1(3500)], 'FF bedroom-3 toilet basin + shower -> SS-1')
+    drain('FF-S3', 'soil', 110, [at('FF-T12', 3550), [8700, 15500, 3500], s3(3450)], 'FF kids toilet WC -> SS-3')
+    drain('FF-W3', 'waste', 75, [at('FF-T11', 3580), [7000, 15900, 3570], at('FF-T13', 3560), s3(3500)], 'FF kids toilet basin + shower -> SS-3')
+    # ---- SF
+    drain('SF-S1', 'soil', 110, [at('SF-S05', 6850), [1000, 11150, 6800], s1(6750)], 'SF servant washroom WC -> SS-1')
+    drain('SF-W1', 'waste', 75, [at('SF-S06', 6880), at('SF-S07', 6860), [900, 11500, 6820], s1(6800)], 'SF servant basin + shower -> SS-1')
+    drain('SF-W2', 'waste', 75, [at('SF-U02', 6900), at('SF-U01', 6880), [700, 10500, 6840], s1(6800)], 'SF utility sink + washer -> SS-1')
+    # ---- sewer: IC-2 -> under GF toilet and lobby/foyer (sleeved, CO-1/CO-2) -> IC-3 -> IC-5 -> municipal; SS-3 -> IC-4 -> IC-5
+    z = drain('SW-1', 'sewer', 150, [[150, 11700, -450], [1500, 12600], [4600, 13900], [4800, 14200], [4800, 18000], [4800, 18600], [5300, 20300]],
+              'IC-2 -> CO-1 -> CO-2 -> IC-3 (sleeved; nothing under the guest room)')
+    z = drain('SW-2', 'sewer', 150, [[5300, 20300, z - 20], [7600, 21900]], 'IC-3 -> IC-5')
+    z4 = drain('SW-3', 'sewer', 110, [s3(-300), [8950, 19000], [8700, 20300]], 'SS-3 -> IC-4 (sleeved under the guest lounge)')
+    z4 = drain('SW-4', 'sewer', 150, [[8700, 20300, z4 - 20], [7600, 21900]], 'IC-4 -> IC-5')
+    drain('SW-5', 'sewer', 150, [[7600, 21900, min(z, z4) - 20], [7600, 23600]], 'IC-5 -> municipal sewer (confirm connection with RWA / MCG)', outfall=True)
+    # ---- water: inlet -> UGT -> pump -> riser R-1 (E-wall chase + OTS) -> OHT on the SF roof; down-takes DT-1 (OTS) and DT-2 (SS-3 duct)
+    run('W-IN', 'cold', 25, [[2500, 23600, -400], [2500, 22300, -400], [1400, 21700, -300]], 'municipal inlet with meter + check valve -> UGT (does not cross the sewer)')
+    run('R-1', 'pumped', 32, [[900, 21100, -200], [330, 20000, -200], [330, 19300, 700], [330, 12800, 700], [100, 12500, 700],
+                              [100, 12500, roof + 100], [OHT[0] - 700, OHT[1], roof + 100], [OHT[0] - 650, OHT[1], roof + 1500]], 'pumped riser to the OHT, in a boxed chase on the inner face of the east wall (not in the party wall, not across the guest room)')
+    run('DT-1', 'cold', 32, [[OHT[0], OHT[1] - 600, roof + 400], [OHT[0], 11000, roof + 100], [300, 11000, roof + 100], [300, 11000, 900]],
+        'down-take in the OTS: GF, FF and SF wet areas west of the stair')
+    for rid, pts, what in [
+        ('DT-1a', [[300, 11000, 1200], [1300, 12200, 1200], [2850, 12000, 1200], [3750, 11400, 1150]], 'GF toilet + dining basin'),
+        ('DT-1b', [[300, 11000, 1100], [1700, 11000, 1100]], 'GF wash nook'),
+        ('DT-1c', [[300, 11000, 4500], [500, 10300, 4500], [700, 9300, 4500], [2618, 9450, 4500]], 'FF master washroom'),
+        ('DT-1d', [[300, 11000, 4600], [1650, 11300, 4600], [3820, 11300, 4600]], 'FF bedroom-3 toilet'),
+        ('DT-1e', [[300, 11000, 7900], [1650, 11300, 7900]], 'SF servant washroom'),
+        ('DT-1f', [[300, 11000, 7850], [600, 10500, 7850], [2131, 10500, 7850]], 'SF utility'),
+    ]:
+        run(rid, 'cold', 25, pts, what)
+    run('DT-2', 'cold', 25, [[OHT[0] + 600, OHT[1], roof + 400], [OHT[0] + 600, 15300, roof + 100], [8950, 15300, roof + 100],
+                             [8950, 15300, 4600], [7562, 15400, 4600], [6580, 15400, 4600]], 'down-take in the SS-3 duct: FF kids toilet')
+    sol = fur['SF-R02']['pos']
+    run('HW-1', 'hot', 25, [[sol[0], sol[1] - 600, roof + 1200], [sol[0], 10900, roof + 100], [400, 10900, roof + 100], [400, 10900, 4400],
+                            [700, 9600, 4400], [2618, 9600, 4400]], 'solar hot water -> FF master washroom')
+    run('HW-2', 'hot', 25, [[400, 10900, 4400], [400, 10900, 1250], [1700, 10950, 1250]], 'solar hot water -> GF kitchen wash nook')
+    # ---- rain: terrace slope 1:100 to the north; 4 RWPs down the front face -> RWH pit; overflow -> storm drain
+    rwp = [(300, 19300), (2950, 19560), (6870, 21300), (9100, 21420)]
+    for i, (x, y) in enumerate(rwp):
+        run('RWP-%d' % (i + 1), 'rain', 100, [[x, y, 7050], [x, y, -300]], 'terrace / balcony rainwater')
+    drain('RW-C1', 'rain', 100, [[300, 19300, -300], [2950, 19560, -320], [4100, 21000, -380], [4500, 21400, -400]], 'RWP-1/2 -> RWH')
+    drain('RW-C2', 'rain', 100, [[9100, 21420, -300], [6870, 21300, -330], [5100, 21450, -380], [4500, 21400, -400]], 'RWP-3/4 -> RWH')
+    drain('RW-OF', 'rain', 100, [[4900, 21800, -300], [6300, 22420, -350]], 'RWH overflow -> 300 mm storm drain (no sewage)', outfall=True)
+    h['services'] = dict(
+        plumbing=dict(stacks=stacks, chambers=chambers, runs=runs,
+                      source='Plumbing Layout Rev A (Oct 2026) re-applied to the R1 layout; SS-2 dropped (R1-C10 master washroom on SS-1)',
+                      status='design intent - sizing, falls and municipal connection by the licensed plumbing consultant'),
+    )
+
+
 PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
-           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace]
+           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, e12_plumbing]
 
 
 def build():
