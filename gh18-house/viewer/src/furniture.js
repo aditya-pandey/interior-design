@@ -311,6 +311,17 @@ B.basin = (p, w, d, h) => {
   box(p, 'ceramic', w, 0.16, d, 0, h - 0.16, 0, 0.05);
   cyl(p, 'black_metal', 0.01, 0.01, 0.18, 0, h, -d / 2 + 0.05, 10);
 };
+// built-in bath tub: tiled apron, white shell with a rim, inner basin, overflow + spout
+B.bathtub = (p, w, d, h) => {
+  const rim = 0.07, depth = 0.4;
+  box(p, 'tile_matte_lg', w, h - 0.02, d, 0, 0, 0, 0.004);
+  box(p, 'ceramic', w, 0.02, rim, 0, h - 0.02, -d / 2 + rim / 2, 0.006);
+  box(p, 'ceramic', w, 0.02, rim, 0, h - 0.02, d / 2 - rim / 2, 0.006);
+  box(p, 'ceramic', rim, 0.02, d - 2 * rim, -w / 2 + rim / 2, h - 0.02, 0, 0.006);
+  box(p, 'ceramic', rim, 0.02, d - 2 * rim, w / 2 - rim / 2, h - 0.02, 0, 0.006);
+  box(p, 'ceramic', w - 2 * rim, depth, d - 2 * rim, 0, h - depth, 0, 0.08);
+  cyl(p, 'steel', 0.012, 0.012, 0.12, w / 2 - 0.2, h, -d / 2 + 0.035, 10);
+};
 B.shower_head = (p, w) => {
   cyl(p, 'black_metal', w / 2, w / 2, 0.012, 0, 0, 0, 32);
   cyl(p, 'black_metal', 0.01, 0.01, 0.4, 0, 0.012, 0, 8);

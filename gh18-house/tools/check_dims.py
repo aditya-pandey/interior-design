@@ -32,10 +32,14 @@ SUPERSEDED = {
     ("FF", "3250", 750.2): "D-03 toilet moved to the front wall",
     ("FF", "4258", 800.0): "D-03 toilet moved to the front wall",
 }
+REVERTED = {"R1": ("D-03",)}     # changes a later revision undid: their PDF strings are measured again
 
 
-def superseded(fl, txt, X):
-    return next((v for (f, t, x), v in SUPERSEDED.items() if f == fl and t == txt and abs(x - X) < 4), None)
+def superseded(fl, txt, X, h=None):
+    why = next((v for (f, t, x), v in SUPERSEDED.items() if f == fl and t == txt and abs(x - X) < 4), None)
+    if why and h is not None and any(why.startswith(c) for c in REVERTED.get(h["meta"].get("revision"), ())):
+        return None
+    return why
 
 
 # ------------------------------------------------------------- model probes
@@ -190,15 +194,20 @@ SPEC = [
   ("FF", "4070", 564.8, 619.8, "Bedroom 3 (was kids room) clear width",
    lambda P: P.f("FF-W11", "-") - P.f("FF-W03", "+"),
    lambda P: ((P.f("FF-W03", "+"), 14000), (P.f("FF-W11", "-"), 14000), 0)),
-  ("FF", "3100", 752.8, 680.8, "Old bedroom 3 toilet width", None, None),
-  ("FF", "1500", 802.1, 706.1, "Old bedroom 3 toilet depth", None, None),
+  ("FF", "3100", 752.8, 680.8, "Front-right bedroom toilet width (R0 position)",
+   lambda P: P.f("FF-W04", "-") - P.f("FF-W19", "+"), None),
+  ("FF", "1500", 802.1, 706.1, "Front-right bedroom toilet depth (R0 position)",
+   lambda P: P.f("FF-W20", "-") - P.f("FF-W18", "+"), None),
   ("FF", "5540", 496.1, 715.7, "Bedroom 3 (was kids room) depth: wardrobe front -> GL-1 wall",
    lambda P: P.f("FF-W24", "-") - P.fb("FF-B01")[3],
    lambda P: ((P.f("FF-W03", "+"), P.fb("FF-B01")[3]), (P.f("FF-W03", "+"), P.f("FF-W24", "-")), 400)),
-  ("FF", "3250", 750.2, 742.2, "Old bedroom 3 toilet block width incl. west wall", None, None),
+  ("FF", "3250", 750.2, 742.2, "Front-right bedroom toilet block width incl. west wall (R0 position)",
+   lambda P: P.f("FF-W04", "-") - P.f("FF-W19", "-"), None),
   ("FF", "4550", 660.0, 764.5, "Kids room (was bedroom 3) wardrobe wall length",
    lambda P: P.b("FF-W21", 1) - P.a("FF-W21", 1), None),
-  ("FF", "4258", 800.0, 812.1, "Old bedroom 3 depth along the right wall (to the old toilet)", None, None),
+  ("FF", "4258", 800.0, 812.1, "Front-right bedroom depth along the right wall (from the R0 toilet)",
+   lambda P: P.arc_y_at_x("FF-W27", P.f("FF-W04", "-"), "in") - P.f("FF-W20", "+"),
+   lambda P: ((P.f("FF-W04", "-"), P.f("FF-W20", "+")), (P.f("FF-W04", "-"), P.arc_y_at_x("FF-W27", P.f("FF-W04", "-"), "in")), 450)),
 ]
 
 
@@ -252,9 +261,10 @@ def main():
         rec = "" if cand else "  [not found in pdf_dims.json]"
         used.update(cand)
         val = int(txt.lstrip("R"))
-        why = superseded(fl, txt, X)
+        why = superseded(fl, txt, X, h)
         if why:
-            m = fn(P) if fn else None
+            # D-03 reused the wall ids for the moved toilet, so those measurements mean nothing while superseded
+            m = fn(P) if fn and not why.startswith("D-03") else None
             if not cand:
                 bad += 1
             out("%-3s %-6s %-6s %7s %-6s %-6s %s  [superseded: %s]%s" % (

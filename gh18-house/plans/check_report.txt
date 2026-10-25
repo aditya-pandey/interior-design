@@ -47,12 +47,12 @@ FF  1965   1964        -1 OK            Kids toilet depth
 FF  2015   2016        +1 OK            FF lift block depth
 FF  4455   4457        +2 OK            FF lobby length
 FF  4070   4039       -31 OK~           Bedroom 3 (was kids room) clear width
-FF  3100   -            - SUPER         Old bedroom 3 toilet width  [superseded: D-03 toilet moved to the front wall]
-FF  1500   -            - SUPER         Old bedroom 3 toilet depth  [superseded: D-03 toilet moved to the front wall]
+FF  3100   -            - SUPER         Front-right bedroom toilet width (R0 position)  [superseded: D-03 toilet moved to the front wall]
+FF  1500   -            - SUPER         Front-right bedroom toilet depth (R0 position)  [superseded: D-03 toilet moved to the front wall]
 FF  5540   5542        +2 OK            Bedroom 3 (was kids room) depth: wardrobe front -> GL-1 wall
-FF  3250   -            - SUPER         Old bedroom 3 toilet block width incl. west wall  [superseded: D-03 toilet moved to the front wall]
+FF  3250   -            - SUPER         Front-right bedroom toilet block width incl. west wall (R0 position)  [superseded: D-03 toilet moved to the front wall]
 FF  4550   4550        +0 OK            Kids room (was bedroom 3) wardrobe wall length
-FF  4258   -            - SUPER         Old bedroom 3 depth along the right wall (to the old toilet)  [superseded: D-03 toilet moved to the front wall]
+FF  4258   -            - SUPER         Front-right bedroom depth along the right wall (from the R0 toilet)  [superseded: D-03 toilet moved to the front wall]
 
 PDF strings mapped: 51 / 51
 

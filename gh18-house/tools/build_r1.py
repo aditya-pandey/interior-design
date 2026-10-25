@@ -160,7 +160,99 @@ def b7_under_stair(h):
     ]
 
 
-PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair]
+# ---------------------------------------------------------------- C: first floor
+
+def c8_pantry(h):
+    """C8: the full-height lobby cupboard by the lift becomes a pantry: stone counter with storage above,
+    kept 250 mm clear of the lift door."""
+    ff = floor(h, 'FF')
+    drop(ff['furniture'], 'FF-L01')
+    ff['furniture'] += [
+        F('FF-L01', 'FF-LOB', 'counter', (6200, 11149), (1500, 600, 900), 0, note='R1-C8 pantry counter (kettle / microwave points)'),
+        F('FF-L05', 'FF-LOB', 'wall_cabinet', (6200, 11024), (1500, 350, 750), 0, z=1500, note='pantry storage above the counter'),
+    ]
+
+
+def c9_kids_toilet_back(h):
+    """C9: D-03 reverted. The kids-room toilet returns beside the stair, where the plumbing sheet's SS-3 stack and
+    red-line 15 (WNW toilet, retain) expect it; GL-10 is a bedroom window again. The D-04 room swap stays: the
+    study desk along GL-9 now faces north (red-line 8: desk facing N or E)."""
+    ff = floor(h, 'FF')
+    W = base.W
+    walls = ff['walls']
+    i19 = walls.index(find(walls, 'FF-W19'))
+    walls[i19] = W('FF-W19', (5973, 15306), (5973, 16956), 150, 'internal', 'new', note='R1-C9 kids toilet west wall (as R0)')
+    i20 = walls.index(find(walls, 'FF-W20'))
+    walls[i20] = W('FF-W20', (5900, 16880), (XR_IN, 16880), 150, 'internal', 'new',
+                   openings=[O('FF-D3c', 'D3', 'door', 298, 800, 2400, 0, hinge='a', swing='-y', note='kids room -> kids toilet')])
+    i6 = walls.index(find(walls, 'FF-GL6b'))
+    walls[i6] = W('FF-GL6b', (8050, 15306), (8050, 16805), 10, 'glass_partition', 'new', h=2000,
+                  openings=[O('FF-GL6bd', 'GL-6b', 'glass_door', 799, 700, 2000, 0, hinge='b', swing='-x')])
+    opening(find(walls, 'FF-W27'), 'FF-GL10').pop('note', None)
+    arcpts, C_ARC2, R_ARC2, C_GL9, R_GL9 = base.arcpts, base.C_ARC2, base.R_ARC2, base.C_GL9, base.R_GL9
+    kid = find(ff['rooms'], 'FF-KID')
+    kid['polygon'] = ([[4371, 15456], [5900, 15456], [5900, 16956], [XR_IN, 16956], [XR_IN, 21215]] + arcpts(C_ARC2, R_ARC2 - 150, 88.4, 102.7) +
+                      [[6869, 21146]] + arcpts(C_GL9, R_GL9 - 75, 106.0, 117.3) + [[4924, 20171], [4371, 20006]])
+    kid['note'] = 'R1-C9: toilet back beside the stair; study desk along GL-9 faces north (road side)'
+    ktl = find(ff['rooms'], 'FF-KTL')
+    ktl.update(polygon=[[6048, 15305], [XR_IN, 15305], [XR_IN, 16805], [6048, 16805]],
+               note='R1-C9 back at its R0 place (WNW, red-line 15); stack SS-3 in a boxed duct')
+    drop(ff['furniture'], 'FF-T11', 'FF-T12', 'FF-T13', 'FF-K03', 'FF-K04', 'FF-K05', 'FF-K07', 'FF-K12')
+    ff['furniture'] += [
+        F('FF-T11', 'FF-KTL', 'vanity', (6580, 15606), (1065, 600, 850), 0, mirror=True),
+        F('FF-T12', 'FF-KTL', 'wc_wall_hung', (7562, 15586), (380, 560, 400), 0),
+        F('FF-T13', 'FF-KTL', 'shower_head', (8620, 15700), (250, 250, 50), 0, z=2150),
+        F('FF-K03', 'FF-KID', 'bed_queen', (8101, 19084), (1620, 2100, 1100), 90, mattress=[1524, 1981]),
+        F('FF-K04', 'FF-KID', 'side_table', (8926, 18024), (500, 450, 500), 90),
+        F('FF-K05', 'FF-KID', 'side_table', (8926, 20144), (500, 450, 500), 90),
+        F('FF-K07', 'FF-KID', 'storage_tall', (7700, 17180), (1200, 450, 2400), 0, note='books + toys'),
+        F('FF-K12', 'FF-KID', 'rug', (7300, 19084), (2400, 3000, 10), 0),
+    ]
+
+
+def c10_master_suite(h):
+    """C10: master washroom and dresser swapped, with a bath tub (owner decision; red-line 11 advised keeping the
+    toilet in its sunken area - hold point: new sunken floor over the kitchen, waterproofing + flood test, SS-2
+    re-planned). Route: bedroom -> dresser -> washroom.
+    Washroom (old dresser zone, ~9'-1" x 5'-7"): tub with over-tub shower on the west side, WC on the east wall by
+    the OTS (drains to the OTS stack SS-1), basin on the south wall, vent window + exhaust into the OTS.
+    Dresser (old washroom zone, ~9'-1" x 9'-8"): lit by GL-4, dressing mirror on the east wall (red-line 12),
+    wardrobes, window bench."""
+    ff = floor(h, 'FF')
+    walls = ff['walls']
+    opening(find(walls, 'FF-W07'), 'FF-D2a').update(offset=685, hinge='a', swing='-x', note='R1-C10 master bedroom -> dresser')
+    opening(find(walls, 'FF-W08'), 'FF-D3a').update(offset=1159, hinge='a', swing='+y', note='R1-C10 dresser -> master washroom')
+    opening(find(walls, 'FF-W01'), 'FF-GL4')['note'] = 'R1-C10 now the dresser window'
+    find(walls, 'FF-OTS1').setdefault('openings', []).append(
+        O('FF-MW1', 'KW-1', 'window', 1015, 500, 600, 1500, note='R1-C10 master washroom vent window + exhaust into the OTS'))
+    drop(walls, 'FF-GL6')
+    walls.append(base.W('FF-GL6', (2243, 9800), (2243, 10669), 10, 'glass_partition', 'new', h=2000, note='R1-C10 over-tub shower screen'))
+    mtl, drs = find(ff['rooms'], 'FF-MTL'), find(ff['rooms'], 'FF-DRS')
+    mtl.update(name='Master Washroom', polygon=[[XL_IN, 8755], [2993, 8755], [2993, 10669], [1031, 10669], [1031, 10451], [XL_IN, 10451]],
+               brief_change=True, was='Dresser', note='R1-C10: bath tub with shower over, WC by the OTS, vent into the OTS; hold point: new sunken floor over the kitchen')
+    drs.update(polygon=[[XL_IN, 5665], [2993, 5665], [2993, 8605], [XL_IN, 8605]], brief_change=True, was='Master Toilet',
+               note='R1-C10: walk-in dresser lit by GL-4; mirror on the east wall (red-line 12)')
+    drop(ff['furniture'], 'FF-T01', 'FF-T02', 'FF-T03', 'FF-D01', 'FF-D02', 'FF-D03', 'FF-D04', 'FF-M06')
+    ff['furniture'] += [
+        # washroom
+        F('FF-T01', 'FF-MTL', 'bathtub', (2618, 9712), (1700, 750, 560), 90, note='1700 x 750 tub, shower over'),
+        F('FF-T03', 'FF-MTL', 'shower_head', (2850, 10400), (250, 250, 50), 0, z=2150),
+        F('FF-T02', 'FF-MTL', 'wc_wall_hung', (510, 10050), (380, 560, 400), 270, note='by the OTS: soil to SS-1'),
+        F('FF-T04', 'FF-MTL', 'vanity', (780, 9030), (1000, 550, 850), 0, mirror=True),
+        # dresser
+        F('FF-D01', 'FF-DRS', 'dressing_table', (455, 6350), (1100, 450, 750), 270, mirror=True, note='mirror on the east wall'),
+        F('FF-D02', 'FF-DRS', 'wardrobe', (530, 7755), (1700, 600, 2700), 270),
+        F('FF-D03', 'FF-DRS', 'wardrobe', (1110, 8305), (560, 600, 2700), 180),
+        F('FF-D05', 'FF-DRS', 'wardrobe', (2593, 8305), (800, 600, 2700), 180),
+        F('FF-D04', 'FF-DRS', 'pouf', (1700, 7300), (600, 600, 420), 0),
+        F('FF-D06', 'FF-DRS', 'storage_bench', (1608, 5890), (1460, 450, 450), 0, note='window bench under GL-4'),
+        # master bedroom TV moved along the wall for the new dresser door
+        F('FF-M06', 'FF-MST', 'tv_unit', (3343, 8550), (1800, 400, 450), 270),
+    ]
+
+
+PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
+           c8_pantry, c9_kids_toilet_back, c10_master_suite]
 
 
 def build():

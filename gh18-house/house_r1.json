@@ -1723,7 +1723,7 @@
               "width": 1460,
               "height": 1450,
               "sill": 950,
-              "note": "master toilet"
+              "note": "R1-C10 now the dresser window"
             }
           ]
         },
@@ -1758,7 +1758,19 @@
           "b": [1031, 10601],
           "t": 300,
           "kind": "shaft",
-          "status": "existing"
+          "status": "existing",
+          "openings": [
+            {
+              "id": "FF-MW1",
+              "mark": "KW-1",
+              "type": "window",
+              "offset": 1015,
+              "width": 500,
+              "height": 600,
+              "sill": 1500,
+              "note": "R1-C10 master washroom vent window + exhaust into the OTS"
+            }
+          ]
         },
         {
           "id": "FF-OTS2",
@@ -1837,13 +1849,13 @@
               "id": "FF-D2a",
               "mark": "D2",
               "type": "door",
-              "offset": 3242,
+              "offset": 685,
               "width": 1000,
               "height": 2400,
               "sill": 0,
               "hinge": "a",
               "swing": "-x",
-              "note": "master to dresser"
+              "note": "R1-C10 master bedroom -> dresser"
             }
           ],
           "note": "toilet/dresser | master (2993-3143)"
@@ -1860,13 +1872,13 @@
               "id": "FF-D3a",
               "mark": "D3",
               "type": "door",
-              "offset": 1209,
+              "offset": 1159,
               "width": 800,
               "height": 2400,
               "sill": 0,
               "hinge": "a",
-              "swing": "-y",
-              "note": "dresser to master toilet"
+              "swing": "+y",
+              "note": "R1-C10 dresser -> master washroom"
             }
           ]
         },
@@ -2024,17 +2036,17 @@
         },
         {
           "id": "FF-W19",
-          "a": [6950, 19200],
-          "b": [6950, 21020],
+          "a": [5973, 15306],
+          "b": [5973, 16956],
           "t": 150,
           "kind": "internal",
           "status": "new",
-          "note": "D-03 kids toilet west wall (meets the GL-10 pier)"
+          "note": "R1-C9 kids toilet west wall (as R0)"
         },
         {
           "id": "FF-W20",
-          "a": [6875, 19125],
-          "b": [9151, 19125],
+          "a": [5900, 16880],
+          "b": [9151, 16880],
           "t": 150,
           "kind": "internal",
           "status": "new",
@@ -2043,12 +2055,12 @@
               "id": "FF-D3c",
               "mark": "D3",
               "type": "door",
-              "offset": 275,
+              "offset": 298,
               "width": 800,
               "height": 2400,
               "sill": 0,
               "hinge": "a",
-              "swing": "+y",
+              "swing": "-y",
               "note": "kids room -> kids toilet"
             }
           ]
@@ -2151,8 +2163,7 @@
               "offset": 669,
               "width": 1000,
               "height": 1450,
-              "sill": 950,
-              "note": "D-03 now the kids toilet window: frosted, with exhaust fan"
+              "sill": 950
             }
           ],
           "note": "curved front piers with GL-10"
@@ -2194,16 +2205,6 @@
           "note": "stair spine handrail"
         },
         {
-          "id": "FF-GL6",
-          "a": [1130, 5665],
-          "b": [1130, 7565],
-          "t": 10,
-          "kind": "glass_partition",
-          "status": "new",
-          "h": 2000,
-          "note": "master toilet walk-in shower (open at y=7565)"
-        },
-        {
           "id": "FF-GL6a",
           "a": [2380, 10849],
           "b": [2380, 12813],
@@ -2227,38 +2228,66 @@
         },
         {
           "id": "FF-GL6b",
-          "a": [8350, 20300],
-          "b": [9151, 20300],
+          "a": [8050, 15306],
+          "b": [8050, 16805],
           "t": 10,
           "kind": "glass_partition",
           "status": "new",
           "h": 2000,
-          "note": "D-03 kids toilet walk-in shower panel"
+          "openings": [
+            {
+              "id": "FF-GL6bd",
+              "mark": "GL-6b",
+              "type": "glass_door",
+              "offset": 799,
+              "width": 700,
+              "height": 2000,
+              "sill": 0,
+              "hinge": "b",
+              "swing": "-x"
+            }
+          ]
+        },
+        {
+          "id": "FF-GL6",
+          "a": [2243, 9800],
+          "b": [2243, 10669],
+          "t": 10,
+          "kind": "glass_partition",
+          "status": "new",
+          "h": 2000,
+          "note": "R1-C10 over-tub shower screen"
         }
       ],
       "rooms": [
         {
           "id": "FF-MTL",
-          "name": "Master Toilet",
-          "polygon": [[230, 5665], [2993, 5665], [2993, 8605], [230, 8605]],
+          "name": "Master Washroom",
+          "polygon": [[230, 8755], [2993, 8755], [2993, 10669], [1031, 10669], [1031, 10451], [230, 10451]],
           "floor": "tile_matte_lg",
           "wall": "tile_matte_lg",
           "ceiling": {
             "type": "POP",
             "height": 2600
-          }
+          },
+          "brief_change": true,
+          "was": "Dresser",
+          "note": "R1-C10: bath tub with shower over, WC by the OTS, vent into the OTS; hold point: new sunken floor over the kitchen"
         },
         {
           "id": "FF-DRS",
           "name": "Dresser",
-          "polygon": [[230, 8755], [2993, 8755], [2993, 10669], [1031, 10669], [1031, 10451], [230, 10451]],
+          "polygon": [[230, 5665], [2993, 5665], [2993, 8605], [230, 8605]],
           "floor": "marble_beige",
           "wall": "paint_warm_white",
           "ceiling": {
             "type": "POP",
             "height": 2750,
             "cove": true
-          }
+          },
+          "brief_change": true,
+          "was": "Master Toilet",
+          "note": "R1-C10: walk-in dresser lit by GL-4; mirror on the east wall (red-line 12)"
         },
         {
           "id": "FF-MST",
@@ -2333,7 +2362,7 @@
           "id": "FF-KID",
           "name": "Kids Room",
           "label_at": [6100, 17300],
-          "polygon": [[4371, 15456], [5900, 15456], [5900, 15305], [9151, 15305], [9151, 19050], [6875, 19050], [6875, 21140], [6874, 21138], [6582, 21049], [6292, 20952], [6005, 20847], [5721, 20733], [5440, 20612], [5163, 20484], [4889, 20347], [4924, 20171], [4371, 20006]],
+          "polygon": [[4371, 15456], [5900, 15456], [5900, 16956], [9151, 16956], [9151, 21215], [9146, 21213], [8818, 21217], [8490, 21208], [8163, 21188], [7837, 21157], [7512, 21113], [7189, 21058], [6868, 20992], [6869, 21146], [6897, 21144], [6601, 21055], [6307, 20957], [6017, 20851], [5730, 20737], [5446, 20615], [5166, 20485], [4889, 20347], [4924, 20171], [4371, 20006]],
           "floor": "marble_beige",
           "wall": "paint_warm_white",
           "ceiling": {
@@ -2342,12 +2371,12 @@
             "cove": true
           },
           "brief_change": true,
-          "note": "D-04 front-right bedroom with its own toilet; study desk at the east glazing (GL-9)"
+          "note": "R1-C9: toilet back beside the stair; study desk along GL-9 faces north (road side)"
         },
         {
           "id": "FF-KTL",
           "name": "Kids Toilet",
-          "polygon": [[7025, 19200], [9151, 19200], [9146, 21213], [8841, 21217], [8536, 21210], [8232, 21193], [7928, 21167], [7625, 21130], [7324, 21083], [7025, 21026], [7025, 21020]],
+          "polygon": [[6048, 15305], [9151, 15305], [9151, 16805], [6048, 16805]],
           "floor": "tile_matte_lg",
           "wall": "tile_matte_lg",
           "ceiling": {
@@ -2355,7 +2384,7 @@
             "height": 2600
           },
           "brief_change": true,
-          "note": "D-03 on the front (east) wall: window GL-10 with exhaust fan; over the parking and the store end of the GF mandir room"
+          "note": "R1-C9 back at its R0 place (WNW, red-line 15); stack SS-3 in a boxed duct"
         },
         {
           "id": "FF-LFT",
@@ -2419,14 +2448,6 @@
           "rot": 180
         },
         {
-          "id": "FF-M06",
-          "room": "FF-MST",
-          "type": "tv_unit",
-          "pos": [3343, 7800],
-          "size": [1800, 400, 450],
-          "rot": 270
-        },
-        {
           "id": "FF-M07",
           "room": "FF-MST",
           "type": "lounge_chair",
@@ -2441,65 +2462,6 @@
           "pos": [7200, 8738],
           "size": [2400, 3000, 10],
           "rot": 0
-        },
-        {
-          "id": "FF-D01",
-          "room": "FF-DRS",
-          "type": "dressing_table",
-          "pos": [455, 9400],
-          "size": [1100, 450, 750],
-          "rot": 270,
-          "mirror": true
-        },
-        {
-          "id": "FF-D02",
-          "room": "FF-DRS",
-          "type": "wardrobe",
-          "pos": [2012, 10369],
-          "size": [1962, 600, 2700],
-          "rot": 180
-        },
-        {
-          "id": "FF-D03",
-          "room": "FF-DRS",
-          "type": "wardrobe",
-          "pos": [530, 10200],
-          "size": [501, 600, 2700],
-          "rot": 270
-        },
-        {
-          "id": "FF-D04",
-          "room": "FF-DRS",
-          "type": "pouf",
-          "pos": [1700, 9500],
-          "size": [600, 600, 420],
-          "rot": 0
-        },
-        {
-          "id": "FF-T01",
-          "room": "FF-MTL",
-          "type": "wc_wall_hung",
-          "pos": [2713, 6384],
-          "size": [380, 560, 400],
-          "rot": 90
-        },
-        {
-          "id": "FF-T02",
-          "room": "FF-MTL",
-          "type": "vanity",
-          "pos": [2718, 8050],
-          "size": [900, 550, 850],
-          "rot": 90,
-          "mirror": true
-        },
-        {
-          "id": "FF-T03",
-          "room": "FF-MTL",
-          "type": "shower_head",
-          "pos": [680, 6400],
-          "size": [250, 250, 50],
-          "rot": 0,
-          "z": 2150
         },
         {
           "id": "FF-B01",
@@ -2632,31 +2594,6 @@
           "note": "PDF 550 wardrobe strip"
         },
         {
-          "id": "FF-K03",
-          "room": "FF-KID",
-          "type": "bed_queen",
-          "pos": [8101, 17100],
-          "size": [1620, 2100, 1100],
-          "rot": 90,
-          "mattress": [1524, 1981]
-        },
-        {
-          "id": "FF-K04",
-          "room": "FF-KID",
-          "type": "side_table",
-          "pos": [8926, 16040],
-          "size": [500, 450, 500],
-          "rot": 90
-        },
-        {
-          "id": "FF-K05",
-          "room": "FF-KID",
-          "type": "side_table",
-          "pos": [8926, 18160],
-          "size": [500, 450, 500],
-          "rot": 90
-        },
-        {
           "id": "FF-K06",
           "room": "FF-KID",
           "type": "study_desk",
@@ -2674,64 +2611,12 @@
           "rot": 22.5
         },
         {
-          "id": "FF-K07",
-          "room": "FF-KID",
-          "type": "storage_tall",
-          "pos": [6550, 15530],
-          "size": [1200, 450, 2400],
-          "rot": 0,
-          "note": "books + toys"
-        },
-        {
           "id": "FF-K11",
           "room": "FF-KID",
           "type": "bean_bag",
           "pos": [5500, 18300],
           "size": [800, 800, 600],
           "rot": 0
-        },
-        {
-          "id": "FF-K12",
-          "room": "FF-KID",
-          "type": "rug",
-          "pos": [7000, 17100],
-          "size": [2400, 3000, 10],
-          "rot": 0
-        },
-        {
-          "id": "FF-T11",
-          "room": "FF-KTL",
-          "type": "wc_wall_hung",
-          "pos": [7305, 20550],
-          "size": [380, 560, 400],
-          "rot": 270
-        },
-        {
-          "id": "FF-T12",
-          "room": "FF-KTL",
-          "type": "vanity",
-          "pos": [8851, 19700],
-          "size": [900, 600, 850],
-          "rot": 90,
-          "mirror": true
-        },
-        {
-          "id": "FF-T13",
-          "room": "FF-KTL",
-          "type": "shower_head",
-          "pos": [8750, 20750],
-          "size": [250, 250, 50],
-          "rot": 0,
-          "z": 2150
-        },
-        {
-          "id": "FF-L01",
-          "room": "FF-LOB",
-          "type": "storage_tall",
-          "pos": [6324, 11074],
-          "size": [1748, 450, 2700],
-          "rot": 0,
-          "note": "full-height lobby cupboard (brief: storage instead of a store room)"
         },
         {
           "id": "FF-L02",
@@ -2756,6 +2641,188 @@
           "pos": [7200, 6150],
           "size": [450, 450, 450],
           "rot": 0
+        },
+        {
+          "id": "FF-L01",
+          "room": "FF-LOB",
+          "type": "counter",
+          "pos": [6200, 11149],
+          "size": [1500, 600, 900],
+          "rot": 0,
+          "note": "R1-C8 pantry counter (kettle / microwave points)"
+        },
+        {
+          "id": "FF-L05",
+          "room": "FF-LOB",
+          "type": "wall_cabinet",
+          "pos": [6200, 11024],
+          "size": [1500, 350, 750],
+          "rot": 0,
+          "z": 1500,
+          "note": "pantry storage above the counter"
+        },
+        {
+          "id": "FF-T11",
+          "room": "FF-KTL",
+          "type": "vanity",
+          "pos": [6580, 15606],
+          "size": [1065, 600, 850],
+          "rot": 0,
+          "mirror": true
+        },
+        {
+          "id": "FF-T12",
+          "room": "FF-KTL",
+          "type": "wc_wall_hung",
+          "pos": [7562, 15586],
+          "size": [380, 560, 400],
+          "rot": 0
+        },
+        {
+          "id": "FF-T13",
+          "room": "FF-KTL",
+          "type": "shower_head",
+          "pos": [8620, 15700],
+          "size": [250, 250, 50],
+          "rot": 0,
+          "z": 2150
+        },
+        {
+          "id": "FF-K03",
+          "room": "FF-KID",
+          "type": "bed_queen",
+          "pos": [8101, 19084],
+          "size": [1620, 2100, 1100],
+          "rot": 90,
+          "mattress": [1524, 1981]
+        },
+        {
+          "id": "FF-K04",
+          "room": "FF-KID",
+          "type": "side_table",
+          "pos": [8926, 18024],
+          "size": [500, 450, 500],
+          "rot": 90
+        },
+        {
+          "id": "FF-K05",
+          "room": "FF-KID",
+          "type": "side_table",
+          "pos": [8926, 20144],
+          "size": [500, 450, 500],
+          "rot": 90
+        },
+        {
+          "id": "FF-K07",
+          "room": "FF-KID",
+          "type": "storage_tall",
+          "pos": [7700, 17180],
+          "size": [1200, 450, 2400],
+          "rot": 0,
+          "note": "books + toys"
+        },
+        {
+          "id": "FF-K12",
+          "room": "FF-KID",
+          "type": "rug",
+          "pos": [7300, 19084],
+          "size": [2400, 3000, 10],
+          "rot": 0
+        },
+        {
+          "id": "FF-T01",
+          "room": "FF-MTL",
+          "type": "bathtub",
+          "pos": [2618, 9712],
+          "size": [1700, 750, 560],
+          "rot": 90,
+          "note": "1700 x 750 tub, shower over"
+        },
+        {
+          "id": "FF-T03",
+          "room": "FF-MTL",
+          "type": "shower_head",
+          "pos": [2850, 10400],
+          "size": [250, 250, 50],
+          "rot": 0,
+          "z": 2150
+        },
+        {
+          "id": "FF-T02",
+          "room": "FF-MTL",
+          "type": "wc_wall_hung",
+          "pos": [510, 10050],
+          "size": [380, 560, 400],
+          "rot": 270,
+          "note": "by the OTS: soil to SS-1"
+        },
+        {
+          "id": "FF-T04",
+          "room": "FF-MTL",
+          "type": "vanity",
+          "pos": [780, 9030],
+          "size": [1000, 550, 850],
+          "rot": 0,
+          "mirror": true
+        },
+        {
+          "id": "FF-D01",
+          "room": "FF-DRS",
+          "type": "dressing_table",
+          "pos": [455, 6350],
+          "size": [1100, 450, 750],
+          "rot": 270,
+          "mirror": true,
+          "note": "mirror on the east wall"
+        },
+        {
+          "id": "FF-D02",
+          "room": "FF-DRS",
+          "type": "wardrobe",
+          "pos": [530, 7755],
+          "size": [1700, 600, 2700],
+          "rot": 270
+        },
+        {
+          "id": "FF-D03",
+          "room": "FF-DRS",
+          "type": "wardrobe",
+          "pos": [1110, 8305],
+          "size": [560, 600, 2700],
+          "rot": 180
+        },
+        {
+          "id": "FF-D05",
+          "room": "FF-DRS",
+          "type": "wardrobe",
+          "pos": [2593, 8305],
+          "size": [800, 600, 2700],
+          "rot": 180
+        },
+        {
+          "id": "FF-D04",
+          "room": "FF-DRS",
+          "type": "pouf",
+          "pos": [1700, 7300],
+          "size": [600, 600, 420],
+          "rot": 0
+        },
+        {
+          "id": "FF-D06",
+          "room": "FF-DRS",
+          "type": "storage_bench",
+          "pos": [1608, 5890],
+          "size": [1460, 450, 450],
+          "rot": 0,
+          "note": "window bench under GL-4"
+        },
+        {
+          "id": "FF-M06",
+          "room": "FF-MST",
+          "type": "tv_unit",
+          "pos": [3343, 8550],
+          "size": [1800, 400, 450],
+          "rot": 270
         }
       ],
       "joinery": [
