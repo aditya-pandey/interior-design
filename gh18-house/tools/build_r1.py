@@ -400,8 +400,366 @@ def e12_plumbing(h):
     )
 
 
+def e13_electrical(h):
+    """E13 electrical: Electrical Layout Rev A (point schedule, circuits, DB positions) re-placed for R1.
+    The sheet was drawn on R0, so its rules are kept and each point is set against the R1 furniture.
+    Points: {id, kind, room, serves, at [x, y, z]} with z absolute like the plumbing (GF FFL +450 ...).
+    Circuits are grouped per DB by the sheet's rules; conduit routes run in the slab above and drop to each
+    point (loop-in), the outdoor ones buried at -300. AC refrigerant routes are drawn by hand."""
+    lv = h['levels']
+    fl_of = {fl['id']: fl for fl in h['floors']}
+    rooms = {r['id']: r for fl in h['floors'] for r in fl['rooms']}
+    areas = {a['id']: a for fl in h['floors'] for a in fl.get('outdoor', [])}
+    fur = {f['id']: f for fl in h['floors'] for f in fl['furniture']}
+
+    # ---- ODUs re-placed for R1 (party walls E/W: none on them; S/SW on the back terrace, else short routes)
+    sf, gf = fl_of['SF'], fl_of['GF']
+    drop(sf['furniture'], 'SF-AC2')
+    fur['SF-AC1'].update(pos=[655, 5815], note='AC outdoor unit, SE corner of the back terrace (bedroom 3, via the OTS)')
+    sf['furniture'] += [
+        F('SF-AC5', 'SF-TRF', 'ac_odu', (8300, 15455), (750, 300, 600), 0, note='AC outdoor unit, kids room; NW of the front terrace against the stair wall'),
+        F('SF-AC6', 'SF-TRF', 'ac_odu', (7400, 15455), (750, 300, 600), 0, note='AC outdoor unit, guest lounge / study; up the SS-3 duct'),
+    ]
+    gf['furniture'].append(F('GF-O08', 'GF-COURT', 'ac_odu', (2700, 19700), (750, 300, 600), 0, note='AC outdoor unit, guest room, front lawn (Electrical Rev A, A6)'))
+
+    CEIL = ('light', 'pd', 'fan', 'sd', 'hd')
+    HEIGHT = dict(sb=1200, sb2w=600, s6=300, s6c=1100, s16=300, usb=800, tv=1100, data=300, ac=2150, gy=1900, ef=2250, ml=2000,
+                  ucl=1450, ch=2200, ip65=600, wl=2100, gl=600, cctv=2700, vdp=1400, vdpo=1500, ev=1200, iso=1500, mtr=1500,
+                  db=1500, inv=400, rack=1200, pump=500, ups=900, spare=1500)
+    pts = []
+    w_tol = lambda p: 400  # noqa: E731  (half the thickest wall + the 20 mm stand-off)
+
+    def P(kind, room, x, y, z=None, note='', serves=None, **kw):
+        if room in rooms:
+            fid, base = room[:2], lv[room[:2]]['ffl']
+            ceil = (rooms[room].get('ceiling') or {}).get('height', 2750)
+        elif room == 'ROOF':
+            fid, base, ceil = 'SF', lv['ROOF']['ffl'], 0
+        else:
+            fid, base, ceil = room[:2], areas[room].get('z', 0), 2750
+        if z is None:
+            z = ceil if kind in CEIL else HEIGHT[kind]
+        n = sum(1 for p in pts if p['floor'] == fid) + 1
+        pts.append(dict(id='%s-E%02d' % (fid, n), kind=kind, floor=fid, room=room, serves=serves or room, at=[x, y, base + z], base=base, note=note, **kw))
+
+    def bedside(room, wx, ty, usb=False):
+        P('sb2w', room, wx, ty - 330, note='bedside 2-way + fan regulator')
+        P('s6', room, wx, ty + 330, note='bedside socket')
+        if usb:
+            P('usb', room, wx, ty + 330, z=800, note='bedside USB')
+
+    # ---------------- GF (DB-1 = main DB)
+    K = 'GF-KIT'
+    P('light', K, 1700, 7300); P('light', K, 1700, 9800)
+    P('ucl', K, 430, 7757, note='under the east wall cabinets'); P('ucl', K, 2950, 7800, note='under the west wall cabinets')
+    P('ucl', K, 2090, 11190, note='under the wash-nook cabinet (R1-B4)')
+    P('hd', K, 1700, 8500, note='heat detector (A3)')
+    P('sb', K, 3130, 9200, note='by the kitchen door')
+    P('ch', K, 250, 7300, note='chimney over the hob on the east wall (A3), duct along the cabinets to the rear wall')
+    P('s6c', K, 250, 8700, note='counter socket')
+    P('s16', K, 3130, 7300, z=1100, note='microwave, west counter')
+    P('s16', K, 250, 10051, note='fridge, in the tall unit')
+    P('s16', K, 2850, 11345, note='dishwasher under the wash-nook counter, 0.65 m from the sink')
+    P('ef', K, 2650, 5685, note='exhaust fan on the rear external wall (A3)')
+    P('ef', K, 1051, 11050, z=1400, note='wash-nook exhaust into the OTS through KW-1 (R1-B4)')
+    P('db', K, 250, 9451, note='DB-1 (main), 400 mm enclosed cabinet on the kitchen east wall, SE zone (A3, R1-B7)', tag='DB-1')
+    L, D = 'GF-DRW', 'GF-DIN'
+    P('light', L, 4800, 6400); P('light', L, 8200, 6400); P('light', D, 8200, 9700); P('light', D, 3900, 9700)
+    P('pd', D, 5700, 9850, note='pendant over the dining table (A2)')
+    P('fan', L, 7000, 7083)
+    P('sd', L, 6000, 8400, note='smoke detector (A2)')
+    P('ac', L, 9131, 7083, note='2 TR, west wall above the TV (A2)', tr=2.0)
+    P('tv', L, 9131, 7083, note='TV + 5 A + data, west wall (A2)')
+    P('s6', L, 9131, 8100); P('s6', L, 3320, 6600)
+    P('sb2w', L, 3320, 5900, z=1200, note='2-way, lounge end by the lawn door (A2)')
+    P('sb2w', D, 7400, 10746, z=1200, note='2-way, dining end on the lift wall (A2)')
+    P('ml', D, 3750, 11345, note='mirror light over the dining basin (R1-B3)')
+    T = 'GF-TLT'
+    P('light', T, 3300, 12800); P('light', T, 1700, 12800)
+    P('ef', T, 630, 12985, note='on the OTS wall (A4)')
+    P('gy', T, 1500, 11535, note='high on the south wall, 0.7 m clear of the shower')
+    P('s6', T, 4180, 12800, z=1100, note='0.68 m from the vanity, RCD (A4)')
+    P('sb', 'GF-LOB', 4370, 12950, serves=T, note='toilet switches outside the door (A4)')
+    B = 'GF-LOB'
+    P('light', B, 5100, 12000); P('light', B, 5100, 15800)
+    P('sd', B, 5100, 14000, note='smoke detector (A5)')
+    P('sb2w', B, 7180, 12500, z=1200, note='2-way stair switching (A5)')
+    J = 'GF-JAN'
+    P('light', J, 7000, 14600, z=2100)
+    P('sb', J, 6100, 14150)
+    P('inv', J, 8525, 12885, note='inverter + battery on the ventilated rack (A5, R1-B7)', tag='INV')
+    P('rack', J, 8525, 12885, note='network rack + router (A5)')
+    Y = 'GF-FOY'
+    P('light', Y, 5100, 18000); P('light', Y, 4800, 19300)
+    P('vdp', Y, 5880, 17900, note='video door phone screen (A8)')
+    P('sb', Y, 5880, 20100, note='by the main door')
+    G = 'GF-GST'
+    P('light', G, 1900, 15300); P('light', G, 1900, 18300); P('fan', G, 1900, 16845)
+    P('ac', G, 1566, 19086, z=2450, note='1.5 TR, north wall above GL-1 (head 2400) (A6)', tr=1.5)
+    P('tv', G, 4180, 16845, note='west wall facing the bed (A6)')
+    P('s6', G, 4180, 15300)
+    P('sb', G, 4180, 15850, note='by the door')
+    P('sd', G, 1900, 16000, note='smoke detector (R1 addition)')
+    bedside(G, 250, 15785); bedside(G, 250, 17905)
+    P('wl', G, 250, 18630, z=1700, note='mandir niche light (R1-B6)')
+    S = 'GF-MND'
+    P('light', S, 7600, 16300); P('light', S, 7600, 18500); P('fan', S, 7600, 17300)
+    P('ac', S, 8500, 15294, note='1.5 TR, south wall above the settee; refrigerant up the SS-3 duct', tr=1.5)
+    P('tv', S, 9131, 17300, note='TV for the guest lounge (R1-B5)')
+    P('s6', S, 6100, 18600, z=900, note='desk (A7)'); P('s6', S, 6100, 19100, z=900, note='desk (A7)')
+    P('ups', S, 6100, 18850, note='UPS socket at the desk (A7)')
+    P('data', S, 6100, 18350, z=900, note='Cat-6 at the desk (A7)')
+    P('sb', S, 6100, 16600, note='by the door')
+    P('sd', S, 7600, 16900, note='smoke detector (R1 addition)')
+    # outside (DB-1, RCD)
+    for x in (1200, 3600, 5900, 8200):
+        P('gl', 'GF-LAWN-B', x, 1300, note='garden light')
+    P('wl', 'GF-DECK', 250, 4200, note='pergola wall light'); P('wl', 'GF-DECK', 9131, 4200, note='pergola wall light')
+    P('gl', 'GF-COURT', 2400, 21800, note='garden light'); P('gl', 'GF-COURT', 3900, 21300, note='garden light')
+    P('wl', 'GF-COURT', 6000, 20750, note='gate light (A8)'); P('wl', 'GF-COURT', 6000, 21950, note='gate light (A8)')
+    P('ip65', 'GF-LAWN-B', 9131, 3000, note='weatherproof socket, rear lawn (A1)')
+    P('pump', 'GF-LAWN-B', 300, 2700, note='irrigation pump point (A1)', kw=0.75)
+    P('cctv', 'GF-DECK', 9100, 5540, note='rear CCTV (A1)')
+    P('cctv', 'GF-COURT', 5700, 22000, note='gate + street CCTV')
+    P('vdpo', 'GF-COURT', 5900, 22050, note='outdoor VDP unit at the gate (A8)')
+    P('mtr', 'GF-COURT', 5000, 22290, note='meter + main switch on the front boundary wall, read from the street', tag='MTR')
+    P('pump', 'GF-COURT', 1800, 21100, note='UGT pump PP 0.5-1 HP (plumbing E12)', kw=0.75)
+    P('ev', 'GF-PARK', 8600, 19916, note='EV charger 32 A under the FF overhang')
+
+    # ---------------- FF (DB-2)
+    M = 'FF-MST'
+    P('light', M, 4300, 8200); P('light', M, 6000, 10000); P('light', M, 6000, 7500); P('fan', M, 6900, 8738)
+    P('sd', M, 5500, 8738, note='smoke detector (B2)')
+    P('ac', M, 9131, 7300, note='2 TR, west wall off the glazing (B2)', tr=2.0)
+    P('tv', M, 3163, 8550)
+    P('s6', M, 6000, 6825, note='by the lounge chair')
+    bedside(M, 9131, 7473, usb=True); bedside(M, 9131, 10003, usb=True)
+    P('sb', M, 5550, 10649, note='by the door')
+    P('wl', 'FF-BAL', 5420, 6635, note='balcony wall light'); P('wl', 'FF-BAL', 9070, 6635, note='balcony wall light')
+    P('gl', 'FF-BAL', 6600, 4900, z=300, note='planter light'); P('gl', 'FF-BAL', 8300, 4900, z=300, note='planter light')
+    P('ip65', 'FF-BAL', 5420, 6635, note='weatherproof (B1/B9)'); P('ip65', 'FF-BAL', 9070, 6635, note='weatherproof (B1/B9)')
+    R = 'FF-DRS'
+    P('light', R, 1600, 7100)
+    P('ml', R, 250, 6350, note='mirror light, east wall (B3/B4, red-line 12)')
+    P('s6', R, 250, 6850, z=900, note='at the dressing table')
+    P('db', R, 2973, 5950, note='DB-2 on the dresser west wall, SE zone of the plot. Rev A had it over DB-1, which is now the R1-C10 washroom', tag='DB-2')
+    P('sb', R, 2973, 7500, note='by the door')
+    W = 'FF-MTL'
+    P('sb', R, 2973, 7700, serves=W, note='washroom switches outside, at the dresser door (B3)')
+    P('light', W, 1300, 9900); P('light', W, 2600, 9300)
+    P('ml', W, 780, 8775, note='mirror light over the vanity')
+    P('ef', W, 530, 10431, z=1800, note='in KW-1 on the OTS wall (FF-MW1)')
+    P('gy', W, 250, 9550, note='east wall, 2 m from the shower, high (B3)')
+    P('s6', W, 1500, 10649, z=1100, note='0.75 m clear of the tub, RCD')
+    T3 = 'FF-TL3'
+    P('light', T3, 2600, 11800); P('ml', T3, 3820, 10869)
+    P('ef', T3, 1051, 11100, note='on the OTS wall (B5)')
+    P('gy', T3, 2920, 10869, note='above the WC, 1.3 m from the shower')
+    P('sb', 'FF-BD3', 3203, 13250, serves=T3, note='toilet switches outside, in the bedroom niche (B5)')
+    Lf = 'FF-LOB'
+    P('light', Lf, 5100, 12100); P('light', Lf, 5100, 14300)
+    P('sd', Lf, 5100, 13300, note='smoke detector')
+    P('sb2w', Lf, 7178, 12600, z=1200, note='2-way stair switching')
+    P('s6c', Lf, 5700, 10869, note='pantry counter (R1-C8)'); P('s6c', Lf, 6700, 10869, note='pantry counter (R1-C8)')
+    P('ucl', Lf, 6200, 11150, note='under the pantry wall cupboards (R1-C8)')
+    B3 = 'FF-BD3'
+    P('light', B3, 2200, 14400); P('light', B3, 2200, 17800); P('fan', B3, 2200, 15576)
+    P('sd', B3, 2200, 16700, note='smoke detector')
+    P('ac', B3, 4249, 15100, note='1.5 TR, west wall; refrigerant through the toilet ceiling and the OTS (B6: E wall is a party wall)', tr=1.5)
+    P('tv', B3, 4249, 15576)
+    P('s6', B3, 4249, 16050)
+    P('sb', B3, 4249, 14700, note='by the door')
+    bedside(B3, 250, 14516); bedside(B3, 250, 16636)
+    Kd = 'FF-KID'
+    P('light', Kd, 6800, 18000); P('light', Kd, 6800, 20000); P('fan', Kd, 7300, 19084)
+    P('sd', Kd, 6000, 18500, note='smoke detector (B8)')
+    P('ac', Kd, 8710, 16975, z=2400, note='1.5 TR, south wall above the tall storage; ODU on the front terrace', tr=1.5)
+    P('tv', Kd, 4944, 19084, face=[1, 0], note='TV niche in the wardrobe run, facing the bed')
+    P('sb', Kd, 5878, 15700, note='by the door')
+    bedside(Kd, 9131, 18024); bedside(Kd, 9131, 20144)
+    P('s6', Kd, 5856, 20411, z=0, note='floor box under the study desk')
+    P('data', Kd, 5856, 20300, z=0, note='Cat-6 in the desk floor box')
+    Kt = 'FF-KTL'
+    P('light', Kt, 7500, 16100)
+    P('ef', Kt, 8600, 16100, z=2600, ceiling=True, note='ceiling fan ducted up to the front terrace: the west wall is the GH-19 party wall (B7)')
+    P('gy', Kt, 7300, 16785, note='on the inner (north) wall, 1.6 m from the shower (B7)')
+    P('sb', Kd, 7050, 16975, serves=Kt, note='toilet switches outside the door')
+
+    # ---------------- SF (DB-3; the SF is not on R0, so these are R1 additions)
+    Ls = 'SF-LOB'
+    P('light', Ls, 5100, 12100); P('light', Ls, 5100, 14300)
+    P('sd', Ls, 5100, 13300, note='smoke detector')
+    P('sb2w', Ls, 7178, 12600, z=1200, note='2-way stair switching')
+    P('iso', Ls, 7178, 11000, note='lift isolator at the top landing (machine-room-less lift)', kw=4.0)
+    Sv = 'SF-SRV'
+    P('light', Sv, 2500, 13700); P('fan', Sv, 1700, 14400)
+    P('s6', Sv, 3600, 15286, z=900, note='at the desk'); P('s6', Sv, 250, 14100, z=600, note='bedside')
+    P('sb', Sv, 4249, 14500, note='by the door')
+    P('sd', Sv, 2500, 14300, note='smoke detector')
+    P('db', Sv, 250, 13300, note='DB-3 for the SF + terrace, east wall (no indoor SE space on the SF)', tag='DB-3')
+    Sw = 'SF-SWR'
+    P('light', Sw, 1650, 11800)
+    P('ef', Sw, 1051, 11200, note='on the OTS wall')
+    P('gy', Sw, 1950, 10869, note='above the WC, 1.4 m from the shower')
+    P('sb', Sv, 2050, 12983, serves=Sw, note='washroom switches outside the door')
+    St = 'SF-WSH'
+    P('light', St, 3300, 11800); P('sb', St, 4249, 12400)
+    U = 'SF-TRB'
+    P('s16', U, 1200, 10649, z=1100, note='washer-dryer, 0.68 m from the utility sink (R1-D11)')
+    P('s6c', U, 3231, 10649, note='ironing counter (R1-D11)')
+    P('ip65', U, 5600, 10649, note='terrace weatherproof socket')
+    P('wl', U, 2600, 10649, z=2300, note='utility light'); P('wl', U, 7000, 10649, z=2300, note='terrace light')
+    P('spare', U, 8800, 10649, note='solar PV inverter provision + spare conduit to the main panel')
+    P('pump', 'ROOF', 5300, 11600, z=300, note='pressure pump on the feed to the SF washroom (services check: 1.45 m head)', kw=0.37)
+
+    # wall-mounted points face into their room: unit plan normal of the nearest straight wall (for the 3D symbols)
+    for p in pts:
+        if 'face' in p or p['kind'] in CEIL or p.get('ceiling') or p['kind'] in ('gl', 'pump') or (p['kind'] in ('s6', 'data') and p['at'][2] == lv[p['floor']]['ffl']):
+            continue
+        best = None
+        for w in fl_of[p['floor']]['walls']:
+            if 'a' not in w:
+                continue
+            (ax, ay), (bx, by) = w['a'], w['b']
+            L = math.hypot(bx - ax, by - ay)
+            t = max(0, min(1, ((p['at'][0] - ax) * (bx - ax) + (p['at'][1] - ay) * (by - ay)) / L ** 2))
+            qx, qy = ax + t * (bx - ax), ay + t * (by - ay)
+            d = math.hypot(p['at'][0] - qx, p['at'][1] - qy)
+            if best is None or d < best[0]:
+                best = (d, (p['at'][0] - qx) / (d or 1), (p['at'][1] - qy) / (d or 1))
+        if best and best[0] < w_tol(p):
+            p['face'] = [round(best[1], 3), round(best[2], 3)]
+
+    # ---------------- DBs, circuits
+    DB = {p['tag']: p for p in pts if p['kind'] == 'db'}
+    MTR = next(p for p in pts if p['kind'] == 'mtr')
+    INV = next(p for p in pts if p['kind'] == 'inv')
+    db_of = lambda p: DB['DB-1'] if p['floor'] == 'GF' else DB['DB-2'] if p['floor'] == 'FF' else DB['DB-3']  # noqa: E731
+    outdoor = lambda p: p['room'] not in rooms or rooms[p['room']].get('kind') == 'outdoor'  # noqa: E731
+    LIGHT = ('light', 'pd', 'fan', 'sd', 'hd', 'ml', 'ucl', 'wl', 'gl', 'ef', 'sb', 'sb2w')
+    SOCK = ('s6', 's6c', 'usb', 'tv', 'ch', 'ip65')
+    UPS = ('ups', 'cctv', 'vdp', 'vdpo', 'rack')
+    circuits = []
+
+    def circuit(cid, cls, db, members, **kw):
+        circuits.append(dict(id=cid, cls=cls, db=db['tag'] if 'tag' in db else db['id'], points=[p['id'] for p in members], **kw))
+        for p in members:
+            p['circuit'] = cid
+
+    def chunk(members, n):
+        out, cur = [], []
+        for p in members:
+            if sum(1 for q in cur if q['kind'] not in ('sb', 'sb2w')) >= n and p['kind'] not in ('sb', 'sb2w'):
+                out.append(cur)
+                cur = []
+            cur.append(p)
+        return out + ([cur] if cur else [])
+
+    count = {}
+
+    def next_id(prefix):
+        count[prefix] = count.get(prefix, 0) + 1
+        return '%s%d' % (prefix, count[prefix])
+
+    for tag in ('DB-1', 'DB-2', 'DB-3'):
+        db = DB[tag]
+        mine = [p for p in pts if db_of(p) is db and p['kind'] not in ('db', 'mtr', 'inv', 'data')]
+        inside = [p for p in mine if not outdoor(p)]
+        out = [p for p in mine if outdoor(p)]
+        for grp in chunk([p for p in inside if p['kind'] in LIGHT], 10):
+            circuit(next_id('L'), 'lighting', db, grp, mcb='10A', cable='1.5 sq mm', rcd=any(rooms[p['serves']]['name'].lower().find(w) >= 0 for p in grp for w in ('toilet', 'washroom')), backup=True)
+        for grp in chunk([p for p in inside if p['kind'] in SOCK], 8):
+            circuit(next_id('S'), 'sockets', db, grp, mcb='16A', cable='2.5 sq mm', rcd=True)
+        if [p for p in out if p['kind'] in LIGHT]:
+            circuit(next_id('L'), 'lighting', db, [p for p in out if p['kind'] in LIGHT], mcb='10A', cable='1.5 sq mm', rcd=True, backup=False, note='outdoor')
+        if [p for p in out if p['kind'] in SOCK]:
+            circuit(next_id('S'), 'sockets', db, [p for p in out if p['kind'] in SOCK], mcb='16A', cable='2.5 sq mm', rcd=True, note='outdoor')
+        for p in mine:
+            k = p['kind']
+            if k == 's16':
+                circuit(next_id('P'), 'power', db, [p], mcb='20A', cable='4 sq mm', rcd=True)
+            elif k == 'gy':
+                circuit(next_id('G'), 'geyser', db, [p], mcb='20A', cable='4 sq mm', rcd=True)
+            elif k == 'ac':
+                circuit(next_id('AC'), 'ac', db, [p], mcb='25A' if p['tr'] >= 2 else '20A', cable='4 sq mm', rcd=False)
+            elif k == 'ev':
+                circuit('EV', 'power', db, [p], mcb='40A (maker)', cable='6 sq mm (maker)', rcd=True, note='type A/B RCD per charger maker')
+            elif k == 'iso':
+                circuit('LIFT', 'power', DB['DB-1'], [p], mcb='as vendor (3-phase)', cable='as vendor', rcd=False)
+            elif k in ('pump', 'spare'):
+                circuit(next_id('PUMP') if k == 'pump' else 'SPARE', 'power', db, [p], mcb='as maker', cable='as maker', rcd=True)
+    circuit('UPS', 'ups', INV, [p for p in pts if p['kind'] in UPS], mcb='16A', cable='2.5 sq mm', rcd=True, note='inverter backup: also the lighting circuits marked backup')
+    circuit('DATA', 'data', INV, [p for p in pts if p['kind'] in ('data', 'tv')], mcb='-', cable='Cat-6', rcd=False, note='from the network rack')
+    for p in pts:      # TV points are on a socket circuit and on the data run: keep the socket one as the power circuit
+        if p['kind'] == 'tv':
+            p['circuit'] = next(c['id'] for c in circuits if p['id'] in c['points'] and c['cls'] == 'sockets')
+
+    # ---------------- conduit routes (loop-in, in the slab above; outdoor buried)
+    byid = {p['id']: p for p in pts}
+    SLAB = {'GF': lv['FF']['ffl'] - 150, 'FF': lv['SF']['ffl'] - 150, 'SF': lv['ROOF']['ffl'] - 150}
+    routes = []
+    for c in circuits:
+        src = DB[c['db']] if c['db'] in DB else INV
+        members = [byid[i] for i in c['points']]
+        segs = []
+        cur = src
+        left = list(members)
+        level = lambda p: -300 if outdoor(p) and p['floor'] == 'GF' else SLAB[p['floor']]  # noqa: E731
+        trunk = [list(src['at'])]
+        while left:
+            nxt = min(left, key=lambda q: abs(q['at'][0] - cur['at'][0]) + abs(q['at'][1] - cur['at'][1]) + abs(level(q) - level(cur)) * 0.5)
+            left.remove(nxt)
+            za, zb = level(cur), level(nxt)
+            if not trunk or trunk[-1][2] != za:
+                trunk.append([cur['at'][0], cur['at'][1], za])
+            trunk.append([nxt['at'][0], cur['at'][1], za])
+            if za != zb:
+                trunk.append([nxt['at'][0], cur['at'][1], zb])
+            trunk.append([nxt['at'][0], nxt['at'][1], zb])
+            segs.append([[nxt['at'][0], nxt['at'][1], zb], list(nxt['at'])])
+            cur = nxt
+        clean = [trunk[0]] + [q for a, q in zip(trunk, trunk[1:]) if q != a]
+        routes.append(dict(circuit=c['id'], cls=c['cls'], trunk=clean, drops=segs))
+    # sub-mains and refrigerant (by hand)
+    sub = [
+        dict(id='SM-1', frm='MTR', to='DB-1', note='4-core armoured, buried, sleeved under the lobby floor; clear of the sewer',
+             pts=[MTR['at'], [5000, 22290, -450], [5700, 22290, -450], [5700, 17300, -450], [5700, 17300, 250], [5700, 10900, 250], [3400, 10900, 250],
+                  [3400, 9451, 250], [250, 9451, 250], DB['DB-1']['at']]),
+        dict(id='SM-2', frm='DB-1', to='DB-2', note='in the GF ceiling slab, up the dresser west wall',
+             pts=[DB['DB-1']['at'], [250, 9451, SLAB['GF']], [250, 5950, SLAB['GF']], [2973, 5950, SLAB['GF']], DB['DB-2']['at']]),
+        dict(id='SM-3', frm='DB-1', to='DB-3', note='in the GF ceiling slab, then a riser in the east-wall chase (guest room / bedroom 3 / servant room)',
+             pts=[DB['DB-1']['at'], [250, 9451, SLAB['GF']], [1100, 9451, SLAB['GF']], [1100, 13300, SLAB['GF']], [330, 13300, SLAB['GF']],
+                  [330, 13300, DB['DB-3']['at'][2]], DB['DB-3']['at']]),
+        dict(id='SM-4', frm='DB-1', to='INV', note='inverter charger feed + UPS changeover',
+             pts=[DB['DB-1']['at'], [250, 9451, SLAB['GF']], [8525, 9451, SLAB['GF']], [8525, 12885, SLAB['GF']], INV['at']]),
+    ]
+    acs = {p['room']: p for p in pts if p['kind'] == 'ac'}
+    G0 = lambda r: lv[r[:2]]['ffl']  # noqa: E731
+    ref = [
+        dict(ac=acs['GF-DRW']['id'], odu='SF-AC3', note='out above the GL-5 head, up the balcony west wall (inside the plot), over the parapet',
+             pts=[acs['GF-DRW']['at'], [9050, 7083, 3300], [9050, 5750, 3300], [9050, 5750, 8250], [9050, 6900, 8250], [7775, 6900, 8250], [7775, 6955, 7650]]),
+        dict(ac=acs['FF-MST']['id'], odu='SF-AC4', note='straight up through the slab to the back terrace',
+             pts=[acs['FF-MST']['at'], [9050, 7300, 6900], [9050, 7300, 7350], [8540, 7300, 7350], [8540, 6955, 7650]]),
+        dict(ac=acs['FF-BD3']['id'], odu='SF-AC1', note='in the ceiling void, through the toilet ceiling into the OTS, up to the back terrace (drains via the OTS)',
+             pts=[acs['FF-BD3']['at'], [4100, 15100, 6600], [4100, 12700, 6600], [700, 12700, 6600], [700, 12500, 6600], [700, 12500, 7350],
+                  [700, 10300, 7350], [655, 6000, 7350], [655, 5815, 7650]]),
+        dict(ac=acs['FF-KID']['id'], odu='SF-AC5', note='up through the slab to the front terrace',
+             pts=[acs['FF-KID']['at'], [8710, 16975, 7350], [8300, 16975, 7350], [8300, 15455, 7650]]),
+        dict(ac=acs['GF-MND']['id'], odu='SF-AC6', note='up the SS-3 boxed duct to the front terrace',
+             pts=[acs['GF-MND']['at'], [8850, 15400, 2600], [8850, 15400, 7350], [7400, 15650, 7350], [7400, 15455, 7650]]),
+        dict(ac=acs['GF-GST']['id'], odu='GF-O08', note='through the north wall, down to the front-lawn unit (A6)',
+             pts=[acs['GF-GST']['at'], [1566, 19300, 3150], [2700, 19300, 3150], [2700, 19550, 3150], [2700, 19700, 650]]),
+    ]
+    for r in ref:
+        r['length'] = round(sum(math.dist(a, b) for a, b in zip(r['pts'], r['pts'][1:])))
+    h['services']['electrical'] = dict(
+        source='Electrical Layout Rev A (Oct 2026) re-placed for the R1 layout; SF points added (SF not on R0)',
+        status='design intent - final design, cable sizes, load sanction and test certificate by the licensed electrical contractor',
+        points=pts, circuits=circuits, routes=routes, submains=sub, refrigerant=ref)
+
+
 PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
-           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, e12_plumbing]
+           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace, e12_plumbing, e13_electrical]
 
 
 def build():

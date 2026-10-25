@@ -160,6 +160,7 @@
 <polyline points="790,9651 790,9251" fill="none" stroke="#8a7a5c" stroke-width="6" />
 <polyline points="230,9651 830,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polyline points="830,9651 230,9251" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="2325,19550 3075,19550 3075,19850 2325,19850" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 </g>
 <g id="stair">
 <polygon points="5899,12865 7899,12865 7899,13919 5899,13919" fill="#fbfbfb" stroke="#222" stroke-width="10" />

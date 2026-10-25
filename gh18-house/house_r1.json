@@ -1673,6 +1673,15 @@
           "size": [400, 600, 2250],
           "rot": 270,
           "note": "DB-1, enclosed cabinet (electrical Rev A A3, red-line 4)"
+        },
+        {
+          "id": "GF-O08",
+          "room": "GF-COURT",
+          "type": "ac_odu",
+          "pos": [2700, 19700],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit, guest room, front lawn (Electrical Rev A, A6)"
         }
       ],
       "pergola": {
@@ -3737,19 +3746,10 @@
           "id": "SF-AC1",
           "room": "SF-TRB",
           "type": "ac_odu",
-          "pos": [5975, 6955],
+          "pos": [655, 5815],
           "size": [750, 300, 600],
           "rot": 0,
-          "note": "AC outdoor unit (S/SW zone)"
-        },
-        {
-          "id": "SF-AC2",
-          "room": "SF-TRB",
-          "type": "ac_odu",
-          "pos": [6800, 6955],
-          "size": [750, 300, 600],
-          "rot": 0,
-          "note": "AC outdoor unit (S/SW zone)"
+          "note": "AC outdoor unit, SE corner of the back terrace (bedroom 3, via the OTS)"
         },
         {
           "id": "SF-AC3",
@@ -3790,6 +3790,24 @@
           "z": 3300,
           "on_roof": true,
           "note": "solar water heater facing south; hot water to the master washroom + kitchen"
+        },
+        {
+          "id": "SF-AC5",
+          "room": "SF-TRF",
+          "type": "ac_odu",
+          "pos": [8300, 15455],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit, kids room; NW of the front terrace against the stair wall"
+        },
+        {
+          "id": "SF-AC6",
+          "room": "SF-TRF",
+          "type": "ac_odu",
+          "pos": [7400, 15455],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit, guest lounge / study; up the SS-3 duct"
         }
       ],
       "canopy": {
@@ -4191,6 +4209,3185 @@
       ],
       "source": "Plumbing Layout Rev A (Oct 2026) re-applied to the R1 layout; SS-2 dropped (R1-C10 master washroom on SS-1)",
       "status": "design intent - sizing, falls and municipal connection by the licensed plumbing consultant"
+    },
+    "electrical": {
+      "source": "Electrical Layout Rev A (Oct 2026) re-placed for the R1 layout; SF points added (SF not on R0)",
+      "status": "design intent - final design, cable sizes, load sanction and test certificate by the licensed electrical contractor",
+      "points": [
+        {
+          "id": "GF-E01",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [1700, 7300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E02",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [1700, 9800, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E03",
+          "kind": "ucl",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [430, 7757, 1900],
+          "base": 450,
+          "note": "under the east wall cabinets",
+          "face": [1.0, 0.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E04",
+          "kind": "ucl",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [2950, 7800, 1900],
+          "base": 450,
+          "note": "under the west wall cabinets",
+          "face": [-1.0, 0.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E05",
+          "kind": "ucl",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [2090, 11190, 1900],
+          "base": 450,
+          "note": "under the wash-nook cabinet (R1-B4)",
+          "face": [0.0, -1.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E06",
+          "kind": "hd",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [1700, 8500, 3200],
+          "base": 450,
+          "note": "heat detector (A3)",
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E07",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [3130, 9200, 1650],
+          "base": 450,
+          "note": "by the kitchen door",
+          "face": [-1.0, 0.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E08",
+          "kind": "ch",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [250, 7300, 2650],
+          "base": 450,
+          "note": "chimney over the hob on the east wall (A3), duct along the cabinets to the rear wall",
+          "face": [1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E09",
+          "kind": "s6c",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [250, 8700, 1550],
+          "base": 450,
+          "note": "counter socket",
+          "face": [1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E10",
+          "kind": "s16",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [3130, 7300, 1550],
+          "base": 450,
+          "note": "microwave, west counter",
+          "face": [-1.0, 0.0],
+          "circuit": "P1"
+        },
+        {
+          "id": "GF-E11",
+          "kind": "s16",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [250, 10051, 750],
+          "base": 450,
+          "note": "fridge, in the tall unit",
+          "face": [1.0, 0.0],
+          "circuit": "P2"
+        },
+        {
+          "id": "GF-E12",
+          "kind": "s16",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [2850, 11345, 750],
+          "base": 450,
+          "note": "dishwasher under the wash-nook counter, 0.65 m from the sink",
+          "face": [0.0, -1.0],
+          "circuit": "P3"
+        },
+        {
+          "id": "GF-E13",
+          "kind": "ef",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [2650, 5685, 2700],
+          "base": 450,
+          "note": "exhaust fan on the rear external wall (A3)",
+          "face": [0.0, 1.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E14",
+          "kind": "ef",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [1051, 11050, 1850],
+          "base": 450,
+          "note": "wash-nook exhaust into the OTS through KW-1 (R1-B4)",
+          "face": [1.0, 0.0],
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E15",
+          "kind": "db",
+          "floor": "GF",
+          "room": "GF-KIT",
+          "serves": "GF-KIT",
+          "at": [250, 9451, 1950],
+          "base": 450,
+          "note": "DB-1 (main), 400 mm enclosed cabinet on the kitchen east wall, SE zone (A3, R1-B7)",
+          "tag": "DB-1",
+          "face": [1.0, 0.0]
+        },
+        {
+          "id": "GF-E16",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [4800, 6400, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E17",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [8200, 6400, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L1"
+        },
+        {
+          "id": "GF-E18",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-DIN",
+          "serves": "GF-DIN",
+          "at": [8200, 9700, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E19",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-DIN",
+          "serves": "GF-DIN",
+          "at": [3900, 9700, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E20",
+          "kind": "pd",
+          "floor": "GF",
+          "room": "GF-DIN",
+          "serves": "GF-DIN",
+          "at": [5700, 9850, 3200],
+          "base": 450,
+          "note": "pendant over the dining table (A2)",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E21",
+          "kind": "fan",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [7000, 7083, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E22",
+          "kind": "sd",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [6000, 8400, 3200],
+          "base": 450,
+          "note": "smoke detector (A2)",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E23",
+          "kind": "ac",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [9131, 7083, 2600],
+          "base": 450,
+          "note": "2 TR, west wall above the TV (A2)",
+          "tr": 2.0,
+          "face": [-1.0, 0.0],
+          "circuit": "AC1"
+        },
+        {
+          "id": "GF-E24",
+          "kind": "tv",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [9131, 7083, 1550],
+          "base": 450,
+          "note": "TV + 5 A + data, west wall (A2)",
+          "face": [-1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E25",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [9131, 8100, 750],
+          "base": 450,
+          "note": "",
+          "face": [-1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E26",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [3320, 6600, 750],
+          "base": 450,
+          "note": "",
+          "face": [1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E27",
+          "kind": "sb2w",
+          "floor": "GF",
+          "room": "GF-DRW",
+          "serves": "GF-DRW",
+          "at": [3320, 5900, 1650],
+          "base": 450,
+          "note": "2-way, lounge end by the lawn door (A2)",
+          "face": [1.0, 0.0],
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E28",
+          "kind": "sb2w",
+          "floor": "GF",
+          "room": "GF-DIN",
+          "serves": "GF-DIN",
+          "at": [7400, 10746, 1650],
+          "base": 450,
+          "note": "2-way, dining end on the lift wall (A2)",
+          "face": [0.0, -1.0],
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E29",
+          "kind": "ml",
+          "floor": "GF",
+          "room": "GF-DIN",
+          "serves": "GF-DIN",
+          "at": [3750, 11345, 2450],
+          "base": 450,
+          "note": "mirror light over the dining basin (R1-B3)",
+          "face": [0.0, -1.0],
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E30",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-TLT",
+          "serves": "GF-TLT",
+          "at": [3300, 12800, 3050],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E31",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-TLT",
+          "serves": "GF-TLT",
+          "at": [1700, 12800, 3050],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E32",
+          "kind": "ef",
+          "floor": "GF",
+          "room": "GF-TLT",
+          "serves": "GF-TLT",
+          "at": [630, 12985, 2700],
+          "base": 450,
+          "note": "on the OTS wall (A4)",
+          "face": [0.0, 1.0],
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E33",
+          "kind": "gy",
+          "floor": "GF",
+          "room": "GF-TLT",
+          "serves": "GF-TLT",
+          "at": [1500, 11535, 2350],
+          "base": 450,
+          "note": "high on the south wall, 0.7 m clear of the shower",
+          "face": [0.0, 1.0],
+          "circuit": "G1"
+        },
+        {
+          "id": "GF-E34",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-TLT",
+          "serves": "GF-TLT",
+          "at": [4180, 12800, 1550],
+          "base": 450,
+          "note": "0.68 m from the vanity, RCD (A4)",
+          "face": [-1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E35",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-LOB",
+          "serves": "GF-TLT",
+          "at": [4370, 12950, 1650],
+          "base": 450,
+          "note": "toilet switches outside the door (A4)",
+          "face": [1.0, 0.0],
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E36",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-LOB",
+          "serves": "GF-LOB",
+          "at": [5100, 12000, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L2"
+        },
+        {
+          "id": "GF-E37",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-LOB",
+          "serves": "GF-LOB",
+          "at": [5100, 15800, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E38",
+          "kind": "sd",
+          "floor": "GF",
+          "room": "GF-LOB",
+          "serves": "GF-LOB",
+          "at": [5100, 14000, 3200],
+          "base": 450,
+          "note": "smoke detector (A5)",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E39",
+          "kind": "sb2w",
+          "floor": "GF",
+          "room": "GF-LOB",
+          "serves": "GF-LOB",
+          "at": [7180, 12500, 1650],
+          "base": 450,
+          "note": "2-way stair switching (A5)",
+          "face": [-1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E40",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-JAN",
+          "serves": "GF-JAN",
+          "at": [7000, 14600, 2550],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E41",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-JAN",
+          "serves": "GF-JAN",
+          "at": [6100, 14150, 1650],
+          "base": 450,
+          "note": "",
+          "face": [1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E42",
+          "kind": "inv",
+          "floor": "GF",
+          "room": "GF-JAN",
+          "serves": "GF-JAN",
+          "at": [8525, 12885, 850],
+          "base": 450,
+          "note": "inverter + battery on the ventilated rack (A5, R1-B7)",
+          "tag": "INV",
+          "face": [0.0, 1.0]
+        },
+        {
+          "id": "GF-E43",
+          "kind": "rack",
+          "floor": "GF",
+          "room": "GF-JAN",
+          "serves": "GF-JAN",
+          "at": [8525, 12885, 1650],
+          "base": 450,
+          "note": "network rack + router (A5)",
+          "face": [0.0, 1.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E44",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-FOY",
+          "serves": "GF-FOY",
+          "at": [5100, 18000, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E45",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-FOY",
+          "serves": "GF-FOY",
+          "at": [4800, 19300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E46",
+          "kind": "vdp",
+          "floor": "GF",
+          "room": "GF-FOY",
+          "serves": "GF-FOY",
+          "at": [5880, 17900, 1850],
+          "base": 450,
+          "note": "video door phone screen (A8)",
+          "face": [-1.0, 0.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E47",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-FOY",
+          "serves": "GF-FOY",
+          "at": [5880, 20100, 1650],
+          "base": 450,
+          "note": "by the main door",
+          "face": [-1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E48",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [1900, 15300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E49",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [1900, 18300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E50",
+          "kind": "fan",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [1900, 16845, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E51",
+          "kind": "ac",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [1566, 19086, 2900],
+          "base": 450,
+          "note": "1.5 TR, north wall above GL-1 (head 2400) (A6)",
+          "tr": 1.5,
+          "face": [0.0, -1.0],
+          "circuit": "AC2"
+        },
+        {
+          "id": "GF-E52",
+          "kind": "tv",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [4180, 16845, 1550],
+          "base": 450,
+          "note": "west wall facing the bed (A6)",
+          "face": [-1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E53",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [4180, 15300, 750],
+          "base": 450,
+          "note": "",
+          "face": [-1.0, 0.0],
+          "circuit": "S1"
+        },
+        {
+          "id": "GF-E54",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [4180, 15850, 1650],
+          "base": 450,
+          "note": "by the door",
+          "face": [-1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E55",
+          "kind": "sd",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [1900, 16000, 3200],
+          "base": 450,
+          "note": "smoke detector (R1 addition)",
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E56",
+          "kind": "sb2w",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [250, 15455, 1050],
+          "base": 450,
+          "note": "bedside 2-way + fan regulator",
+          "face": [1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E57",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [250, 16115, 750],
+          "base": 450,
+          "note": "bedside socket",
+          "face": [1.0, 0.0],
+          "circuit": "S2"
+        },
+        {
+          "id": "GF-E58",
+          "kind": "sb2w",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [250, 17575, 1050],
+          "base": 450,
+          "note": "bedside 2-way + fan regulator",
+          "face": [1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E59",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [250, 18235, 750],
+          "base": 450,
+          "note": "bedside socket",
+          "face": [1.0, 0.0],
+          "circuit": "S2"
+        },
+        {
+          "id": "GF-E60",
+          "kind": "wl",
+          "floor": "GF",
+          "room": "GF-GST",
+          "serves": "GF-GST",
+          "at": [250, 18630, 2150],
+          "base": 450,
+          "note": "mandir niche light (R1-B6)",
+          "face": [1.0, 0.0],
+          "circuit": "L3"
+        },
+        {
+          "id": "GF-E61",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [7600, 16300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L4"
+        },
+        {
+          "id": "GF-E62",
+          "kind": "light",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [7600, 18500, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L4"
+        },
+        {
+          "id": "GF-E63",
+          "kind": "fan",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [7600, 17300, 3200],
+          "base": 450,
+          "note": "",
+          "circuit": "L4"
+        },
+        {
+          "id": "GF-E64",
+          "kind": "ac",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [8500, 15294, 2600],
+          "base": 450,
+          "note": "1.5 TR, south wall above the settee; refrigerant up the SS-3 duct",
+          "tr": 1.5,
+          "face": [0.0, 1.0],
+          "circuit": "AC3"
+        },
+        {
+          "id": "GF-E65",
+          "kind": "tv",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [9131, 17300, 1550],
+          "base": 450,
+          "note": "TV for the guest lounge (R1-B5)",
+          "face": [-1.0, 0.0],
+          "circuit": "S2"
+        },
+        {
+          "id": "GF-E66",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [6100, 18600, 1350],
+          "base": 450,
+          "note": "desk (A7)",
+          "face": [1.0, 0.0],
+          "circuit": "S2"
+        },
+        {
+          "id": "GF-E67",
+          "kind": "s6",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [6100, 19100, 1350],
+          "base": 450,
+          "note": "desk (A7)",
+          "face": [1.0, 0.0],
+          "circuit": "S2"
+        },
+        {
+          "id": "GF-E68",
+          "kind": "ups",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [6100, 18850, 1350],
+          "base": 450,
+          "note": "UPS socket at the desk (A7)",
+          "face": [1.0, 0.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E69",
+          "kind": "data",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [6100, 18350, 1350],
+          "base": 450,
+          "note": "Cat-6 at the desk (A7)",
+          "face": [1.0, 0.0],
+          "circuit": "DATA"
+        },
+        {
+          "id": "GF-E70",
+          "kind": "sb",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [6100, 16600, 1650],
+          "base": 450,
+          "note": "by the door",
+          "face": [1.0, 0.0],
+          "circuit": "L4"
+        },
+        {
+          "id": "GF-E71",
+          "kind": "sd",
+          "floor": "GF",
+          "room": "GF-MND",
+          "serves": "GF-MND",
+          "at": [7600, 16900, 3200],
+          "base": 450,
+          "note": "smoke detector (R1 addition)",
+          "circuit": "L4"
+        },
+        {
+          "id": "GF-E72",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [1200, 1300, 600],
+          "base": 0,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E73",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [3600, 1300, 600],
+          "base": 0,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E74",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [5900, 1300, 600],
+          "base": 0,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E75",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [8200, 1300, 600],
+          "base": 0,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E76",
+          "kind": "wl",
+          "floor": "GF",
+          "room": "GF-DECK",
+          "serves": "GF-DECK",
+          "at": [250, 4200, 2400],
+          "base": 300,
+          "note": "pergola wall light",
+          "face": [1.0, 0.0],
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E77",
+          "kind": "wl",
+          "floor": "GF",
+          "room": "GF-DECK",
+          "serves": "GF-DECK",
+          "at": [9131, 4200, 2400],
+          "base": 300,
+          "note": "pergola wall light",
+          "face": [-1.0, 0.0],
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E78",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [2400, 21800, 900],
+          "base": 300,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E79",
+          "kind": "gl",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [3900, 21300, 900],
+          "base": 300,
+          "note": "garden light",
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E80",
+          "kind": "wl",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [6000, 20750, 2400],
+          "base": 300,
+          "note": "gate light (A8)",
+          "face": [1.0, 0.0],
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E81",
+          "kind": "wl",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [6000, 21950, 2400],
+          "base": 300,
+          "note": "gate light (A8)",
+          "face": [1.0, 0.0],
+          "circuit": "L5"
+        },
+        {
+          "id": "GF-E82",
+          "kind": "ip65",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [9131, 3000, 600],
+          "base": 0,
+          "note": "weatherproof socket, rear lawn (A1)",
+          "face": [-1.0, 0.0],
+          "circuit": "S3"
+        },
+        {
+          "id": "GF-E83",
+          "kind": "pump",
+          "floor": "GF",
+          "room": "GF-LAWN-B",
+          "serves": "GF-LAWN-B",
+          "at": [300, 2700, 500],
+          "base": 0,
+          "note": "irrigation pump point (A1)",
+          "kw": 0.75,
+          "circuit": "PUMP1"
+        },
+        {
+          "id": "GF-E84",
+          "kind": "cctv",
+          "floor": "GF",
+          "room": "GF-DECK",
+          "serves": "GF-DECK",
+          "at": [9100, 5540, 3000],
+          "base": 300,
+          "note": "rear CCTV (A1)",
+          "face": [0.0, -1.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E85",
+          "kind": "cctv",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [5700, 22000, 3000],
+          "base": 300,
+          "note": "gate + street CCTV",
+          "face": [0.0, -1.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E86",
+          "kind": "vdpo",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [5900, 22050, 1800],
+          "base": 300,
+          "note": "outdoor VDP unit at the gate (A8)",
+          "face": [0.0, -1.0],
+          "circuit": "UPS"
+        },
+        {
+          "id": "GF-E87",
+          "kind": "mtr",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [5000, 22290, 1800],
+          "base": 300,
+          "note": "meter + main switch on the front boundary wall, read from the street",
+          "tag": "MTR",
+          "face": [0.0, 1.0]
+        },
+        {
+          "id": "GF-E88",
+          "kind": "pump",
+          "floor": "GF",
+          "room": "GF-COURT",
+          "serves": "GF-COURT",
+          "at": [1800, 21100, 800],
+          "base": 300,
+          "note": "UGT pump PP 0.5-1 HP (plumbing E12)",
+          "kw": 0.75,
+          "circuit": "PUMP2"
+        },
+        {
+          "id": "GF-E89",
+          "kind": "ev",
+          "floor": "GF",
+          "room": "GF-PARK",
+          "serves": "GF-PARK",
+          "at": [8600, 19916, 1200],
+          "base": 0,
+          "note": "EV charger 32 A under the FF overhang",
+          "face": [0.0, 1.0],
+          "circuit": "EV"
+        },
+        {
+          "id": "FF-E01",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [4300, 8200, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E02",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [6000, 10000, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E03",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [6000, 7500, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E04",
+          "kind": "fan",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [6900, 8738, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E05",
+          "kind": "sd",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [5500, 8738, 6500],
+          "base": 3750,
+          "note": "smoke detector (B2)",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E06",
+          "kind": "ac",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 7300, 5900],
+          "base": 3750,
+          "note": "2 TR, west wall off the glazing (B2)",
+          "tr": 2.0,
+          "face": [-1.0, 0.0],
+          "circuit": "AC4"
+        },
+        {
+          "id": "FF-E07",
+          "kind": "tv",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [3163, 8550, 4850],
+          "base": 3750,
+          "note": "",
+          "face": [1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E08",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [6000, 6825, 4050],
+          "base": 3750,
+          "note": "by the lounge chair",
+          "face": [0.0, 1.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E09",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 7143, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [-1.0, 0.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E10",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 7803, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [-1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E11",
+          "kind": "usb",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 7803, 4550],
+          "base": 3750,
+          "note": "bedside USB",
+          "face": [-1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E12",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 9673, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [-1.0, 0.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E13",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 10333, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [-1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E14",
+          "kind": "usb",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [9131, 10333, 4550],
+          "base": 3750,
+          "note": "bedside USB",
+          "face": [-1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E15",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-MST",
+          "serves": "FF-MST",
+          "at": [5550, 10649, 4950],
+          "base": 3750,
+          "note": "by the door",
+          "face": [0.0, -1.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E16",
+          "kind": "wl",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [5420, 6635, 5850],
+          "base": 3750,
+          "note": "balcony wall light",
+          "face": [0.0, -1.0],
+          "circuit": "L9"
+        },
+        {
+          "id": "FF-E17",
+          "kind": "wl",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [9070, 6635, 5850],
+          "base": 3750,
+          "note": "balcony wall light",
+          "face": [0.0, -1.0],
+          "circuit": "L9"
+        },
+        {
+          "id": "FF-E18",
+          "kind": "gl",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [6600, 4900, 4050],
+          "base": 3750,
+          "note": "planter light",
+          "circuit": "L9"
+        },
+        {
+          "id": "FF-E19",
+          "kind": "gl",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [8300, 4900, 4050],
+          "base": 3750,
+          "note": "planter light",
+          "circuit": "L9"
+        },
+        {
+          "id": "FF-E20",
+          "kind": "ip65",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [5420, 6635, 4350],
+          "base": 3750,
+          "note": "weatherproof (B1/B9)",
+          "face": [0.0, -1.0],
+          "circuit": "S7"
+        },
+        {
+          "id": "FF-E21",
+          "kind": "ip65",
+          "floor": "FF",
+          "room": "FF-BAL",
+          "serves": "FF-BAL",
+          "at": [9070, 6635, 4350],
+          "base": 3750,
+          "note": "weatherproof (B1/B9)",
+          "face": [0.0, -1.0],
+          "circuit": "S7"
+        },
+        {
+          "id": "FF-E22",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-DRS",
+          "at": [1600, 7100, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E23",
+          "kind": "ml",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-DRS",
+          "at": [250, 6350, 5750],
+          "base": 3750,
+          "note": "mirror light, east wall (B3/B4, red-line 12)",
+          "face": [1.0, 0.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E24",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-DRS",
+          "at": [250, 6850, 4650],
+          "base": 3750,
+          "note": "at the dressing table",
+          "face": [1.0, 0.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E25",
+          "kind": "db",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-DRS",
+          "at": [2973, 5950, 5250],
+          "base": 3750,
+          "note": "DB-2 on the dresser west wall, SE zone of the plot. Rev A had it over DB-1, which is now the R1-C10 washroom",
+          "tag": "DB-2",
+          "face": [-1.0, 0.0]
+        },
+        {
+          "id": "FF-E26",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-DRS",
+          "at": [2973, 7500, 4950],
+          "base": 3750,
+          "note": "by the door",
+          "face": [-1.0, 0.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E27",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-DRS",
+          "serves": "FF-MTL",
+          "at": [2973, 7700, 4950],
+          "base": 3750,
+          "note": "washroom switches outside, at the dresser door (B3)",
+          "face": [-1.0, 0.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E28",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [1300, 9900, 6350],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E29",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [2600, 9300, 6350],
+          "base": 3750,
+          "note": "",
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E30",
+          "kind": "ml",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [780, 8775, 5750],
+          "base": 3750,
+          "note": "mirror light over the vanity",
+          "face": [0.0, 1.0],
+          "circuit": "L6"
+        },
+        {
+          "id": "FF-E31",
+          "kind": "ef",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [530, 10431, 5550],
+          "base": 3750,
+          "note": "in KW-1 on the OTS wall (FF-MW1)",
+          "face": [0.0, -1.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E32",
+          "kind": "gy",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [250, 9550, 5650],
+          "base": 3750,
+          "note": "east wall, 2 m from the shower, high (B3)",
+          "face": [1.0, 0.0],
+          "circuit": "G2"
+        },
+        {
+          "id": "FF-E33",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-MTL",
+          "serves": "FF-MTL",
+          "at": [1500, 10649, 4850],
+          "base": 3750,
+          "note": "0.75 m clear of the tub, RCD",
+          "face": [0.0, -1.0],
+          "circuit": "S4"
+        },
+        {
+          "id": "FF-E34",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-TL3",
+          "serves": "FF-TL3",
+          "at": [2600, 11800, 6350],
+          "base": 3750,
+          "note": "",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E35",
+          "kind": "ml",
+          "floor": "FF",
+          "room": "FF-TL3",
+          "serves": "FF-TL3",
+          "at": [3820, 10869, 5750],
+          "base": 3750,
+          "note": "",
+          "face": [0.0, 1.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E36",
+          "kind": "ef",
+          "floor": "FF",
+          "room": "FF-TL3",
+          "serves": "FF-TL3",
+          "at": [1051, 11100, 6000],
+          "base": 3750,
+          "note": "on the OTS wall (B5)",
+          "face": [1.0, 0.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E37",
+          "kind": "gy",
+          "floor": "FF",
+          "room": "FF-TL3",
+          "serves": "FF-TL3",
+          "at": [2920, 10869, 5650],
+          "base": 3750,
+          "note": "above the WC, 1.3 m from the shower",
+          "face": [0.0, 1.0],
+          "circuit": "G3"
+        },
+        {
+          "id": "FF-E38",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-TL3",
+          "at": [3203, 13250, 4950],
+          "base": 3750,
+          "note": "toilet switches outside, in the bedroom niche (B5)",
+          "face": [-1.0, 0.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E39",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [5100, 12100, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E40",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [5100, 14300, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E41",
+          "kind": "sd",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [5100, 13300, 6500],
+          "base": 3750,
+          "note": "smoke detector",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E42",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [7178, 12600, 4950],
+          "base": 3750,
+          "note": "2-way stair switching",
+          "face": [-1.0, 0.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E43",
+          "kind": "s6c",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [5700, 10869, 4850],
+          "base": 3750,
+          "note": "pantry counter (R1-C8)",
+          "face": [0.0, 1.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E44",
+          "kind": "s6c",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [6700, 10869, 4850],
+          "base": 3750,
+          "note": "pantry counter (R1-C8)",
+          "face": [0.0, 1.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E45",
+          "kind": "ucl",
+          "floor": "FF",
+          "room": "FF-LOB",
+          "serves": "FF-LOB",
+          "at": [6200, 11150, 5200],
+          "base": 3750,
+          "note": "under the pantry wall cupboards (R1-C8)",
+          "face": [0.0, 1.0],
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E46",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [2200, 14400, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E47",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [2200, 17800, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L7"
+        },
+        {
+          "id": "FF-E48",
+          "kind": "fan",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [2200, 15576, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E49",
+          "kind": "sd",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [2200, 16700, 6500],
+          "base": 3750,
+          "note": "smoke detector",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E50",
+          "kind": "ac",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [4249, 15100, 5900],
+          "base": 3750,
+          "note": "1.5 TR, west wall; refrigerant through the toilet ceiling and the OTS (B6: E wall is a party wall)",
+          "tr": 1.5,
+          "face": [-1.0, 0.0],
+          "circuit": "AC5"
+        },
+        {
+          "id": "FF-E51",
+          "kind": "tv",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [4249, 15576, 4850],
+          "base": 3750,
+          "note": "",
+          "face": [-1.0, 0.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E52",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [4249, 16050, 4050],
+          "base": 3750,
+          "note": "",
+          "face": [-1.0, 0.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E53",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [4249, 14700, 4950],
+          "base": 3750,
+          "note": "by the door",
+          "face": [-1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E54",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [250, 14186, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E55",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [250, 14846, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [1.0, 0.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E56",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [250, 16306, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E57",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-BD3",
+          "serves": "FF-BD3",
+          "at": [250, 16966, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [1.0, 0.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E58",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [6800, 18000, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E59",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [6800, 20000, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E60",
+          "kind": "fan",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [7300, 19084, 6500],
+          "base": 3750,
+          "note": "",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E61",
+          "kind": "sd",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [6000, 18500, 6500],
+          "base": 3750,
+          "note": "smoke detector (B8)",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E62",
+          "kind": "ac",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [8710, 16975, 6150],
+          "base": 3750,
+          "note": "1.5 TR, south wall above the tall storage; ODU on the front terrace",
+          "tr": 1.5,
+          "face": [0.0, 1.0],
+          "circuit": "AC6"
+        },
+        {
+          "id": "FF-E63",
+          "kind": "tv",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [4944, 19084, 4850],
+          "base": 3750,
+          "note": "TV niche in the wardrobe run, facing the bed",
+          "face": [1, 0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E64",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [5878, 15700, 4950],
+          "base": 3750,
+          "note": "by the door",
+          "face": [-1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E65",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [9131, 17694, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [-1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E66",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [9131, 18354, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [-1.0, 0.0],
+          "circuit": "S5"
+        },
+        {
+          "id": "FF-E67",
+          "kind": "sb2w",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [9131, 19814, 4350],
+          "base": 3750,
+          "note": "bedside 2-way + fan regulator",
+          "face": [-1.0, 0.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E68",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [9131, 20474, 4050],
+          "base": 3750,
+          "note": "bedside socket",
+          "face": [-1.0, 0.0],
+          "circuit": "S6"
+        },
+        {
+          "id": "FF-E69",
+          "kind": "s6",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [5856, 20411, 3750],
+          "base": 3750,
+          "note": "floor box under the study desk",
+          "circuit": "S6"
+        },
+        {
+          "id": "FF-E70",
+          "kind": "data",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KID",
+          "at": [5856, 20300, 3750],
+          "base": 3750,
+          "note": "Cat-6 in the desk floor box",
+          "circuit": "DATA"
+        },
+        {
+          "id": "FF-E71",
+          "kind": "light",
+          "floor": "FF",
+          "room": "FF-KTL",
+          "serves": "FF-KTL",
+          "at": [7500, 16100, 6350],
+          "base": 3750,
+          "note": "",
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E72",
+          "kind": "ef",
+          "floor": "FF",
+          "room": "FF-KTL",
+          "serves": "FF-KTL",
+          "at": [8600, 16100, 6350],
+          "base": 3750,
+          "note": "ceiling fan ducted up to the front terrace: the west wall is the GH-19 party wall (B7)",
+          "ceiling": true,
+          "circuit": "L8"
+        },
+        {
+          "id": "FF-E73",
+          "kind": "gy",
+          "floor": "FF",
+          "room": "FF-KTL",
+          "serves": "FF-KTL",
+          "at": [7300, 16785, 5650],
+          "base": 3750,
+          "note": "on the inner (north) wall, 1.6 m from the shower (B7)",
+          "face": [0.0, -1.0],
+          "circuit": "G4"
+        },
+        {
+          "id": "FF-E74",
+          "kind": "sb",
+          "floor": "FF",
+          "room": "FF-KID",
+          "serves": "FF-KTL",
+          "at": [7050, 16975, 4950],
+          "base": 3750,
+          "note": "toilet switches outside the door",
+          "face": [0.0, 1.0],
+          "circuit": "L8"
+        },
+        {
+          "id": "SF-E01",
+          "kind": "light",
+          "floor": "SF",
+          "room": "SF-LOB",
+          "serves": "SF-LOB",
+          "at": [5100, 12100, 9800],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E02",
+          "kind": "light",
+          "floor": "SF",
+          "room": "SF-LOB",
+          "serves": "SF-LOB",
+          "at": [5100, 14300, 9800],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E03",
+          "kind": "sd",
+          "floor": "SF",
+          "room": "SF-LOB",
+          "serves": "SF-LOB",
+          "at": [5100, 13300, 9800],
+          "base": 7050,
+          "note": "smoke detector",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E04",
+          "kind": "sb2w",
+          "floor": "SF",
+          "room": "SF-LOB",
+          "serves": "SF-LOB",
+          "at": [7178, 12600, 8250],
+          "base": 7050,
+          "note": "2-way stair switching",
+          "face": [-1.0, 0.0],
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E05",
+          "kind": "iso",
+          "floor": "SF",
+          "room": "SF-LOB",
+          "serves": "SF-LOB",
+          "at": [7178, 11000, 8550],
+          "base": 7050,
+          "note": "lift isolator at the top landing (machine-room-less lift)",
+          "kw": 4.0,
+          "face": [-1.0, 0.0],
+          "circuit": "LIFT"
+        },
+        {
+          "id": "SF-E06",
+          "kind": "light",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [2500, 13700, 9800],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E07",
+          "kind": "fan",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [1700, 14400, 9800],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E08",
+          "kind": "s6",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [3600, 15286, 7950],
+          "base": 7050,
+          "note": "at the desk",
+          "face": [0.0, -1.0],
+          "circuit": "S8"
+        },
+        {
+          "id": "SF-E09",
+          "kind": "s6",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [250, 14100, 7650],
+          "base": 7050,
+          "note": "bedside",
+          "face": [1.0, 0.0],
+          "circuit": "S8"
+        },
+        {
+          "id": "SF-E10",
+          "kind": "sb",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [4249, 14500, 8250],
+          "base": 7050,
+          "note": "by the door",
+          "face": [-1.0, 0.0],
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E11",
+          "kind": "sd",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [2500, 14300, 9800],
+          "base": 7050,
+          "note": "smoke detector",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E12",
+          "kind": "db",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SRV",
+          "at": [250, 13300, 8550],
+          "base": 7050,
+          "note": "DB-3 for the SF + terrace, east wall (no indoor SE space on the SF)",
+          "tag": "DB-3",
+          "face": [1.0, 0.0]
+        },
+        {
+          "id": "SF-E13",
+          "kind": "light",
+          "floor": "SF",
+          "room": "SF-SWR",
+          "serves": "SF-SWR",
+          "at": [1650, 11800, 9650],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E14",
+          "kind": "ef",
+          "floor": "SF",
+          "room": "SF-SWR",
+          "serves": "SF-SWR",
+          "at": [1051, 11200, 9300],
+          "base": 7050,
+          "note": "on the OTS wall",
+          "face": [1.0, 0.0],
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E15",
+          "kind": "gy",
+          "floor": "SF",
+          "room": "SF-SWR",
+          "serves": "SF-SWR",
+          "at": [1950, 10869, 8950],
+          "base": 7050,
+          "note": "above the WC, 1.4 m from the shower",
+          "face": [0.0, 1.0],
+          "circuit": "G5"
+        },
+        {
+          "id": "SF-E16",
+          "kind": "sb",
+          "floor": "SF",
+          "room": "SF-SRV",
+          "serves": "SF-SWR",
+          "at": [2050, 12983, 8250],
+          "base": 7050,
+          "note": "washroom switches outside the door",
+          "face": [0.0, 1.0],
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E17",
+          "kind": "light",
+          "floor": "SF",
+          "room": "SF-WSH",
+          "serves": "SF-WSH",
+          "at": [3300, 11800, 9650],
+          "base": 7050,
+          "note": "",
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E18",
+          "kind": "sb",
+          "floor": "SF",
+          "room": "SF-WSH",
+          "serves": "SF-WSH",
+          "at": [4249, 12400, 8250],
+          "base": 7050,
+          "note": "",
+          "face": [-1.0, 0.0],
+          "circuit": "L10"
+        },
+        {
+          "id": "SF-E19",
+          "kind": "s16",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [1200, 10649, 8150],
+          "base": 7050,
+          "note": "washer-dryer, 0.68 m from the utility sink (R1-D11)",
+          "face": [0.0, -1.0],
+          "circuit": "P4"
+        },
+        {
+          "id": "SF-E20",
+          "kind": "s6c",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [3231, 10649, 8150],
+          "base": 7050,
+          "note": "ironing counter (R1-D11)",
+          "face": [0.0, -1.0],
+          "circuit": "S9"
+        },
+        {
+          "id": "SF-E21",
+          "kind": "ip65",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [5600, 10649, 7650],
+          "base": 7050,
+          "note": "terrace weatherproof socket",
+          "face": [0.0, -1.0],
+          "circuit": "S9"
+        },
+        {
+          "id": "SF-E22",
+          "kind": "wl",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [2600, 10649, 9350],
+          "base": 7050,
+          "note": "utility light",
+          "face": [0.0, -1.0],
+          "circuit": "L11"
+        },
+        {
+          "id": "SF-E23",
+          "kind": "wl",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [7000, 10649, 9350],
+          "base": 7050,
+          "note": "terrace light",
+          "face": [0.0, -1.0],
+          "circuit": "L11"
+        },
+        {
+          "id": "SF-E24",
+          "kind": "spare",
+          "floor": "SF",
+          "room": "SF-TRB",
+          "serves": "SF-TRB",
+          "at": [8800, 10649, 8550],
+          "base": 7050,
+          "note": "solar PV inverter provision + spare conduit to the main panel",
+          "face": [0.0, -1.0],
+          "circuit": "SPARE"
+        },
+        {
+          "id": "SF-E25",
+          "kind": "pump",
+          "floor": "SF",
+          "room": "ROOF",
+          "serves": "ROOF",
+          "at": [5300, 11600, 10650],
+          "base": 10350,
+          "note": "pressure pump on the feed to the SF washroom (services check: 1.45 m head)",
+          "kw": 0.37,
+          "circuit": "PUMP3"
+        }
+      ],
+      "circuits": [
+        {
+          "id": "L1",
+          "cls": "lighting",
+          "db": "DB-1",
+          "points": ["GF-E01", "GF-E02", "GF-E03", "GF-E04", "GF-E05", "GF-E06", "GF-E07", "GF-E13", "GF-E14", "GF-E16", "GF-E17"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": false,
+          "backup": true
+        },
+        {
+          "id": "L2",
+          "cls": "lighting",
+          "db": "DB-1",
+          "points": ["GF-E18", "GF-E19", "GF-E20", "GF-E21", "GF-E22", "GF-E27", "GF-E28", "GF-E29", "GF-E30", "GF-E31", "GF-E32", "GF-E35", "GF-E36"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": true
+        },
+        {
+          "id": "L3",
+          "cls": "lighting",
+          "db": "DB-1",
+          "points": ["GF-E37", "GF-E38", "GF-E39", "GF-E40", "GF-E41", "GF-E44", "GF-E45", "GF-E47", "GF-E48", "GF-E49", "GF-E50", "GF-E54", "GF-E55", "GF-E56", "GF-E58", "GF-E60"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": false,
+          "backup": true
+        },
+        {
+          "id": "L4",
+          "cls": "lighting",
+          "db": "DB-1",
+          "points": ["GF-E61", "GF-E62", "GF-E63", "GF-E70", "GF-E71"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": false,
+          "backup": true
+        },
+        {
+          "id": "S1",
+          "cls": "sockets",
+          "db": "DB-1",
+          "points": ["GF-E08", "GF-E09", "GF-E24", "GF-E25", "GF-E26", "GF-E34", "GF-E52", "GF-E53"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "S2",
+          "cls": "sockets",
+          "db": "DB-1",
+          "points": ["GF-E57", "GF-E59", "GF-E65", "GF-E66", "GF-E67"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "L5",
+          "cls": "lighting",
+          "db": "DB-1",
+          "points": ["GF-E72", "GF-E73", "GF-E74", "GF-E75", "GF-E76", "GF-E77", "GF-E78", "GF-E79", "GF-E80", "GF-E81"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": false,
+          "note": "outdoor"
+        },
+        {
+          "id": "S3",
+          "cls": "sockets",
+          "db": "DB-1",
+          "points": ["GF-E82"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true,
+          "note": "outdoor"
+        },
+        {
+          "id": "P1",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E10"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "P2",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E11"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "P3",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E12"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "AC1",
+          "cls": "ac",
+          "db": "DB-1",
+          "points": ["GF-E23"],
+          "mcb": "25A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "G1",
+          "cls": "geyser",
+          "db": "DB-1",
+          "points": ["GF-E33"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "AC2",
+          "cls": "ac",
+          "db": "DB-1",
+          "points": ["GF-E51"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "AC3",
+          "cls": "ac",
+          "db": "DB-1",
+          "points": ["GF-E64"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "PUMP1",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E83"],
+          "mcb": "as maker",
+          "cable": "as maker",
+          "rcd": true
+        },
+        {
+          "id": "PUMP2",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E88"],
+          "mcb": "as maker",
+          "cable": "as maker",
+          "rcd": true
+        },
+        {
+          "id": "EV",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["GF-E89"],
+          "mcb": "40A (maker)",
+          "cable": "6 sq mm (maker)",
+          "rcd": true,
+          "note": "type A/B RCD per charger maker"
+        },
+        {
+          "id": "L6",
+          "cls": "lighting",
+          "db": "DB-2",
+          "points": ["FF-E01", "FF-E02", "FF-E03", "FF-E04", "FF-E05", "FF-E09", "FF-E12", "FF-E15", "FF-E22", "FF-E23", "FF-E26", "FF-E27", "FF-E28", "FF-E29", "FF-E30"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": true
+        },
+        {
+          "id": "L7",
+          "cls": "lighting",
+          "db": "DB-2",
+          "points": ["FF-E31", "FF-E34", "FF-E35", "FF-E36", "FF-E38", "FF-E39", "FF-E40", "FF-E41", "FF-E42", "FF-E45", "FF-E46", "FF-E47"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": true
+        },
+        {
+          "id": "L8",
+          "cls": "lighting",
+          "db": "DB-2",
+          "points": ["FF-E48", "FF-E49", "FF-E53", "FF-E54", "FF-E56", "FF-E58", "FF-E59", "FF-E60", "FF-E61", "FF-E64", "FF-E65", "FF-E67", "FF-E71", "FF-E72", "FF-E74"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": true
+        },
+        {
+          "id": "S4",
+          "cls": "sockets",
+          "db": "DB-2",
+          "points": ["FF-E07", "FF-E08", "FF-E10", "FF-E11", "FF-E13", "FF-E14", "FF-E24", "FF-E33"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "S5",
+          "cls": "sockets",
+          "db": "DB-2",
+          "points": ["FF-E43", "FF-E44", "FF-E51", "FF-E52", "FF-E55", "FF-E57", "FF-E63", "FF-E66"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "S6",
+          "cls": "sockets",
+          "db": "DB-2",
+          "points": ["FF-E68", "FF-E69"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "L9",
+          "cls": "lighting",
+          "db": "DB-2",
+          "points": ["FF-E16", "FF-E17", "FF-E18", "FF-E19"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": false,
+          "note": "outdoor"
+        },
+        {
+          "id": "S7",
+          "cls": "sockets",
+          "db": "DB-2",
+          "points": ["FF-E20", "FF-E21"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true,
+          "note": "outdoor"
+        },
+        {
+          "id": "AC4",
+          "cls": "ac",
+          "db": "DB-2",
+          "points": ["FF-E06"],
+          "mcb": "25A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "G2",
+          "cls": "geyser",
+          "db": "DB-2",
+          "points": ["FF-E32"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "G3",
+          "cls": "geyser",
+          "db": "DB-2",
+          "points": ["FF-E37"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "AC5",
+          "cls": "ac",
+          "db": "DB-2",
+          "points": ["FF-E50"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "AC6",
+          "cls": "ac",
+          "db": "DB-2",
+          "points": ["FF-E62"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": false
+        },
+        {
+          "id": "G4",
+          "cls": "geyser",
+          "db": "DB-2",
+          "points": ["FF-E73"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "L10",
+          "cls": "lighting",
+          "db": "DB-3",
+          "points": ["SF-E01", "SF-E02", "SF-E03", "SF-E04", "SF-E06", "SF-E07", "SF-E10", "SF-E11", "SF-E13", "SF-E14", "SF-E16", "SF-E17", "SF-E18"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": true
+        },
+        {
+          "id": "S8",
+          "cls": "sockets",
+          "db": "DB-3",
+          "points": ["SF-E08", "SF-E09"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "L11",
+          "cls": "lighting",
+          "db": "DB-3",
+          "points": ["SF-E22", "SF-E23"],
+          "mcb": "10A",
+          "cable": "1.5 sq mm",
+          "rcd": true,
+          "backup": false,
+          "note": "outdoor"
+        },
+        {
+          "id": "S9",
+          "cls": "sockets",
+          "db": "DB-3",
+          "points": ["SF-E20", "SF-E21"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true,
+          "note": "outdoor"
+        },
+        {
+          "id": "LIFT",
+          "cls": "power",
+          "db": "DB-1",
+          "points": ["SF-E05"],
+          "mcb": "as vendor (3-phase)",
+          "cable": "as vendor",
+          "rcd": false
+        },
+        {
+          "id": "G5",
+          "cls": "geyser",
+          "db": "DB-3",
+          "points": ["SF-E15"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "P4",
+          "cls": "power",
+          "db": "DB-3",
+          "points": ["SF-E19"],
+          "mcb": "20A",
+          "cable": "4 sq mm",
+          "rcd": true
+        },
+        {
+          "id": "SPARE",
+          "cls": "power",
+          "db": "DB-3",
+          "points": ["SF-E24"],
+          "mcb": "as maker",
+          "cable": "as maker",
+          "rcd": true
+        },
+        {
+          "id": "PUMP3",
+          "cls": "power",
+          "db": "DB-3",
+          "points": ["SF-E25"],
+          "mcb": "as maker",
+          "cable": "as maker",
+          "rcd": true
+        },
+        {
+          "id": "UPS",
+          "cls": "ups",
+          "db": "INV",
+          "points": ["GF-E43", "GF-E46", "GF-E68", "GF-E84", "GF-E85", "GF-E86"],
+          "mcb": "16A",
+          "cable": "2.5 sq mm",
+          "rcd": true,
+          "note": "inverter backup: also the lighting circuits marked backup"
+        },
+        {
+          "id": "DATA",
+          "cls": "data",
+          "db": "INV",
+          "points": ["GF-E24", "GF-E52", "GF-E65", "GF-E69", "FF-E07", "FF-E51", "FF-E63", "FF-E70"],
+          "mcb": "-",
+          "cable": "Cat-6",
+          "rcd": false,
+          "note": "from the network rack"
+        }
+      ],
+      "routes": [
+        {
+          "circuit": "L1",
+          "cls": "lighting",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [1700, 9451, 3600], [1700, 9800, 3600], [1700, 8500, 3600], [1700, 7300, 3600], [430, 7300, 3600], [430, 7757, 3600], [2950, 7757, 3600], [2950, 7800, 3600], [3130, 7800, 3600], [3130, 9200, 3600], [2090, 9200, 3600], [2090, 11190, 3600], [1051, 11190, 3600], [1051, 11050, 3600], [2650, 11050, 3600], [2650, 5685, 3600], [4800, 5685, 3600], [4800, 6400, 3600], [8200, 6400, 3600]],
+          "drops": [
+            [[1700, 9800, 3600], [1700, 9800, 3200]],
+            [[1700, 8500, 3600], [1700, 8500, 3200]],
+            [[1700, 7300, 3600], [1700, 7300, 3200]],
+            [[430, 7757, 3600], [430, 7757, 1900]],
+            [[2950, 7800, 3600], [2950, 7800, 1900]],
+            [[3130, 9200, 3600], [3130, 9200, 1650]],
+            [[2090, 11190, 3600], [2090, 11190, 1900]],
+            [[1051, 11050, 3600], [1051, 11050, 1850]],
+            [[2650, 5685, 3600], [2650, 5685, 2700]],
+            [[4800, 6400, 3600], [4800, 6400, 3200]],
+            [[8200, 6400, 3600], [8200, 6400, 3200]]
+          ]
+        },
+        {
+          "circuit": "L2",
+          "cls": "lighting",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [3900, 9451, 3600], [3900, 9700, 3600], [3750, 9700, 3600], [3750, 11345, 3600], [3300, 11345, 3600], [3300, 12800, 3600], [4370, 12800, 3600], [4370, 12950, 3600], [5100, 12950, 3600], [5100, 12000, 3600], [5700, 12000, 3600], [5700, 9850, 3600], [6000, 9850, 3600], [6000, 8400, 3600], [7000, 8400, 3600], [7000, 7083, 3600], [8200, 7083, 3600], [8200, 9700, 3600], [7400, 9700, 3600], [7400, 10746, 3600], [1700, 10746, 3600], [1700, 12800, 3600], [630, 12800, 3600], [630, 12985, 3600], [3320, 12985, 3600], [3320, 5900, 3600]],
+          "drops": [
+            [[3900, 9700, 3600], [3900, 9700, 3200]],
+            [[3750, 11345, 3600], [3750, 11345, 2450]],
+            [[3300, 12800, 3600], [3300, 12800, 3050]],
+            [[4370, 12950, 3600], [4370, 12950, 1650]],
+            [[5100, 12000, 3600], [5100, 12000, 3200]],
+            [[5700, 9850, 3600], [5700, 9850, 3200]],
+            [[6000, 8400, 3600], [6000, 8400, 3200]],
+            [[7000, 7083, 3600], [7000, 7083, 3200]],
+            [[8200, 9700, 3600], [8200, 9700, 3200]],
+            [[7400, 10746, 3600], [7400, 10746, 1650]],
+            [[1700, 12800, 3600], [1700, 12800, 3050]],
+            [[630, 12985, 3600], [630, 12985, 2700]],
+            [[3320, 5900, 3600], [3320, 5900, 1650]]
+          ]
+        },
+        {
+          "circuit": "L3",
+          "cls": "lighting",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [250, 15455, 3600], [1900, 15455, 3600], [1900, 15300, 3600], [1900, 16000, 3600], [1900, 16845, 3600], [1900, 18300, 3600], [250, 18300, 3600], [250, 18630, 3600], [250, 17575, 3600], [5100, 17575, 3600], [5100, 18000, 3600], [4800, 18000, 3600], [4800, 19300, 3600], [5880, 19300, 3600], [5880, 20100, 3600], [5100, 20100, 3600], [5100, 15800, 3600], [4180, 15800, 3600], [4180, 15850, 3600], [5100, 15850, 3600], [5100, 14000, 3600], [6100, 14000, 3600], [6100, 14150, 3600], [7000, 14150, 3600], [7000, 14600, 3600], [7180, 14600, 3600], [7180, 12500, 3600]],
+          "drops": [
+            [[250, 15455, 3600], [250, 15455, 1050]],
+            [[1900, 15300, 3600], [1900, 15300, 3200]],
+            [[1900, 16000, 3600], [1900, 16000, 3200]],
+            [[1900, 16845, 3600], [1900, 16845, 3200]],
+            [[1900, 18300, 3600], [1900, 18300, 3200]],
+            [[250, 18630, 3600], [250, 18630, 2150]],
+            [[250, 17575, 3600], [250, 17575, 1050]],
+            [[5100, 18000, 3600], [5100, 18000, 3200]],
+            [[4800, 19300, 3600], [4800, 19300, 3200]],
+            [[5880, 20100, 3600], [5880, 20100, 1650]],
+            [[5100, 15800, 3600], [5100, 15800, 3200]],
+            [[4180, 15850, 3600], [4180, 15850, 1650]],
+            [[5100, 14000, 3600], [5100, 14000, 3200]],
+            [[6100, 14150, 3600], [6100, 14150, 1650]],
+            [[7000, 14600, 3600], [7000, 14600, 2550]],
+            [[7180, 12500, 3600], [7180, 12500, 1650]]
+          ]
+        },
+        {
+          "circuit": "L4",
+          "cls": "lighting",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [6100, 9451, 3600], [6100, 16600, 3600], [7600, 16600, 3600], [7600, 16300, 3600], [7600, 16900, 3600], [7600, 17300, 3600], [7600, 18500, 3600]],
+          "drops": [
+            [[6100, 16600, 3600], [6100, 16600, 1650]],
+            [[7600, 16300, 3600], [7600, 16300, 3200]],
+            [[7600, 16900, 3600], [7600, 16900, 3200]],
+            [[7600, 17300, 3600], [7600, 17300, 3200]],
+            [[7600, 18500, 3600], [7600, 18500, 3200]]
+          ]
+        },
+        {
+          "circuit": "S1",
+          "cls": "sockets",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [250, 8700, 3600], [250, 7300, 3600], [3320, 7300, 3600], [3320, 6600, 3600], [9131, 6600, 3600], [9131, 7083, 3600], [9131, 8100, 3600], [4180, 8100, 3600], [4180, 12800, 3600], [4180, 15300, 3600], [4180, 16845, 3600]],
+          "drops": [
+            [[250, 8700, 3600], [250, 8700, 1550]],
+            [[250, 7300, 3600], [250, 7300, 2650]],
+            [[3320, 6600, 3600], [3320, 6600, 750]],
+            [[9131, 7083, 3600], [9131, 7083, 1550]],
+            [[9131, 8100, 3600], [9131, 8100, 750]],
+            [[4180, 12800, 3600], [4180, 12800, 1550]],
+            [[4180, 15300, 3600], [4180, 15300, 750]],
+            [[4180, 16845, 3600], [4180, 16845, 1550]]
+          ]
+        },
+        {
+          "circuit": "S2",
+          "cls": "sockets",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [250, 16115, 3600], [250, 18235, 3600], [6100, 18235, 3600], [6100, 18600, 3600], [6100, 19100, 3600], [9131, 19100, 3600], [9131, 17300, 3600]],
+          "drops": [
+            [[250, 16115, 3600], [250, 16115, 750]],
+            [[250, 18235, 3600], [250, 18235, 750]],
+            [[6100, 18600, 3600], [6100, 18600, 1350]],
+            [[6100, 19100, 3600], [6100, 19100, 1350]],
+            [[9131, 17300, 3600], [9131, 17300, 1550]]
+          ]
+        },
+        {
+          "circuit": "L5",
+          "cls": "lighting",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [250, 9451, -300], [250, 4200, -300], [1200, 4200, -300], [1200, 1300, -300], [3600, 1300, -300], [5900, 1300, -300], [8200, 1300, -300], [9131, 1300, -300], [9131, 4200, -300], [6000, 4200, -300], [6000, 20750, -300], [6000, 21950, -300], [3900, 21950, -300], [3900, 21300, -300], [2400, 21300, -300], [2400, 21800, -300]],
+          "drops": [
+            [[250, 4200, -300], [250, 4200, 2400]],
+            [[1200, 1300, -300], [1200, 1300, 600]],
+            [[3600, 1300, -300], [3600, 1300, 600]],
+            [[5900, 1300, -300], [5900, 1300, 600]],
+            [[8200, 1300, -300], [8200, 1300, 600]],
+            [[9131, 4200, -300], [9131, 4200, 2400]],
+            [[6000, 20750, -300], [6000, 20750, 2400]],
+            [[6000, 21950, -300], [6000, 21950, 2400]],
+            [[3900, 21300, -300], [3900, 21300, 900]],
+            [[2400, 21800, -300], [2400, 21800, 900]]
+          ]
+        },
+        {
+          "circuit": "S3",
+          "cls": "sockets",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [9131, 9451, 3600], [9131, 9451, -300], [9131, 3000, -300]],
+          "drops": [
+            [[9131, 3000, -300], [9131, 3000, 600]]
+          ]
+        },
+        {
+          "circuit": "P1",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [3130, 9451, 3600], [3130, 7300, 3600]],
+          "drops": [
+            [[3130, 7300, 3600], [3130, 7300, 1550]]
+          ]
+        },
+        {
+          "circuit": "P2",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [250, 10051, 3600]],
+          "drops": [
+            [[250, 10051, 3600], [250, 10051, 750]]
+          ]
+        },
+        {
+          "circuit": "P3",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [2850, 9451, 3600], [2850, 11345, 3600]],
+          "drops": [
+            [[2850, 11345, 3600], [2850, 11345, 750]]
+          ]
+        },
+        {
+          "circuit": "AC1",
+          "cls": "ac",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [9131, 9451, 3600], [9131, 7083, 3600]],
+          "drops": [
+            [[9131, 7083, 3600], [9131, 7083, 2600]]
+          ]
+        },
+        {
+          "circuit": "G1",
+          "cls": "geyser",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [1500, 9451, 3600], [1500, 11535, 3600]],
+          "drops": [
+            [[1500, 11535, 3600], [1500, 11535, 2350]]
+          ]
+        },
+        {
+          "circuit": "AC2",
+          "cls": "ac",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [1566, 9451, 3600], [1566, 19086, 3600]],
+          "drops": [
+            [[1566, 19086, 3600], [1566, 19086, 2900]]
+          ]
+        },
+        {
+          "circuit": "AC3",
+          "cls": "ac",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [8500, 9451, 3600], [8500, 15294, 3600]],
+          "drops": [
+            [[8500, 15294, 3600], [8500, 15294, 2600]]
+          ]
+        },
+        {
+          "circuit": "PUMP1",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [300, 9451, 3600], [300, 9451, -300], [300, 2700, -300]],
+          "drops": [
+            [[300, 2700, -300], [300, 2700, 500]]
+          ]
+        },
+        {
+          "circuit": "PUMP2",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [1800, 9451, 3600], [1800, 9451, -300], [1800, 21100, -300]],
+          "drops": [
+            [[1800, 21100, -300], [1800, 21100, 800]]
+          ]
+        },
+        {
+          "circuit": "EV",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [8600, 9451, 3600], [8600, 9451, -300], [8600, 19916, -300]],
+          "drops": [
+            [[8600, 19916, -300], [8600, 19916, 1200]]
+          ]
+        },
+        {
+          "circuit": "L6",
+          "cls": "lighting",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [2973, 7500, 6900], [2973, 7700, 6900], [4300, 7700, 6900], [4300, 8200, 6900], [5500, 8200, 6900], [5500, 8738, 6900], [6900, 8738, 6900], [6000, 8738, 6900], [6000, 7500, 6900], [6000, 10000, 6900], [5550, 10000, 6900], [5550, 10649, 6900], [2600, 10649, 6900], [2600, 9300, 6900], [1300, 9300, 6900], [1300, 9900, 6900], [780, 9900, 6900], [780, 8775, 6900], [1600, 8775, 6900], [1600, 7100, 6900], [250, 7100, 6900], [250, 6350, 6900], [9131, 6350, 6900], [9131, 7143, 6900], [9131, 9673, 6900]],
+          "drops": [
+            [[2973, 7500, 6900], [2973, 7500, 4950]],
+            [[2973, 7700, 6900], [2973, 7700, 4950]],
+            [[4300, 8200, 6900], [4300, 8200, 6500]],
+            [[5500, 8738, 6900], [5500, 8738, 6500]],
+            [[6900, 8738, 6900], [6900, 8738, 6500]],
+            [[6000, 7500, 6900], [6000, 7500, 6500]],
+            [[6000, 10000, 6900], [6000, 10000, 6500]],
+            [[5550, 10649, 6900], [5550, 10649, 4950]],
+            [[2600, 9300, 6900], [2600, 9300, 6350]],
+            [[1300, 9900, 6900], [1300, 9900, 6350]],
+            [[780, 8775, 6900], [780, 8775, 5750]],
+            [[1600, 7100, 6900], [1600, 7100, 6500]],
+            [[250, 6350, 6900], [250, 6350, 5750]],
+            [[9131, 7143, 6900], [9131, 7143, 4350]],
+            [[9131, 9673, 6900], [9131, 9673, 4350]]
+          ]
+        },
+        {
+          "circuit": "L7",
+          "cls": "lighting",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [3820, 5950, 6900], [3820, 10869, 6900], [2600, 10869, 6900], [2600, 11800, 6900], [3203, 11800, 6900], [3203, 13250, 6900], [5100, 13250, 6900], [5100, 13300, 6900], [5100, 14300, 6900], [5100, 12100, 6900], [6200, 12100, 6900], [6200, 11150, 6900], [7178, 11150, 6900], [7178, 12600, 6900], [2200, 12600, 6900], [2200, 14400, 6900], [2200, 17800, 6900], [1051, 17800, 6900], [1051, 11100, 6900], [530, 11100, 6900], [530, 10431, 6900]],
+          "drops": [
+            [[3820, 10869, 6900], [3820, 10869, 5750]],
+            [[2600, 11800, 6900], [2600, 11800, 6350]],
+            [[3203, 13250, 6900], [3203, 13250, 4950]],
+            [[5100, 13300, 6900], [5100, 13300, 6500]],
+            [[5100, 14300, 6900], [5100, 14300, 6500]],
+            [[5100, 12100, 6900], [5100, 12100, 6500]],
+            [[6200, 11150, 6900], [6200, 11150, 5200]],
+            [[7178, 12600, 6900], [7178, 12600, 4950]],
+            [[2200, 14400, 6900], [2200, 14400, 6500]],
+            [[2200, 17800, 6900], [2200, 17800, 6500]],
+            [[1051, 11100, 6900], [1051, 11100, 6000]],
+            [[530, 10431, 6900], [530, 10431, 5550]]
+          ]
+        },
+        {
+          "circuit": "L8",
+          "cls": "lighting",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [4249, 5950, 6900], [4249, 14700, 6900], [5878, 14700, 6900], [5878, 15700, 6900], [7500, 15700, 6900], [7500, 16100, 6900], [8600, 16100, 6900], [9131, 16100, 6900], [9131, 17694, 6900], [9131, 19814, 6900], [6800, 19814, 6900], [6800, 20000, 6900], [7300, 20000, 6900], [7300, 19084, 6900], [6800, 19084, 6900], [6800, 18000, 6900], [7050, 18000, 6900], [7050, 16975, 6900], [6000, 16975, 6900], [6000, 18500, 6900], [2200, 18500, 6900], [2200, 16700, 6900], [2200, 15576, 6900], [250, 15576, 6900], [250, 16306, 6900], [250, 14186, 6900]],
+          "drops": [
+            [[4249, 14700, 6900], [4249, 14700, 4950]],
+            [[5878, 15700, 6900], [5878, 15700, 4950]],
+            [[7500, 16100, 6900], [7500, 16100, 6350]],
+            [[8600, 16100, 6900], [8600, 16100, 6350]],
+            [[9131, 17694, 6900], [9131, 17694, 4350]],
+            [[9131, 19814, 6900], [9131, 19814, 4350]],
+            [[6800, 20000, 6900], [6800, 20000, 6500]],
+            [[7300, 19084, 6900], [7300, 19084, 6500]],
+            [[6800, 18000, 6900], [6800, 18000, 6500]],
+            [[7050, 16975, 6900], [7050, 16975, 4950]],
+            [[6000, 18500, 6900], [6000, 18500, 6500]],
+            [[2200, 16700, 6900], [2200, 16700, 6500]],
+            [[2200, 15576, 6900], [2200, 15576, 6500]],
+            [[250, 16306, 6900], [250, 16306, 4350]],
+            [[250, 14186, 6900], [250, 14186, 4350]]
+          ]
+        },
+        {
+          "circuit": "S4",
+          "cls": "sockets",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [3163, 5950, 6900], [3163, 8550, 6900], [1500, 8550, 6900], [1500, 10649, 6900], [250, 10649, 6900], [250, 6850, 6900], [6000, 6850, 6900], [6000, 6825, 6900], [9131, 6825, 6900], [9131, 7803, 6900], [9131, 10333, 6900]],
+          "drops": [
+            [[3163, 8550, 6900], [3163, 8550, 4850]],
+            [[1500, 10649, 6900], [1500, 10649, 4850]],
+            [[250, 6850, 6900], [250, 6850, 4650]],
+            [[6000, 6825, 6900], [6000, 6825, 4050]],
+            [[9131, 7803, 6900], [9131, 7803, 4050]],
+            [[9131, 7803, 6900], [9131, 7803, 4550]],
+            [[9131, 10333, 6900], [9131, 10333, 4050]],
+            [[9131, 10333, 6900], [9131, 10333, 4550]]
+          ]
+        },
+        {
+          "circuit": "S5",
+          "cls": "sockets",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [5700, 5950, 6900], [5700, 10869, 6900], [6700, 10869, 6900], [4249, 10869, 6900], [4249, 15576, 6900], [4249, 16050, 6900], [4944, 16050, 6900], [4944, 19084, 6900], [9131, 19084, 6900], [9131, 18354, 6900], [250, 18354, 6900], [250, 16966, 6900], [250, 14846, 6900]],
+          "drops": [
+            [[5700, 10869, 6900], [5700, 10869, 4850]],
+            [[6700, 10869, 6900], [6700, 10869, 4850]],
+            [[4249, 15576, 6900], [4249, 15576, 4850]],
+            [[4249, 16050, 6900], [4249, 16050, 4050]],
+            [[4944, 19084, 6900], [4944, 19084, 4850]],
+            [[9131, 18354, 6900], [9131, 18354, 4050]],
+            [[250, 16966, 6900], [250, 16966, 4050]],
+            [[250, 14846, 6900], [250, 14846, 4050]]
+          ]
+        },
+        {
+          "circuit": "S6",
+          "cls": "sockets",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [5856, 5950, 6900], [5856, 20411, 6900], [9131, 20411, 6900], [9131, 20474, 6900]],
+          "drops": [
+            [[5856, 20411, 6900], [5856, 20411, 3750]],
+            [[9131, 20474, 6900], [9131, 20474, 4050]]
+          ]
+        },
+        {
+          "circuit": "L9",
+          "cls": "lighting",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [5420, 5950, 6900], [5420, 6635, 6900], [6600, 6635, 6900], [6600, 4900, 6900], [8300, 4900, 6900], [9070, 4900, 6900], [9070, 6635, 6900]],
+          "drops": [
+            [[5420, 6635, 6900], [5420, 6635, 5850]],
+            [[6600, 4900, 6900], [6600, 4900, 4050]],
+            [[8300, 4900, 6900], [8300, 4900, 4050]],
+            [[9070, 6635, 6900], [9070, 6635, 5850]]
+          ]
+        },
+        {
+          "circuit": "S7",
+          "cls": "sockets",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [5420, 5950, 6900], [5420, 6635, 6900], [9070, 6635, 6900]],
+          "drops": [
+            [[5420, 6635, 6900], [5420, 6635, 4350]],
+            [[9070, 6635, 6900], [9070, 6635, 4350]]
+          ]
+        },
+        {
+          "circuit": "AC4",
+          "cls": "ac",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [9131, 5950, 6900], [9131, 7300, 6900]],
+          "drops": [
+            [[9131, 7300, 6900], [9131, 7300, 5900]]
+          ]
+        },
+        {
+          "circuit": "G2",
+          "cls": "geyser",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [250, 5950, 6900], [250, 9550, 6900]],
+          "drops": [
+            [[250, 9550, 6900], [250, 9550, 5650]]
+          ]
+        },
+        {
+          "circuit": "G3",
+          "cls": "geyser",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [2920, 5950, 6900], [2920, 10869, 6900]],
+          "drops": [
+            [[2920, 10869, 6900], [2920, 10869, 5650]]
+          ]
+        },
+        {
+          "circuit": "AC5",
+          "cls": "ac",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [4249, 5950, 6900], [4249, 15100, 6900]],
+          "drops": [
+            [[4249, 15100, 6900], [4249, 15100, 5900]]
+          ]
+        },
+        {
+          "circuit": "AC6",
+          "cls": "ac",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [8710, 5950, 6900], [8710, 16975, 6900]],
+          "drops": [
+            [[8710, 16975, 6900], [8710, 16975, 6150]]
+          ]
+        },
+        {
+          "circuit": "G4",
+          "cls": "geyser",
+          "trunk": [[2973, 5950, 5250], [2973, 5950, 6900], [7300, 5950, 6900], [7300, 16785, 6900]],
+          "drops": [
+            [[7300, 16785, 6900], [7300, 16785, 5650]]
+          ]
+        },
+        {
+          "circuit": "L10",
+          "cls": "lighting",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [2050, 13300, 10200], [2050, 12983, 10200], [2500, 12983, 10200], [2500, 13700, 10200], [2500, 14300, 10200], [1700, 14300, 10200], [1700, 14400, 10200], [4249, 14400, 10200], [4249, 14500, 10200], [5100, 14500, 10200], [5100, 14300, 10200], [5100, 13300, 10200], [5100, 12100, 10200], [4249, 12100, 10200], [4249, 12400, 10200], [3300, 12400, 10200], [3300, 11800, 10200], [1650, 11800, 10200], [1051, 11800, 10200], [1051, 11200, 10200], [7178, 11200, 10200], [7178, 12600, 10200]],
+          "drops": [
+            [[2050, 12983, 10200], [2050, 12983, 8250]],
+            [[2500, 13700, 10200], [2500, 13700, 9800]],
+            [[2500, 14300, 10200], [2500, 14300, 9800]],
+            [[1700, 14400, 10200], [1700, 14400, 9800]],
+            [[4249, 14500, 10200], [4249, 14500, 8250]],
+            [[5100, 14300, 10200], [5100, 14300, 9800]],
+            [[5100, 13300, 10200], [5100, 13300, 9800]],
+            [[5100, 12100, 10200], [5100, 12100, 9800]],
+            [[4249, 12400, 10200], [4249, 12400, 8250]],
+            [[3300, 11800, 10200], [3300, 11800, 9650]],
+            [[1650, 11800, 10200], [1650, 11800, 9650]],
+            [[1051, 11200, 10200], [1051, 11200, 9300]],
+            [[7178, 12600, 10200], [7178, 12600, 8250]]
+          ]
+        },
+        {
+          "circuit": "S8",
+          "cls": "sockets",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [250, 14100, 10200], [3600, 14100, 10200], [3600, 15286, 10200]],
+          "drops": [
+            [[250, 14100, 10200], [250, 14100, 7650]],
+            [[3600, 15286, 10200], [3600, 15286, 7950]]
+          ]
+        },
+        {
+          "circuit": "L11",
+          "cls": "lighting",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [2600, 13300, 10200], [2600, 10649, 10200], [7000, 10649, 10200]],
+          "drops": [
+            [[2600, 10649, 10200], [2600, 10649, 9350]],
+            [[7000, 10649, 10200], [7000, 10649, 9350]]
+          ]
+        },
+        {
+          "circuit": "S9",
+          "cls": "sockets",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [3231, 13300, 10200], [3231, 10649, 10200], [5600, 10649, 10200]],
+          "drops": [
+            [[3231, 10649, 10200], [3231, 10649, 8150]],
+            [[5600, 10649, 10200], [5600, 10649, 7650]]
+          ]
+        },
+        {
+          "circuit": "LIFT",
+          "cls": "power",
+          "trunk": [[250, 9451, 1950], [250, 9451, 3600], [7178, 9451, 3600], [7178, 9451, 10200], [7178, 11000, 10200]],
+          "drops": [
+            [[7178, 11000, 10200], [7178, 11000, 8550]]
+          ]
+        },
+        {
+          "circuit": "G5",
+          "cls": "geyser",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [1950, 13300, 10200], [1950, 10869, 10200]],
+          "drops": [
+            [[1950, 10869, 10200], [1950, 10869, 8950]]
+          ]
+        },
+        {
+          "circuit": "P4",
+          "cls": "power",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [1200, 13300, 10200], [1200, 10649, 10200]],
+          "drops": [
+            [[1200, 10649, 10200], [1200, 10649, 8150]]
+          ]
+        },
+        {
+          "circuit": "SPARE",
+          "cls": "power",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [8800, 13300, 10200], [8800, 10649, 10200]],
+          "drops": [
+            [[8800, 10649, 10200], [8800, 10649, 8550]]
+          ]
+        },
+        {
+          "circuit": "PUMP3",
+          "cls": "power",
+          "trunk": [[250, 13300, 8550], [250, 13300, 10200], [5300, 13300, 10200], [5300, 11600, 10200]],
+          "drops": [
+            [[5300, 11600, 10200], [5300, 11600, 10650]]
+          ]
+        },
+        {
+          "circuit": "UPS",
+          "cls": "ups",
+          "trunk": [[8525, 12885, 850], [8525, 12885, 3600], [5880, 12885, 3600], [5880, 17900, 3600], [6100, 17900, 3600], [6100, 18850, 3600], [5900, 18850, 3600], [5900, 18850, -300], [5900, 22050, -300], [5700, 22050, -300], [5700, 22000, -300], [9100, 22000, -300], [9100, 5540, -300]],
+          "drops": [
+            [[8525, 12885, 3600], [8525, 12885, 1650]],
+            [[5880, 17900, 3600], [5880, 17900, 1850]],
+            [[6100, 18850, 3600], [6100, 18850, 1350]],
+            [[5900, 22050, -300], [5900, 22050, 1800]],
+            [[5700, 22000, -300], [5700, 22000, 3000]],
+            [[9100, 5540, -300], [9100, 5540, 3000]]
+          ]
+        },
+        {
+          "circuit": "DATA",
+          "cls": "data",
+          "trunk": [[8525, 12885, 850], [8525, 12885, 3600], [9131, 12885, 3600], [9131, 17300, 3600], [6100, 17300, 3600], [6100, 18350, 3600], [4180, 18350, 3600], [4180, 16845, 3600], [4249, 16845, 3600], [4249, 16845, 6900], [4249, 15576, 6900], [4944, 15576, 6900], [4944, 19084, 6900], [5856, 19084, 6900], [5856, 20300, 6900], [3163, 20300, 6900], [3163, 8550, 6900], [9131, 8550, 6900], [9131, 8550, 3600], [9131, 7083, 3600]],
+          "drops": [
+            [[9131, 17300, 3600], [9131, 17300, 1550]],
+            [[6100, 18350, 3600], [6100, 18350, 1350]],
+            [[4180, 16845, 3600], [4180, 16845, 1550]],
+            [[4249, 15576, 6900], [4249, 15576, 4850]],
+            [[4944, 19084, 6900], [4944, 19084, 4850]],
+            [[5856, 20300, 6900], [5856, 20300, 3750]],
+            [[3163, 8550, 6900], [3163, 8550, 4850]],
+            [[9131, 7083, 3600], [9131, 7083, 1550]]
+          ]
+        }
+      ],
+      "submains": [
+        {
+          "id": "SM-1",
+          "frm": "MTR",
+          "to": "DB-1",
+          "note": "4-core armoured, buried, sleeved under the lobby floor; clear of the sewer",
+          "pts": [[5000, 22290, 1800], [5000, 22290, -450], [5700, 22290, -450], [5700, 17300, -450], [5700, 17300, 250], [5700, 10900, 250], [3400, 10900, 250], [3400, 9451, 250], [250, 9451, 250], [250, 9451, 1950]]
+        },
+        {
+          "id": "SM-2",
+          "frm": "DB-1",
+          "to": "DB-2",
+          "note": "in the GF ceiling slab, up the dresser west wall",
+          "pts": [[250, 9451, 1950], [250, 9451, 3600], [250, 5950, 3600], [2973, 5950, 3600], [2973, 5950, 5250]]
+        },
+        {
+          "id": "SM-3",
+          "frm": "DB-1",
+          "to": "DB-3",
+          "note": "in the GF ceiling slab, then a riser in the east-wall chase (guest room / bedroom 3 / servant room)",
+          "pts": [[250, 9451, 1950], [250, 9451, 3600], [1100, 9451, 3600], [1100, 13300, 3600], [330, 13300, 3600], [330, 13300, 8550], [250, 13300, 8550]]
+        },
+        {
+          "id": "SM-4",
+          "frm": "DB-1",
+          "to": "INV",
+          "note": "inverter charger feed + UPS changeover",
+          "pts": [[250, 9451, 1950], [250, 9451, 3600], [8525, 9451, 3600], [8525, 12885, 3600], [8525, 12885, 850]]
+        }
+      ],
+      "refrigerant": [
+        {
+          "ac": "GF-E23",
+          "odu": "SF-AC3",
+          "note": "out above the GL-5 head, up the balcony west wall (inside the plot), over the parapet",
+          "pts": [[9131, 7083, 2600], [9050, 7083, 3300], [9050, 5750, 3300], [9050, 5750, 8250], [9050, 6900, 8250], [7775, 6900, 8250], [7775, 6955, 7650]],
+          "length": 10015
+        },
+        {
+          "ac": "FF-E06",
+          "odu": "SF-AC4",
+          "note": "straight up through the slab to the back terrace",
+          "pts": [[9131, 7300, 5900], [9050, 7300, 6900], [9050, 7300, 7350], [8540, 7300, 7350], [8540, 6955, 7650]],
+          "length": 2420
+        },
+        {
+          "ac": "FF-E50",
+          "odu": "SF-AC1",
+          "note": "in the ceiling void, through the toilet ceiling into the OTS, up to the back terrace (drains via the OTS)",
+          "pts": [[4249, 15100, 5900], [4100, 15100, 6600], [4100, 12700, 6600], [700, 12700, 6600], [700, 12500, 6600], [700, 12500, 7350], [700, 10300, 7350], [655, 6000, 7350], [655, 5815, 7650]],
+          "length": 14318
+        },
+        {
+          "ac": "FF-E62",
+          "odu": "SF-AC5",
+          "note": "up through the slab to the front terrace",
+          "pts": [[8710, 16975, 6150], [8710, 16975, 7350], [8300, 16975, 7350], [8300, 15455, 7650]],
+          "length": 3159
+        },
+        {
+          "ac": "GF-E64",
+          "odu": "SF-AC6",
+          "note": "up the SS-3 boxed duct to the front terrace",
+          "pts": [[8500, 15294, 2600], [8850, 15400, 2600], [8850, 15400, 7350], [7400, 15650, 7350], [7400, 15455, 7650]],
+          "length": 6945
+        },
+        {
+          "ac": "GF-E51",
+          "odu": "GF-O08",
+          "note": "through the north wall, down to the front-lawn unit (A6)",
+          "pts": [[1566, 19086, 2900], [1566, 19300, 3150], [2700, 19300, 3150], [2700, 19550, 3150], [2700, 19700, 650]],
+          "length": 4218
+        }
+      ]
     }
   }
 }

@@ -85,10 +85,11 @@
 <polyline points="3850,12813 2450,12213" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polyline points="3850,12213 2450,12813" fill="none" stroke="#8a7a5c" stroke-width="5" />
 <polygon points="2418,12100 2418,10900 2868,10900 2868,12100" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="5600,6805 6350,6805 6350,7105 5600,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="6425,6805 7175,6805 7175,7105 6425,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="280,5665 1030,5665 1030,5965 280,5965" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="7400,6805 8150,6805 8150,7105 7400,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="8165,6805 8915,6805 8915,7105 8165,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="7925,15305 8675,15305 8675,15605 7925,15605" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="7025,15305 7775,15305 7775,15605 7025,15605" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 </g>
 <g id="stair">
 <polygon points="5899,12865 7899,12865 7899,13919 5899,13919" fill="#fbfbfb" stroke="#222" stroke-width="10" />

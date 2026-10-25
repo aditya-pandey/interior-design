@@ -14,7 +14,7 @@ import { createMaterials } from './materials.js';
 import { buildHouse, FLOOR_IDS } from './build.js';
 import { Walker } from './walk.js';
 import { buildContext } from './context.js';
-import { buildServices } from './services.js';
+import { buildPlumbing, buildElectrical } from './services.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import './style.css';
@@ -109,7 +109,7 @@ const TIMES = {
 };
 
 // ------------------------------------------------------------------ state
-const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false, services: false };
+const state = { floor: 'ALL', explode: 0, cutaway: false, mode: 'orbit', time: 'day', labels: false, services: null };   // services: null | 'plumbing' | 'electrical'
 let M, data, walker;
 const floorGroups = {};
 const ghost = new Map();
@@ -208,7 +208,7 @@ const SERVICE_GHOST = { site: 0.4, floor: 0.16, slabcap: 0.16, furn: 0.16 };
 
 function applyView() {
   const walk = state.mode === 'walk';
-  const svc = state.services && !walk;
+  const svc = !!state.services && !walk;
   if (svc) state.explode = 0;
   const lim = state.floor === 'ALL' ? 3 : ORDER[state.floor];
   for (const fid of FLOOR_IDS) {
@@ -231,7 +231,10 @@ function applyView() {
     });
   }
   if (services) {
-    for (const [fid, g] of Object.entries(services.groups)) g.visible = svc && ORDER[fid] <= lim;
+    for (const [name, layer] of Object.entries(services)) {
+      // one floor at a time when a floor is picked (the roof goes with the SF), all of them otherwise
+      for (const [fid, g] of Object.entries(layer.groups)) g.visible = svc && state.services === name && (state.floor === 'ALL' || ORDER[fid] === lim || (fid === 'ROOF' && lim === 2));
+    }
     scene.traverse((o) => {
       const cat = o.userData.cat;
       if (!o.isMesh || !cat || (cat === 'upper' && !svc)) return;
@@ -241,12 +244,15 @@ function applyView() {
       else if (cat !== 'upper') o.material = o.userData.orig;
       if (cat !== 'upper' || svc) o.castShadow = svc ? false : o.userData.cast;
     });
-    document.getElementById('svc-legend').hidden = !svc;
+    const legend = document.getElementById('svc-legend');
+    legend.hidden = !svc;
+    if (svc) legend.innerHTML = services[state.services].legendHTML;
+    document.querySelectorAll('[data-svc]').forEach((b) => b.classList.toggle('on', b.dataset.svc === (state.services || '')));
   }
   document.querySelectorAll('[data-floor]').forEach((b) => b.classList.toggle('on', b.dataset.floor === state.floor));
   document.querySelectorAll('[data-time]').forEach((b) => b.classList.toggle('on', b.dataset.time === state.time));
   const ck = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
-  ck('cutaway', state.cutaway); ck('labels', state.labels); ck('services', state.services);
+  ck('cutaway', state.cutaway); ck('labels', state.labels);
   const ex = document.getElementById('explode');
   if (ex) { ex.value = state.explode; ex.disabled = svc; }
   document.body.classList.toggle('walking', walk);
@@ -318,7 +324,10 @@ function overviewPresets() {
     { id: 'sf', name: 'Second floor — PROPOSED (cutaway)', group: 'Overview', floor: 'SF', cut: true, pos: [cx + 14, 28, cz + 16], target: [cx, 7.1, cz] },
     { id: 'front', name: `Exterior — front (${compass(0, 1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx + 6, 3.5, D + 16], target: [cx, 4.5, D - 4] },
     { id: 'rear', name: `Exterior — rear lawn (${compass(0, -1)})`, group: 'Overview', floor: 'ALL', cut: false, pos: [cx - 5, 5.5, -14], target: [cx, 3.5, 6] },
-    ...(house.services ? [{ id: 'services', name: 'Services — plumbing', group: 'Overview', floor: 'ALL', cut: false, svc: true, pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] }] : []),
+    ...(house.services ? [
+      { id: 'services', name: 'Services — plumbing', group: 'Overview', floor: 'ALL', cut: false, svc: 'plumbing', pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] },
+      { id: 'electrical', name: 'Services — electrical', group: 'Overview', floor: 'ALL', cut: false, svc: 'electrical', pos: [cx - 17, 17, cz + 22], target: [cx, 3.2, cz + 1] },
+    ] : []),
   ];
 }
 
@@ -337,7 +346,7 @@ function goPreset(id, instant = false) {
   if (!p) return false;
   if (state.mode === 'walk') exitWalk();
   state.floor = p.floor; state.cutaway = p.cut; state.explode = p.explode || 0;
-  if (p.svc) state.services = true;
+  if (p.svc) state.services = p.svc;
   applyView();
   flyTo(...framed(p), instant ? 0 : 1.1);
   document.getElementById('preset').value = id;
@@ -412,7 +421,8 @@ function buildUI() {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
     if (e.code === 'KeyC') { state.cutaway = !state.cutaway; applyView(); }
     if (e.code === 'KeyL') { state.labels = !state.labels; applyView(); }
-    if (e.code === 'KeyP' && services) { state.services = !state.services; applyView(); }
+    if (e.code === 'KeyP' && services) { state.services = state.services === 'plumbing' ? null : 'plumbing'; applyView(); }
+    if (e.code === 'KeyE' && services && state.mode !== 'walk') { state.services = state.services === 'electrical' ? null : 'electrical'; applyView(); }
     if (e.code === 'KeyN') setTime(state.time === 'day' ? 'dusk' : 'day');
     if (e.code === 'Digit1') { state.floor = 'GF'; applyView(); }
     if (e.code === 'Digit2') { state.floor = 'FF'; applyView(); }
@@ -422,35 +432,47 @@ function buildUI() {
   });
 }
 
-// ------------------------------------------------------------------ services (R1 plumbing)
+// ------------------------------------------------------------------ services (R1 plumbing + electrical)
 function setupServices() {
-  services = buildServices(house.services);
-  services.tags = [];
-  for (const [fid, g] of Object.entries(services.groups)) { g.name = 'services-' + fid; g.visible = false; scene.add(g); }
-  for (const lb of services.labels) {
-    const div = document.createElement('div');
-    div.className = 'svc-label';
-    div.innerHTML = `<b>${lb.id}</b><span> ${lb.text}</span>`;
-    services.tags.push(div);
-    const obj = new CSS2DObject(div);
-    obj.position.set(...lb.pos);
-    services.groups[lb.floor].add(obj);
-  }
-  const legend = document.getElementById('svc-legend');
   const hex = (c) => '#' + c.toString(16).padStart(6, '0');
-  legend.innerHTML = `<b>Plumbing — design intent</b>` + services.legend.map((k) =>
-    `<p><i class="${k.shape}" style="background:${hex(k.color)}"></i><span>${k.name}${k.more ? `<em> (${k.more})</em>` : ''}</span></p>`).join('') +
-    `<small>${house.services.plumbing.source}. Not for construction: sizing, falls and the sewer connection by the licensed plumber.</small>`;
+  const names = Object.fromEntries(house.floors.flatMap((f) => f.rooms.map((r) => [r.id, r.name])));
+  const sv = house.services;
+  services = {};
+  const parts = [
+    ['plumbing', sv.plumbing && buildPlumbing(sv.plumbing), 'Plumbing — design intent',
+      'Not for construction: sizing, falls and the sewer connection by the licensed plumber.'],
+    ['electrical', sv.electrical && buildElectrical(sv.electrical, names), 'Electrical — design intent',
+      'Lines are conduits per circuit, looped point to point in the slab above. Not for construction: cable sizes, load sanction and testing by the licensed electrician.'],
+  ];
+  for (const [name, layer, title, foot] of parts) {
+    if (!layer) continue;
+    services[name] = layer;
+    layer.tags = [];
+    for (const [fid, g] of Object.entries(layer.groups)) { g.name = `${name}-${fid}`; g.visible = false; scene.add(g); }
+    for (const lb of layer.labels) {
+      const div = document.createElement('div');
+      div.className = 'svc-label';
+      div.innerHTML = `<b>${lb.id}</b><span> ${lb.text}</span>`;
+      layer.tags.push(div);
+      const obj = new CSS2DObject(div);
+      obj.position.set(...lb.pos);
+      layer.groups[lb.floor].add(obj);
+    }
+    layer.legendHTML = `<b>${title}</b>` + layer.legend.map((k) =>
+      `<p><i class="${k.shape}" style="background:${hex(k.color)}"></i><span>${k.name}${k.more ? `<em> (${k.more})</em>` : ''}</span></p>`).join('') +
+      `<small>${sv[name].source}. ${foot}</small>`;
+    document.querySelector(`[data-svc="${name}"]`).hidden = false;
+  }
   document.getElementById('svc-row').hidden = false;
   document.querySelector('.svc-key').hidden = false;
-  document.getElementById('services').addEventListener('change', (e) => { state.services = e.target.checked; applyView(); });
+  document.querySelectorAll('[data-svc]').forEach((b) => b.addEventListener('click', () => { state.services = b.dataset.svc || null; applyView(); }));
 }
 
 // Service tags are listed most important first (stacks, then chambers); any tag that would land on
 // one already shown is hidden for this frame, so the tags never pile up whatever the camera does.
 function declutterTags() {
   const shown = [];
-  for (const el of services.tags) {
+  for (const el of services[state.services].tags) {
     el.style.visibility = '';
     if (el.parentElement === null || el.style.display === 'none') continue;
     const r = el.getBoundingClientRect();
@@ -593,7 +615,7 @@ window.viewer = {
   setCutaway: (v) => { state.cutaway = v; applyView(); },
   setExplode: (v) => { state.explode = v; applyView(); },
   setLabels: (v) => { state.labels = v; applyView(); },
-  setServices: (v) => { state.services = v; applyView(); },
+  setServices: (v) => { state.services = v === true ? 'plumbing' : v || null; applyView(); },
   setTime,
   walkAt: (roomId, yawDeg = 180, pitchDeg = -5) => {
     enterWalk(roomId);

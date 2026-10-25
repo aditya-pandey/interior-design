@@ -21,6 +21,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #dfe6ea; col
 .row input[type=range] { flex: 1; }
 .check { justify-content: flex-start; }
 .seg span { width: 44px; color: var(--muted); }
+#svc-row span { width: 58px; }
+#svc-row button { padding-left: 4px; padding-right: 4px; }
+[data-svc][hidden] { display: none; }
 .seg button { flex: 1; }
 button { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; font: inherit; }
 button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
