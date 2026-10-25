@@ -32,6 +32,10 @@
 <polygon points="8950,6850 9050,6850 9050,6950 8950,6950" fill="#1d1d1d" stroke="none" stroke-width="0" />
 <text x="4700" y="9950" font-size="120" fill="#4f7385" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >POLYCARBONATE CANOPY OVER (temporary, light steel frame)</text>
 <polygon points="0,5515 5349,5515 5702,5467 6049,5386 6387,5273 6713,5128 7023,4953 7306,4816 7599,4703 7901,4616 8209,4553 8521,4516 8835,4505 9149,4520 9381,4521 9381,21504 9386,21504 9061,21515 8736,21516 8411,21505 8086,21483 7763,21450 7441,21406 7120,21351 6802,21285 6855,21288 6552,21196 6251,21096 5953,20987 5658,20870 5367,20744 5079,20610 4796,20468 4516,20318 4241,20160 3971,19994 3705,19820 3445,19639 3190,19451 2928,19489 2928,19257 0,19257 0,12964 -735,12964 -735,10451 0,10451" fill="none" stroke="#aaa" stroke-width="8" stroke-dasharray="40 40"/>
+<polygon points="5600,10900 7000,10900 7000,12300 5600,12300" fill="none" stroke="#6b8fa0" stroke-width="14" stroke-dasharray="90 60"/>
+<text x="6300" y="11640" font-size="95" fill="#46708a" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ON ROOF: WATER TANK</text>
+<polygon points="4050,12300 1950,12300 1950,10700 4050,10700" fill="none" stroke="#6b8fa0" stroke-width="14" stroke-dasharray="90 60"/>
+<text x="3000" y="11540" font-size="95" fill="#46708a" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >ON ROOF: SOLAR HEATER</text>
 </g>
 <g id="furn">
 <polygon points="230,15206 230,14256 2180,14256 2180,15206" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
@@ -51,14 +55,6 @@
 <ellipse cx="1350" cy="11024" rx="112" ry="77" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
 <polygon points="1525,12175 1775,12175 1775,12425 1525,12425" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <circle cx="1650" cy="12300" r="90" fill="none" stroke="#2aa7c9" stroke-width="8"/>
-<polygon points="2418,10849 3018,10849 3018,11449 2418,11449" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polygon points="3018,10849 3818,10849 3818,11449 3018,11449" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<ellipse cx="3418" cy="11149" rx="192" ry="132" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
-<polygon points="2418,12813 2418,11549 3018,11549 3018,12813" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
-<polyline points="2978,12813 2978,11549" fill="none" stroke="#8a7a5c" stroke-width="6" />
-<polyline points="2418,12813 3018,11549" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polyline points="3018,12813 2418,11549" fill="none" stroke="#8a7a5c" stroke-width="5" />
-<polygon points="4118,12813 3018,12813 3018,12363 4118,12363" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="1900,7900 3700,7900 3700,8500 1900,8500" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="6200,8200 7400,8200 7400,9000 6200,9000" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 <polygon points="6275,7775 6725,7775 6725,8225 6275,8225" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
@@ -75,6 +71,24 @@
 <polyline points="2290,16640 2910,16640" fill="none" stroke="#8a7a5c" stroke-width="8" />
 <circle cx="8800" cy="17400" r="300" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
 <circle cx="500" cy="18850" r="250" fill="#e6efd9" stroke="#8a7a5c" stroke-width="10"/>
+<polygon points="1631,10669 1031,10669 1031,10069 1631,10069" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="2631,10669 1631,10669 1631,10069 2631,10069" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<ellipse cx="2131" cy="10369" rx="192" ry="132" fill="#fff" stroke="#8a7a5c" stroke-width="8"/>
+<polygon points="3781,10669 2681,10669 2681,10219 3781,10219" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="4381,10669 3781,10669 3781,10069 4381,10069" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="4381,10109 3781,10109" fill="none" stroke="#8a7a5c" stroke-width="6" />
+<polyline points="4381,10669 3781,10069" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polyline points="4381,10069 3781,10669" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="3800,7900 5600,7900 5600,8500 3800,8500" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="3850,12813 2450,12813 2450,12213 3850,12213" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polyline points="3850,12253 2450,12253" fill="none" stroke="#8a7a5c" stroke-width="6" />
+<polyline points="3850,12813 2450,12213" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polyline points="3850,12213 2450,12813" fill="none" stroke="#8a7a5c" stroke-width="5" />
+<polygon points="2418,12100 2418,10900 2868,10900 2868,12100" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="5600,6805 6350,6805 6350,7105 5600,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="6425,6805 7175,6805 7175,7105 6425,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="7400,6805 8150,6805 8150,7105 7400,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
+<polygon points="8165,6805 8915,6805 8915,7105 8165,7105" fill="#fffdf8" stroke="#8a7a5c" stroke-width="10" />
 </g>
 <g id="stair">
 <polygon points="5899,12865 7899,12865 7899,13919 5899,13919" fill="#fbfbfb" stroke="#222" stroke-width="10" />
@@ -219,16 +233,18 @@
 <text x="1649.5" y="12099.8" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(1.24 × 1.96 m)</text>
 <text x="1649.5" y="12231" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
 <text x="1649.5" y="12231" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
-<text x="3343.5" y="11587.2" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">WASHING AREA</text>
-<text x="3343.5" y="11587.2" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >WASHING AREA</text>
-<text x="3343.5" y="11774.8" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">39 sq ft (3.6 m²)</text>
-<text x="3343.5" y="11774.8" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >39 sq ft (3.6 m²)</text>
-<text x="3343.5" y="11943.5" font-size="125" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">6'-1" × 6'-5"</text>
-<text x="3343.5" y="11943.5" font-size="125" fill="#555" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >6'-1" × 6'-5"</text>
-<text x="3343.5" y="12099.8" font-size="105" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">(1.85 × 1.96 m)</text>
-<text x="3343.5" y="12099.8" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(1.85 × 1.96 m)</text>
-<text x="3343.5" y="12231" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
-<text x="3343.5" y="12231" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
+<text x="3343.5" y="11518.5" font-size="150" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">STORE</text>
+<text x="3343.5" y="11518.5" font-size="150" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >STORE</text>
+<text x="3343.5" y="11706" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">39 sq ft (3.6 m²)</text>
+<text x="3343.5" y="11706" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >39 sq ft (3.6 m²)</text>
+<text x="3343.5" y="11874.8" font-size="125" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">6'-1" × 6'-5"</text>
+<text x="3343.5" y="11874.8" font-size="125" fill="#555" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >6'-1" × 6'-5"</text>
+<text x="3343.5" y="12031" font-size="105" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">(1.85 × 1.96 m)</text>
+<text x="3343.5" y="12031" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(1.85 × 1.96 m)</text>
+<text x="3343.5" y="12162.2" font-size="110" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BRIEF CHANGE (was Washing Area)</text>
+<text x="3343.5" y="12162.2" font-size="110" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BRIEF CHANGE (was Washing Area)</text>
+<text x="3343.5" y="12299.8" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
+<text x="3343.5" y="12299.8" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
 <text x="2249.5" y="13913.2" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">SERVANT ROOM</text>
 <text x="2249.5" y="13913.2" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >SERVANT ROOM</text>
 <text x="2249.5" y="14175.8" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">102 sq ft (9.5 m²)</text>
@@ -239,16 +255,16 @@
 <text x="2249.5" y="14500.8" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(4.04 × 2.34 m)</text>
 <text x="2249.5" y="14632" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
 <text x="2249.5" y="14632" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
-<text x="4428.1" y="8153.1" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BACK TERRACE (COVERED)</text>
-<text x="4428.1" y="8153.1" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BACK TERRACE (COVERED)</text>
-<text x="4428.1" y="8415.6" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">430 sq ft (40.0 m²)</text>
-<text x="4428.1" y="8415.6" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >430 sq ft (40.0 m²)</text>
-<text x="4428.1" y="8584.4" font-size="125" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">29'-3" × 16'-5"</text>
-<text x="4428.1" y="8584.4" font-size="125" fill="#555" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >29'-3" × 16'-5"</text>
-<text x="4428.1" y="8740.6" font-size="105" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">(8.92 × 5.00 m)</text>
-<text x="4428.1" y="8740.6" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(8.92 × 5.00 m)</text>
-<text x="4428.1" y="8871.9" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
-<text x="4428.1" y="8871.9" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
+<text x="4700" y="7378.8" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">BACK TERRACE + UTILITY (COVERED)</text>
+<text x="4700" y="7378.8" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >BACK TERRACE + UTILITY (COVERED)</text>
+<text x="4700" y="7641.2" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">430 sq ft (40.0 m²)</text>
+<text x="4700" y="7641.2" font-size="135" fill="#444" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >430 sq ft (40.0 m²)</text>
+<text x="4700" y="7810" font-size="125" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">29'-3" × 16'-5"</text>
+<text x="4700" y="7810" font-size="125" fill="#555" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >29'-3" × 16'-5"</text>
+<text x="4700" y="7966.2" font-size="105" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">(8.92 × 5.00 m)</text>
+<text x="4700" y="7966.2" font-size="105" fill="#777" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(8.92 × 5.00 m)</text>
+<text x="4700" y="8097.5" font-size="115" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">PROPOSED</text>
+<text x="4700" y="8097.5" font-size="115" fill="#c0601f" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
 <text x="5178.3" y="17628" font-size="210" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">FRONT TERRACE (OPEN)</text>
 <text x="5178.3" y="17628" font-size="210" fill="#222" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >FRONT TERRACE (OPEN)</text>
 <text x="5178.3" y="17890.5" font-size="135" fill="#fff" text-anchor="middle" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" stroke="#fff" stroke-width="45" stroke-linejoin="round">455 sq ft (42.3 m²)</text>
@@ -309,7 +325,7 @@
 <text x="14800" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >26 sq ft</text>
 <text x="16100" y="8480" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(2.4 m²)</text>
 <text x="16250" y="8480" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
-<text x="11200" y="8700" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Washing Area</text>
+<text x="11200" y="8700" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Store</text>
 <text x="14800" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >39 sq ft</text>
 <text x="16100" y="8700" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(3.6 m²)</text>
 <text x="16250" y="8700" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
@@ -317,7 +333,7 @@
 <text x="14800" y="8920" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >102 sq ft</text>
 <text x="16100" y="8920" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(9.5 m²)</text>
 <text x="16250" y="8920" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >PROPOSED</text>
-<text x="11200" y="9140" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Back Terrace (covered)</text>
+<text x="11200" y="9140" font-size="140" fill="#222" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >Back Terrace + Utility (covered)</text>
 <text x="14800" y="9140" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >430 sq ft</text>
 <text x="16100" y="9140" font-size="140" fill="#222" text-anchor="end" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >(40.0 m²)</text>
 <text x="16250" y="9140" font-size="110" fill="#c0601f" text-anchor="start" font-weight="normal" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" >outdoor</text>

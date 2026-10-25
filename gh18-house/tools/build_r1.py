@@ -251,8 +251,45 @@ def c10_master_suite(h):
     ]
 
 
+# ---------------------------------------------------------------- D: second floor + roof
+
+def d11_utility_terrace(h):
+    """D11: an open utility on the covered back terrace instead of the enclosed washing room: washer-dryer,
+    utility sink, ironing counter and tall storage against the wall right outside the lobby door, draining to the
+    OTS stack beside it; two drying racks under the polycarbonate roof. The old washing room becomes a store.
+    Terrace zoning per the plumbing sheet: heavy items S/SW, N/NE (front terrace) kept open. With a second floor
+    the overhead tank and the solar heater go on the SF roof (head for every floor, incl. the SF washroom, without
+    a booster pump); AC outdoor units along the rear parapet of the back terrace."""
+    sf = floor(h, 'SF')
+    drop(sf['furniture'], 'SF-W01', 'SF-W02', 'SF-W03', 'SF-W04')
+    rename(find(sf['rooms'], 'SF-WSH'), 'Store', 'Washing Area', 'R1-D11 linen / utility store (washing moved out to the terrace)')
+    opening(find(sf['walls'], 'SF-W06'), 'SF-PD2a')['note'] = 'lobby -> store'
+    trb = find(sf['rooms'], 'SF-TRB')
+    trb.update(name='Back Terrace + Utility (covered)', label_at=[4700, 7600],
+               note='R1-D11 open utility along the SF wall + drying under the polycarbonate roof; AC outdoor units on the rear parapet')
+    sf['furniture'] += [
+        F('SF-U01', 'SF-TRB', 'washer_dryer', (1331, 10369), (600, 600, 1750), 180, note='front-load washer + dryer'),
+        F('SF-U02', 'SF-TRB', 'utility_counter', (2131, 10369), (1000, 600, 900), 180, sink=True, note='utility sink; drains to SS-1 in the OTS'),
+        F('SF-U03', 'SF-TRB', 'ironing_station', (3231, 10444), (1100, 450, 900), 180, note='ironing counter with storage below'),
+        F('SF-U04', 'SF-TRB', 'storage_tall', (4081, 10369), (600, 600, 2100), 180, note='detergents, iron, utility'),
+        F('SF-T11', 'SF-TRB', 'drying_rack', (4700, 8200), (1800, 600, 1500), 0),
+        F('SF-S11', 'SF-WSH', 'storage_tall', (3150, 12513), (1400, 600, 2400), 180, note='linen'),
+        F('SF-S12', 'SF-WSH', 'shelf', (2643, 11500), (1200, 450, 2100), 270),
+    ]
+    for i, x in enumerate((5975, 6800, 7775, 8540)):      # in the bays between the canopy posts at x 5450 / 7300 / 9000
+        sf['furniture'].append(F('SF-AC%d' % (i + 1), 'SF-TRB', 'ac_odu', (x, 6955), (750, 300, 600), 0, note='AC outdoor unit (S/SW zone)'))
+    # on the SF roof (z = height above the SF floor; on_roof puts them with the roof in the viewer)
+    roof = h['levels']['ROOF']['ffl'] - h['levels']['SF']['ffl']
+    sf['furniture'] += [
+        F('SF-R01', 'SF-LOB', 'water_tank', (6300, 11600), (1400, 1400, 1900), 0, z=roof, on_roof=True,
+          note='overhead tank 2000 L on a 300 stand, south-west part of the roof beside the lift overrun'),
+        F('SF-R02', 'SF-LOB', 'solar_heater', (3000, 11500), (2100, 1600, 1500), 180, z=roof, on_roof=True,
+          note='solar water heater facing south; hot water to the master washroom + kitchen'),
+    ]
+
+
 PATCHES = [a1_orientation, a2_units, b3_family_lounge, b4_kitchen_wash, b5_guest_lounge, b6_mandir, b7_under_stair,
-           c8_pantry, c9_kids_toilet_back, c10_master_suite]
+           c8_pantry, c9_kids_toilet_back, c10_master_suite, d11_utility_terrace]
 
 
 def build():

@@ -368,7 +368,14 @@ def draw_peninsula(svg, it):
 
 def draw_furniture(svg, fl):
     # plans show the /withpainting layout (paintings drawn below), so skip the pieces it replaces
-    items = sorted((it for it in fl.get("furniture", []) if it.get("variant") != "no_art"), key=lambda it: 0 if it["type"] == "rug" else 1)
+    items = sorted((it for it in fl.get("furniture", []) if it.get("variant") != "no_art" and not it.get("on_roof")),
+                   key=lambda it: 0 if it["type"] == "rug" else 1)
+    for it in fl.get("furniture", []):                # roof equipment: dashed outline + label on the floor below
+        if it.get("on_roof"):
+            pts = hl.furniture_corners(it)
+            svg.poly("over", pts, fill="none", stroke="#6b8fa0", sw=14, extra='stroke-dasharray="90 60"')
+            cx, cy = it["pos"]
+            svg.text("over", cx, cy + 40, "ON ROOF: " + it["type"].replace("_", " ").upper(), size=95, fill="#46708a", weight="bold")
     for it in items:
         if it["type"] == "counter_peninsula":
             draw_peninsula(svg, it)

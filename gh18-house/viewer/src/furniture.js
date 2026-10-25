@@ -432,6 +432,40 @@ B.drying_rack = (p, w, d, h) => {
   for (const sx of [-1, 1]) box(p, 'steel', 0.03, h, d, sx * (w / 2 - 0.015), 0, 0, 0.004);
   for (let i = 0; i < 6; i++) { const g = new THREE.CylinderGeometry(0.008, 0.008, w, 8); g.rotateZ(Math.PI / 2); g.translate(0, h - 0.05 - i * 0.02, -d / 2 + (i + 0.5) * (d / 6)); p.push({ g, m: 'steel' }); }
 };
+// roof / terrace services equipment
+B.water_tank = (p, w, d, h) => {            // moulded tank on a 300 mm stand
+  const r = Math.min(w, d) / 2 - 0.02, st = 0.3;
+  box(p, 'concrete', w, st, d, 0, 0, 0, 0.01);
+  cyl(p, 'black_metal', r, r, h - st - 0.12, 0, st, 0, 40);
+  for (const y of [0.35, 0.7, 1.05]) cyl(p, 'black_metal', r + 0.012, r + 0.012, 0.04, 0, st + y, 0, 40);
+  cyl(p, 'black_metal', r * 0.98, r * 0.3, 0.12, 0, h - 0.12, 0, 40);
+  cyl(p, 'black_metal', 0.22, 0.22, 0.05, 0, h - 0.02, 0, 24);
+};
+B.solar_heater = (p, w, d, h) => {          // two flat-plate collectors tilted to the front (+Z), storage tank behind
+  const tilt = 0.5, cw = w / 2 - 0.05, cl = d - 0.35;
+  for (const s of [-1, 1]) {
+    const g = new THREE.BoxGeometry(cw, 0.06, cl);
+    g.rotateX(tilt); g.translate(s * (cw / 2 + 0.03), 0.3 + Math.sin(tilt) * cl / 2, 0.15);
+    p.push({ g, m: 'window_dark' });
+  }
+  const t = new THREE.CylinderGeometry(0.22, 0.22, w - 0.1, 24);
+  t.rotateZ(Math.PI / 2); t.translate(0, h - 0.25, -d / 2 + 0.25);
+  p.push({ g: t, m: 'lacquer_white' });
+  for (const s of [-1, 1]) {
+    box(p, 'steel', 0.04, h - 0.25, 0.04, s * (w / 2 - 0.05), 0, -d / 2 + 0.25, 0.004);
+    box(p, 'steel', 0.04, 0.3, 0.04, s * (w / 2 - 0.05), 0, d / 2 - 0.1, 0.004);
+  }
+};
+B.ac_odu = (p, w, d, h) => {                // split AC outdoor unit on a low stand, fan grille to the front
+  box(p, 'black_metal', w - 0.1, 0.12, d - 0.04, 0, 0, 0, 0.004);
+  box(p, 'lacquer_white', w, h - 0.12, d, 0, 0.12, 0, 0.02);
+  const g = new THREE.TorusGeometry(0.2, 0.012, 8, 40);
+  g.translate(-w / 2 + 0.3, 0.12 + (h - 0.12) / 2, d / 2 + 0.006);
+  p.push({ g, m: 'black_metal' });
+  const c = new THREE.CircleGeometry(0.19, 32);
+  c.translate(-w / 2 + 0.3, 0.12 + (h - 0.12) / 2, d / 2 + 0.004);
+  p.push({ g: c, m: 'window_dark' });
+};
 B.lounger = (p, w, d, h) => {
   box(p, 'walnut', w, 0.12, d, 0, 0.18, 0, 0.01);
   legs4(p, 'walnut', w, d, 0.18, 0.05, 0.04);

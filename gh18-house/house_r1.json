@@ -3190,7 +3190,7 @@
               "sill": 0,
               "hinge": "a",
               "swing": "-x",
-              "note": "washing area"
+              "note": "lobby -> store"
             },
             {
               "id": "SF-PD2b",
@@ -3465,7 +3465,7 @@
         },
         {
           "id": "SF-WSH",
-          "name": "Washing Area",
+          "name": "Store",
           "polygon": [[2418, 10849], [4269, 10849], [4269, 12813], [2418, 12813]],
           "floor": "tile_matte_lg",
           "wall": "tile_matte_lg",
@@ -3474,7 +3474,9 @@
             "height": 2600
           },
           "status": "proposed",
-          "note": "stacked over FF kids toilet"
+          "note": "R1-D11 linen / utility store (washing moved out to the terrace)",
+          "was": "Washing Area",
+          "brief_change": true
         },
         {
           "id": "SF-SRV",
@@ -3490,7 +3492,7 @@
         },
         {
           "id": "SF-TRB",
-          "name": "Back Terrace (covered)",
+          "name": "Back Terrace + Utility (covered)",
           "kind": "outdoor",
           "polygon": [[230, 5665], [5199, 5665], [5199, 6805], [9151, 6805], [9151, 10669], [1031, 10669], [1031, 10451], [230, 10451]],
           "floor": "deck_tile",
@@ -3499,7 +3501,9 @@
             "type": "polycarbonate canopy on light steel frame",
             "height_high": 3000,
             "height_low": 2600
-          }
+          },
+          "label_at": [4700, 7600],
+          "note": "R1-D11 open utility along the SF wall + drying under the polycarbonate roof; AC outdoor units on the rear parapet"
         },
         {
           "id": "SF-TRF",
@@ -3588,40 +3592,6 @@
           "z": 2150
         },
         {
-          "id": "SF-W01",
-          "room": "SF-WSH",
-          "type": "washer_dryer",
-          "pos": [2718, 11149],
-          "size": [600, 600, 1750],
-          "rot": 0
-        },
-        {
-          "id": "SF-W02",
-          "room": "SF-WSH",
-          "type": "utility_counter",
-          "pos": [3418, 11149],
-          "size": [800, 600, 900],
-          "rot": 0,
-          "sink": true
-        },
-        {
-          "id": "SF-W03",
-          "room": "SF-WSH",
-          "type": "storage_tall",
-          "pos": [2718, 12181],
-          "size": [1264, 600, 2400],
-          "rot": 270,
-          "ironing_pullout": true
-        },
-        {
-          "id": "SF-W04",
-          "room": "SF-WSH",
-          "type": "ironing_station",
-          "pos": [3568, 12588],
-          "size": [1100, 450, 900],
-          "rot": 180
-        },
-        {
           "id": "SF-T01",
           "room": "SF-TRB",
           "type": "drying_rack",
@@ -3700,6 +3670,126 @@
           "pos": [500, 18850],
           "size": [500, 500, 900],
           "rot": 0
+        },
+        {
+          "id": "SF-U01",
+          "room": "SF-TRB",
+          "type": "washer_dryer",
+          "pos": [1331, 10369],
+          "size": [600, 600, 1750],
+          "rot": 180,
+          "note": "front-load washer + dryer"
+        },
+        {
+          "id": "SF-U02",
+          "room": "SF-TRB",
+          "type": "utility_counter",
+          "pos": [2131, 10369],
+          "size": [1000, 600, 900],
+          "rot": 180,
+          "sink": true,
+          "note": "utility sink; drains to SS-1 in the OTS"
+        },
+        {
+          "id": "SF-U03",
+          "room": "SF-TRB",
+          "type": "ironing_station",
+          "pos": [3231, 10444],
+          "size": [1100, 450, 900],
+          "rot": 180,
+          "note": "ironing counter with storage below"
+        },
+        {
+          "id": "SF-U04",
+          "room": "SF-TRB",
+          "type": "storage_tall",
+          "pos": [4081, 10369],
+          "size": [600, 600, 2100],
+          "rot": 180,
+          "note": "detergents, iron, utility"
+        },
+        {
+          "id": "SF-T11",
+          "room": "SF-TRB",
+          "type": "drying_rack",
+          "pos": [4700, 8200],
+          "size": [1800, 600, 1500],
+          "rot": 0
+        },
+        {
+          "id": "SF-S11",
+          "room": "SF-WSH",
+          "type": "storage_tall",
+          "pos": [3150, 12513],
+          "size": [1400, 600, 2400],
+          "rot": 180,
+          "note": "linen"
+        },
+        {
+          "id": "SF-S12",
+          "room": "SF-WSH",
+          "type": "shelf",
+          "pos": [2643, 11500],
+          "size": [1200, 450, 2100],
+          "rot": 270
+        },
+        {
+          "id": "SF-AC1",
+          "room": "SF-TRB",
+          "type": "ac_odu",
+          "pos": [5975, 6955],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit (S/SW zone)"
+        },
+        {
+          "id": "SF-AC2",
+          "room": "SF-TRB",
+          "type": "ac_odu",
+          "pos": [6800, 6955],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit (S/SW zone)"
+        },
+        {
+          "id": "SF-AC3",
+          "room": "SF-TRB",
+          "type": "ac_odu",
+          "pos": [7775, 6955],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit (S/SW zone)"
+        },
+        {
+          "id": "SF-AC4",
+          "room": "SF-TRB",
+          "type": "ac_odu",
+          "pos": [8540, 6955],
+          "size": [750, 300, 600],
+          "rot": 0,
+          "note": "AC outdoor unit (S/SW zone)"
+        },
+        {
+          "id": "SF-R01",
+          "room": "SF-LOB",
+          "type": "water_tank",
+          "pos": [6300, 11600],
+          "size": [1400, 1400, 1900],
+          "rot": 0,
+          "z": 3300,
+          "on_roof": true,
+          "note": "overhead tank 2000 L on a 300 stand, south-west part of the roof beside the lift overrun"
+        },
+        {
+          "id": "SF-R02",
+          "room": "SF-LOB",
+          "type": "solar_heater",
+          "pos": [3000, 11500],
+          "size": [2100, 1600, 1500],
+          "rot": 180,
+          "z": 3300,
+          "on_roof": true,
+          "note": "solar water heater facing south; hot water to the master washroom + kitchen"
         }
       ],
       "canopy": {

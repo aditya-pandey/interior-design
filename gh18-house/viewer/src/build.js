@@ -222,6 +222,10 @@ export function buildHouse(house, M) {
 
     // ---------------- furniture and joinery
     for (const f of fl.furniture || []) {
+      if (f.on_roof) {                   // roof equipment: drawn with the roof so it hides with it in floor views
+        for (const part of buildFurniture(f, fy)) batch.add('ROOF', 'furn', part.m, part.g);
+        continue;
+      }
       const outdoor = (fl.outdoor || []).find((a) => a.id === f.room);
       const baseY = outdoor ? mm(outdoor.z || 0) : fy;
       if (f.src) models.push({ floor: fid, src: f.src, front: f.model_front || '+z', pos: f.pos, rot: f.rot || 0, baseY, size: f.size });
