@@ -170,6 +170,9 @@
       },
       "KW-1": {
         "desc": "R1-B4 wash-nook vent window into the OTS, 500 x 600, sill 1050, with exhaust fan."
+      },
+      "KW-2": {
+        "desc": "R1-C10 master washroom vent window into the OTS, 500 x 600, sill 1500, with exhaust fan."
       }
     }
   },
@@ -1825,7 +1828,7 @@
           "openings": [
             {
               "id": "FF-MW1",
-              "mark": "KW-1",
+              "mark": "KW-2",
               "type": "window",
               "offset": 1015,
               "width": 500,
@@ -5679,7 +5682,7 @@
           "serves": "FF-MTL",
           "at": [530, 10431, 5550],
           "base": 3750,
-          "note": "in KW-1 on the OTS wall (FF-MW1)",
+          "note": "in KW-2 on the OTS wall (FF-MW1)",
           "face": [0.0, -1.0],
           "circuit": "L8"
         },

@@ -249,7 +249,8 @@ def c10_master_suite(h):
     opening(find(walls, 'FF-W08'), 'FF-D3a').update(offset=1159, hinge='a', swing='+y', note='R1-C10 dresser -> master washroom')
     opening(find(walls, 'FF-W01'), 'FF-GL4')['note'] = 'R1-C10 now the dresser window'
     find(walls, 'FF-OTS1').setdefault('openings', []).append(
-        O('FF-MW1', 'KW-1', 'window', 1015, 500, 600, 1500, note='R1-C10 master washroom vent window + exhaust into the OTS'))
+        O('FF-MW1', 'KW-2', 'window', 1015, 500, 600, 1500, note='R1-C10 master washroom vent window + exhaust into the OTS'))
+    h['schedule']['unscheduled']['KW-2'] = {'desc': 'R1-C10 master washroom vent window into the OTS, 500 x 600, sill 1500, with exhaust fan.'}
     drop(walls, 'FF-GL6')
     walls.append(base.W('FF-GL6', (2243, 9800), (2243, 10669), 10, 'glass_partition', 'new', h=2000, note='R1-C10 over-tub shower screen'))
     mtl, drs = find(ff['rooms'], 'FF-MTL'), find(ff['rooms'], 'FF-DRS')
@@ -573,7 +574,7 @@ def e13_electrical(h):
     P('sb', R, 2973, 7700, serves=W, note='washroom switches outside, at the dresser door (B3)')
     P('light', W, 1300, 9900); P('light', W, 2600, 9300)
     P('ml', W, 780, 8775, note='mirror light over the vanity')
-    P('ef', W, 530, 10431, z=1800, note='in KW-1 on the OTS wall (FF-MW1)')
+    P('ef', W, 530, 10431, z=1800, note='in KW-2 on the OTS wall (FF-MW1)')
     P('gy', W, 250, 9550, note='east wall, 2 m from the shower, high (B3)')
     P('s6', W, 1500, 10649, z=1100, note='0.75 m clear of the tub, RCD')
     T3 = 'FF-TL3'

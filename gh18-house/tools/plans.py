@@ -258,7 +258,7 @@ def room_label(svg, r, proposed=False, small=False):
             dims = r.get("dims_label") or "%d × %d" % (round((x1 - x0) / 10) * 10, round((y1 - y0) / 10) * 10)
             lines.append((dims, 120, "normal", "#666"))
     if r.get("brief_change"):
-        lines.append(("BRIEF CHANGE (was %s)" % r["was"] if r.get("was") else "BRIEF CHANGE", 110, "bold", "#c0601f"))
+        lines.append(("%s (was %s)" % (CHANGE_WORD, r["was"]) if r.get("was") else CHANGE_WORD, 110, "bold", "#c0601f"))
     if proposed:
         lines.append(("PROPOSED", 115, "bold", "#c0601f"))
     total = sum(s * 1.25 for _, s, _, _ in lines)
@@ -592,7 +592,8 @@ def title_block(svg, h, fl, rooms_table):
 
 # --------------------------------------------------------------------- main
 
-def build(h, fl):
+def build(h, fl, title=True):
+    """One floor as an SVG. title=False leaves out the side panel (title, legend, room table) for tools/sheets.py."""
     svg = Svg()
     fid = fl["id"]
     proposed = fl["status"] == "PROPOSED"
@@ -629,10 +630,12 @@ def build(h, fl):
             continue
         room_label(svg, dict(a, kind="outdoor"), small=True)
     draw_dims(svg, h, fid)
-    title_block(svg, h, fl, rows)
+    if title:
+        title_block(svg, h, fl, rows)
     return svg.render("GH-18 %s plan" % fl["name"])
 
 
+CHANGE_WORD = "BRIEF CHANGE"   # room-label flag for brief_change rooms (tools/sheets.py uses "R1 CHANGE")
 FEET = False           # set from the model in main(): feet-inches (metres) for Revision R1 onward
 SRC = "house.json"
 
