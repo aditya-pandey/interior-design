@@ -15,6 +15,8 @@
 
 **State at handover (26 Oct 2026):** everything described here is committed and pushed. The last change is F17, the R1 issue of the architect's drawing (`plans/r1/GH-18_R1_drawing.pdf`); before it, F16, the materials and quantities schedule with its 3D view, on `house-design-v1`; it is merged into `main` once the owner approves it. All automated checks pass, and GitHub Pages deployed successfully from `main`.
 
+**Next project:** `/play/`, a free-roam version of the house, is briefed in `PLAY_HANDOFF.md` (not started yet).
+
 This document is meant to be pasted into a new Claude (or other agent) session as the opening context. It tries to carry everything the previous sessions learned: the goal, the data model, the code, the design decisions and why they were made, the user's preferences, the traps, and the open items. If anything here disagrees with the code, trust the code and fix this document.
 
 ---
@@ -384,7 +386,7 @@ The R1 checks pass at handover:
 - **How:** the plans are `plans.build(h, fl, title=False)` nested in the sheet with a fixed crop (`CROP_*`). The door-window rows are read from the openings (counts, sizes, sills; the location comes from the rooms on each side of the wall), plus the GL-6 partitions, GL-8 railing and GL-F facade walls. The finishing rows are read from each room's `floor` / `wall` / `ceiling` and compared with R0's row (`finish_schedule_pdf`): △ = changed, + = not on R0. The revision notes, hold points and remarks are curated lists at the top of the file: keep them in step with CHANGE_REGISTER.md.
 - **Left blank on purpose:** DRN. and CHD., for the architect / contractor to sign.
 
-### 5.6 `check_services.py`
+### 5.7 `check_services.py`
 
 It runs three sections and writes `plans/r1/services_report.txt`.
 
