@@ -1,6 +1,6 @@
 # GH-18 — R1 change register
 
-Revision R1 (Oct 2026) of the GH-18 model, Celebrity Homes, Palam Vihar, Gurugram. Client: Mr. Praveen Kumar Yadav.
+Revision R1 (Oct 2026) of the GH-18 model, Celebrity Homes, Palam Vihar, Gurugram. Owner: Deepti Jain (client on the architect's drawing: Mr. Praveen Kumar Yadav).
 
 This register maps every input of Oct 2026 to what R1 does with it:
 - the owner's change list

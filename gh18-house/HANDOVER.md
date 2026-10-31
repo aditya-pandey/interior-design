@@ -1,7 +1,7 @@
 # GH-18 House Model — Handover for the next AI agent or developer
 
 **Project:** GH-18, Celebrity Homes, Palam Vihar, Gurugram, India. Renovation of an existing house, plus a proposed second floor.
-**Client / owner:** Mr. Praveen Kumar Yadav. The person giving instructions in the build sessions is the owner's side (the repository owner, `aditya-pandey`).
+**Owner:** Deepti Jain. The architect's drawing (R0) names **Mr. Praveen Kumar Yadav** as the client, and that name is kept wherever the drawing is reproduced (`meta.client` in the model, the R1 drawing sheets, the plan title blocks). The person giving instructions in the build sessions is the owner's side (the repository owner, `aditya-pandey`).
 **Repository:** `github.com/aditya-pandey/interior-design`.
 **Branches:**
 - `main` is the repository's default branch and the live branch. GitHub Pages and Netlify both deploy from it.

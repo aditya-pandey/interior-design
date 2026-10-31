@@ -1,6 +1,6 @@
 # GH-18 house model
 
-To-scale model of GH-18, Celebrity Homes, Palam Vihar, Gurugram (client: Mr. Praveen Kumar Yadav), built from the architect's GF/FF plan, plus a proposed second floor.
+To-scale model of GH-18, Celebrity Homes, Palam Vihar, Gurugram (owner: Deepti Jain; client on the architect's drawing: Mr. Praveen Kumar Yadav), built from the architect's GF/FF plan, plus a proposed second floor.
 
 **New to the project (human or AI agent)? Start with `HANDOVER.md` (also `HANDOVER.pdf`).**
 
