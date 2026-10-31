@@ -6,16 +6,13 @@
 **Branches:**
 - `main` is the repository's default branch and the live branch. GitHub Pages and Netlify both deploy from it.
 - `house-design-v1` is the working branch. Changes are made there and merged into `main` to go live.
-- All history up to this handover is on both. The first Claude session worked on an auto-named branch, `claude/zen-shannon-ilvm07`, which was then the default. It was renamed to `house-design-v1` and `main` was created from it.
-- The old branch is identical to `main`. The owner is deleting it in the GitHub UI, because the agent's git connection could not delete it.
-- An open Imgbot pull request (image compression) targeted the old branch and closes with it. It isn't needed.
+- The first Claude session worked on an auto-named branch, `claude/zen-shannon-ilvm07`, which was then the default. It was renamed to `house-design-v1` and `main` was created from it. The owner has since deleted the old branch (and with it an unneeded Imgbot pull request).
+- **What is where (31 Oct 2026):** `main` has everything up to F16 (materials schedule + Materials view, with the car-colour fix). `house-design-v1` is one step ahead: **F17**, the R1 issue of the architect's drawing. F17 waits for the owner's approval before it is merged into `main`.
 **Live sites:**
 - GitHub Pages: https://aditya-pandey.github.io/interior-design/
 - Netlify, from the same repository's `main` branch (production branch set to `main`). Netlify sometimes lags behind GitHub Pages.
 
-**State at handover (26 Oct 2026):** everything described here is committed and pushed. The last change is F17, the R1 issue of the architect's drawing (`plans/r1/GH-18_R1_drawing.pdf`); before it, F16, the materials and quantities schedule with its 3D view, on `house-design-v1`; it is merged into `main` once the owner approves it. All automated checks pass, and GitHub Pages deployed successfully from `main`.
-
-**Next project:** `/play/`, a free-roam version of the house, is briefed in `PLAY_HANDOFF.md` (not started yet).
+**State at handover (31 Oct 2026):** everything described here is committed and pushed. The last change is **F17**, the R1 issue of the architect's drawing (`plans/r1/GH-18_R1_drawing.pdf`, made by `tools/sheets.py`), on `house-design-v1`, not yet merged into `main`. Before it came **F16**, the materials and quantities schedule with its 3D view, which is live. All automated checks pass (`check_dims` PASS for main and R1; `check_services` 278 pass, 4 warnings, 0 fail), and GitHub Pages deployed successfully from `main`.
 
 This document is meant to be pasted into a new Claude (or other agent) session as the opening context. It tries to carry everything the previous sessions learned: the goal, the data model, the code, the design decisions and why they were made, the user's preferences, the traps, and the open items. If anything here disagrees with the code, trust the code and fix this document.
 
@@ -96,7 +93,9 @@ This document is meant to be pasted into a new Claude (or other agent) session a
    - **Owner follow-ups:**
      - the mandir moved from the guest room to the family lounge (B6 revised)
      - a tulsi added (B15), first in the front lawn's NE, then moved to the back garden at the owner's request
-7. **This handover document.**
+7. **This handover document** (first version), the branch reorganisation (`main` live, `house-design-v1` working).
+8. **F16 materials and quantities** (owner's nine items: tiles, pipes, wires, paint, POP, granite, timber, MDF board in wardrobes, lights): `tools/boq.py` → Excel + PDF, and a *Materials* view in the 3D tour. Merged to `main`; a follow-up fix stopped the Materials view recolouring the car.
+9. **F17 R1 issue of the architect's drawing:** the owner asked for an updated version of the original R0 sheet "basis how our layout and plan looks like". `tools/sheets.py` → two A3 sheets (§5.6). The FF master-washroom vent window was re-marked **KW-2** at the same time. On `house-design-v1`, awaiting approval.
 
 ---
 
@@ -330,7 +329,7 @@ The R1 checks pass at handover:
   | `b7_under_stair` | B7 | storage units, inverter / network rack, door swing; DB cabinet K12 beside the fridge tower K04 on the kitchen E wall |
   | `c8_pantry` | C8 | FF lobby pantry counter FF-L01 + wall cupboards FF-L05 |
   | `c9_kids_toilet_back` | C9 | reverts D-03: kids toilet KTL back beside the stair at its R0 size |
-  | `c10_master_suite` | C10 | washroom and dresser swapped; tub FF-T01, WC FF-T02 by the OTS, MW-1 window; doors D2a / D3a re-hung |
+  | `c10_master_suite` | C10 | washroom and dresser swapped; tub FF-T01, WC FF-T02 by the OTS, vent window FF-MW1 (mark KW-2; KW-1 is the GF wash-nook window); doors D2a / D3a re-hung |
   | `d11_utility_terrace` | D11 | SF utility on the covered back terrace; store; drying racks; ODUs; OHT SF-R01 and solar heater SF-R02 on the roof |
   | `b15_tulsi` | B15 | tulsi platform GF-O09 at (645, 1650), rot 270, in the back lawn's NE corner; bamboo planters O10 / O11; fluted panel O12 on the E boundary wall |
   | `e12_plumbing` | E12 | `services.plumbing` |
@@ -695,6 +694,11 @@ Hold points and open questions:
 - **Electrician:** cable sizes, load sanction and testing.
 - **Vastu consultant:** re-check of R1 before freeze.
 - **Main site questions still open** in ASSUMPTIONS (top): A-15 foyer entry door, A-24 short parking bay, B-06 balcony merge.
+- **F17 drawing sheets:**
+  - merge into `main` once the owner approves
+  - DRN. / CHD. boxes are blank on purpose, for the architect / contractor to sign
+  - R0's contractor block (Unique Project Solutions, address, phone) is copied as is; ask if the issue should carry another name
+  - known cosmetic overlaps on the FF plan: the GL-4 tag over the dresser dimension, the D3 tag over the bedroom-3 toilet dimension. Fixing them means moving labels shared with the main site's plans, which must stay byte-identical, so they were left.
 
 ---
 
@@ -773,6 +777,12 @@ Hold points and open questions:
   - they confirm interpretations, so ask when something is ambiguous
 - **Running things themselves:** they offered to run things locally if that saves time and tokens. Suggest local commands when useful, e.g. `npm run dev` to preview.
 - **Reports:** short; what changed, where, why, and any deviation or open question. Send renders. Don't bury the important caveat.
+
+---
+
+### Starter prompt for a new session (copy-paste)
+
+> You are picking up the GH-18 house-model project in the repo `aditya-pandey/interior-design` (folder `gh18-house/`). Read `gh18-house/HANDOVER.md` fully before doing anything; follow its nine rules (§0) and the change checklist (Appendix E). Work on branch `house-design-v1`; merge into `main` (the live site) only when I approve. Keep the main site `/` unchanged; Revision R1 lives at `/v1/`, with feet-inches and metres in brackets. Brainstorm or propose first for big changes, ask when something is ambiguous, and show me screenshots of what you changed. Pending from last time: my approval to merge F17 (the R1 drawing sheets) into `main`, and my choice between floor Option A (Italian marble) and Option B (1600 × 800 tiles).
 
 ---
 
