@@ -432,6 +432,12 @@ function showArt(url) {
 function lieDown(seat) {
   state.lying = { seat, from: { ...walker.camera.position }, foot: walker.foot };
   walker.active = false;
+  if (seat.eye) {                                            // the reading nook: sit and look out across the studio
+    camera.position.set(...seat.eye);
+    camera.rotation.set(0.0, Math.atan2(seat.look[0], seat.look[1]) + Math.PI, 0, 'YXZ');
+    flash('Curl up and read · E to get up');
+    return;
+  }
   camera.position.set(seat.x, seat.y + 0.42, seat.z - 0.55);
   // head turned to the sunset: the sun's bearing (x = -sin az, z = cos az), slightly above the horizon
   const az = THREE.MathUtils.degToRad(TIMES.sunset.az);

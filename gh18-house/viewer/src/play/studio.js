@@ -4,7 +4,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { STUDIO } from './site.js';
 
 // Her studio on the beach: a glass pavilion facing the sea (north) and the sunset (west).
-//   - east wall: a full library, a reading chair with a lamp
+//   - east wall: a round bookshelf nook with a cushioned seat (E to curl up with a book), a floor lamp
 //   - centre: a daybed looking out to sea; a radio on the credenza for the music
 //   - south wall and a free-standing partition: her paintings
 //   - west: a writing desk at the glass, an easel with a canvas in progress
@@ -135,6 +135,7 @@ export function buildStudio(M, pack) {
     fairy: new THREE.MeshStandardMaterial({ color: 0xfff4dd, emissive: 0xffcf8a, emissiveIntensity: 0, roughness: 0.4 }),
     leaf: new THREE.MeshStandardMaterial({ roughness: 0.7, vertexColors: true, side: THREE.DoubleSide }),
     paper: new THREE.MeshStandardMaterial({ roughness: 0.9, vertexColors: true }),
+    ply: new THREE.MeshStandardMaterial({ roughness: 0.55, vertexColors: true }),          // pale birch plywood
   };
 
   // ---- plinth, deck, steps, boardwalk
@@ -212,45 +213,83 @@ export function buildStudio(M, pack) {
   fairy.name = 'fairy_lights';
   group.add(fairy);
 
-  // ---- library: the east wall, floor to ceiling
-  const LB = { x0: X0 + T, x1: X0 + T + 0.38, z0: Z0 + 0.6, z1: Z1 - 0.7 };
-  const shelfY = [];
-  for (let y = F + 0.1; y < F + H - 0.25; y += 0.38) shelfY.push(y);
-  parts.box('wood', LB.x0, F, LB.z0 - 0.04, LB.x1, F + H - 0.05, LB.z0, 0xc49a6c);
-  parts.box('wood', LB.x0, F, LB.z1, LB.x1, F + H - 0.05, LB.z1 + 0.04, 0xc49a6c);
-  for (let z = LB.z0 + 1.2; z < LB.z1 - 0.2; z += 1.2) parts.box('wood', LB.x0, F, z - 0.02, LB.x1, F + H - 0.05, z + 0.02, 0xc49a6c);
-  for (const y of shelfY) parts.box('wood', LB.x0, y - 0.03, LB.z0, LB.x1, y, LB.z1, 0xc49a6c);
-  parts.box('wood', LB.x0, F + H - 0.08, LB.z0 - 0.04, LB.x1 + 0.02, F + H - 0.03, LB.z1 + 0.04, 0xb88c5e);
-  solid(LB.x0, LB.z0, LB.x1, LB.z1, F, F + H);
-  const SPINES = [0x7a2e2e, 0x1f3a5f, 0xc9a24a, 0x2f5d50, 0xe8e0cf, 0x2c4a2a, 0xa4532e, 0x1c1c1c, 0x8a8a8a, 0x5b3a6b, 0xd7c3a1, 0x3f6f8f, 0x9c2f45, 0xe0b46c, 0x435b3a];
+  // ---- reading nook: a round birch-ply bookshelf against the east wall with a cushioned seat inside,
+  // like the owner's reference. The ring stands in the YZ plane, its open front facing the room (+X).
+  const RN = { R: 1.2, band: 0.34, D: 0.5, x: X0 + T, z: 46.4 };
+  RN.y = F + RN.R;
+  const rIn = RN.R - RN.band;
+  const ply = 0xefdcbc, plyEdge = 0xe3caa2;
+  // ring pieces are built in a local frame (circle in XY, depth along +Z) and turned so +Z faces +X
+  const place = (g) => { g.rotateY(Math.PI / 2); g.translate(RN.x, RN.y, RN.z); return g; };
+  const annulus = (r0, r1, depth, z0 = 0) => {
+    const sh = new THREE.Shape(); sh.absarc(0, 0, r1, 0, Math.PI * 2, false);
+    const hole = new THREE.Path(); hole.absarc(0, 0, r0, 0, Math.PI * 2, true); sh.holes.push(hole);
+    const g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false, curveSegments: 72 });
+    g.translate(0, 0, z0);
+    return place(g);
+  };
+  parts.add('ply', annulus(RN.R - 0.026, RN.R, RN.D), ply);              // outer skin
+  parts.add('ply', annulus(rIn, rIn + 0.026, RN.D), ply);                // inner skin
+  parts.add('ply', annulus(rIn, RN.R, 0.018), plyEdge);                  // back
+  const NC = 16;
+  for (let k = 0; k < NC; k++) {                                          // radial dividers
+    const a = (k / NC) * Math.PI * 2 + Math.PI / NC;
+    const g = new THREE.BoxGeometry(RN.band, 0.022, RN.D);
+    g.translate((rIn + RN.R) / 2, 0, RN.D / 2);
+    g.rotateZ(a);
+    parts.add('ply', place(g), ply);
+  }
+  for (const sz of [-1, 1]) parts.box('ply', RN.x, F, RN.z + sz * 0.55 - 0.18, RN.x + RN.D, F + 0.14, RN.z + sz * 0.55 + 0.18, plyEdge);   // feet
+  // books in the cubbies: upright, a few stacked flat, a gap or two
+  const SPINES = [0x7a2e2e, 0x1f3a5f, 0xc9a24a, 0x2f5d50, 0xe8e0cf, 0x2c4a2a, 0xa4532e, 0x1c1c1c, 0x8a8a8a, 0x5b3a6b, 0xd7c3a1, 0x3f6f8f, 0x9c2f45, 0xe0b46c];
   const br = rng(808);
-  for (const y of shelfY) {
-    let z = LB.z0 + 0.03;
-    while (z < LB.z1 - 0.05) {
-      if (br() < 0.035) { z += 0.25 + br() * 0.3; continue; }              // a gap, or a small object
-      const t = 0.022 + br() * 0.035, h = 0.19 + br() * 0.13, dpt = 0.16 + br() * 0.07;
-      const lean = br() < 0.04;
-      const g = new THREE.BoxGeometry(dpt, h, t);
-      if (lean) { g.translate(0, h / 2, 0); g.rotateX(0.18); g.translate(0, -h / 2, 0); }
-      g.translate(LB.x0 + 0.02 + dpt / 2 + (0.36 - dpt - 0.02), y + h / 2, z + t / 2);
-      parts.add('paint', g, SPINES[Math.floor(br() * SPINES.length)]);
+  for (let k = 0; k < NC; k++) {
+    const a = ((k + 0.5) / NC) * Math.PI * 2 + Math.PI / NC;
+    const rc = (rIn + RN.R) / 2;
+    const cz = RN.z - Math.cos(a) * rc, cy = RN.y + Math.sin(a) * rc;     // local x maps to world -Z
+    const tight = Math.abs(Math.sin(2 * a));
+    const roll = br();
+    if (roll < 0.06) continue;                                          // an empty cubby
+    if (roll < 0.2) {                                                   // a small stack lying flat
+      let y = cy - 0.1;
+      for (let i = 0; i < 4; i++) {
+        const t = 0.025 + br() * 0.02;
+        parts.box('paint', RN.x + 0.22, y, cz - 0.1 + br() * 0.02, RN.x + 0.44, y + t, cz + 0.1 + br() * 0.02, SPINES[Math.floor(br() * SPINES.length)], false);
+        y += t;
+      }
+      continue;
+    }
+    const rowW = 0.38 - 0.13 * tight, maxH = 0.25 - 0.07 * tight;
+    let z = cz - rowW / 2;
+    while (z < cz + rowW / 2 - 0.02) {
+      const t = 0.022 + br() * 0.03, h = maxH * (0.72 + br() * 0.28), dpt = 0.15 + br() * 0.06;
+      parts.box('paint', RN.x + RN.D - 0.04 - dpt, cy - maxH / 2, z, RN.x + RN.D - 0.04, cy - maxH / 2 + h, z + t, SPINES[Math.floor(br() * SPINES.length)], false);
       z += t + 0.002;
-      if (z > Math.floor((z - LB.z0) / 1.2) * 1.2 + LB.z0 + 1.17 && br() < 0.9) z = Math.ceil((z - LB.z0) / 1.2) * 1.2 + LB.z0 + 0.03;
     }
   }
-  // a rolling library ladder
-  for (const dz of [-0.22, 0.22]) {
-    const g = new THREE.CylinderGeometry(0.02, 0.02, 3.0, 8);
-    g.rotateZ(-0.2); g.translate(LB.x1 + 0.32, F + 1.45, 46.6 + dz);
-    parts.add('brass', g, 0xb08d57);
-  }
-  for (let k = 0; k < 7; k++) {
-    const y = F + 0.3 + k * 0.38, x = LB.x1 + 0.6 - (y - F) * 0.2;
-    parts.box('wood', x - 0.03, y, 46.35, x + 0.03, y + 0.03, 46.85, 0xb88c5e);
-  }
+  // the seat: sage cushions inside the ring, a backrest leaning on the north side
+  const sage = 0x9dbcad;
+  parts.rbox('fabric', RN.x + 0.27, RN.y - rIn + 0.05, RN.z - 0.05, 0.46, 0.17, 0.98, 0.07, sage);       // on the inner skin's low point
+  // (rotation about X: + tips the top towards +Z, the north side of the ring)
+  const back = new RoundedBoxGeometry(0.44, 0.66, 0.17, 3, 0.07);
+  back.rotateX(0.55); back.translate(RN.x + 0.27, F + 0.86, RN.z + 0.52);
+  parts.add('fabric', back, sage);
+  const side = new RoundedBoxGeometry(0.42, 0.34, 0.15, 3, 0.06);
+  side.rotateX(-0.6); side.translate(RN.x + 0.27, F + 0.68, RN.z - 0.62);
+  parts.add('fabric', side, 0x8fb0a0);
+  solid(RN.x, RN.z - RN.R, RN.x + RN.D, RN.z + RN.R, F, F + 2.4);
+  interact.push({ kind: 'lounger', label: 'Curl up with a book', pos: [RN.x + 0.4, F + 0.9, RN.z], normal: [1, 0], r: 1.9,
+    seat: { x: RN.x + 0.3, z: RN.z, y: F + 0.55, eye: [RN.x + 0.32, F + 1.18, RN.z + 0.12], look: [1, -0.15], quiet: true } });
+  // sheepskin rug in front, a brass floor lamp and a little table for her chai
+  const rug = [];
+  const rr = rng(46);
+  const pts = [];
+  for (let i = 0; i < 40; i++) { const t = (i / 40) * Math.PI * 2, j = 1 + (rr() - 0.5) * 0.18; pts.push(new THREE.Vector2(Math.cos(t) * 0.78 * j, Math.sin(t) * 0.58 * j)); }
+  const rugGeo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 0.025, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.015, bevelSegments: 2 });
+  rugGeo.rotateX(-Math.PI / 2); rugGeo.translate(RN.x + 1.25, F + 0.005, RN.z);
+  rug.push(rugGeo);
+  parts.add('fabric', rug[0], 0xf3efe6);
 
-  // ---- reading corner (south-east): armchair, footstool, floor lamp, side table, rug
-  parts.cyl('fabric', 100.0, F + 0.01, 44.4, 1.15, 1.15, 0.015, 0xd9c7a8, 32);
   const chair = (cx, cz, rot, col) => {
     parts.rbox('fabric', cx, F + 0.1, cz, 0.85, 0.42, 0.8, 0.08, col, rot);
     const back = new RoundedBoxGeometry(0.85, 0.55, 0.18, 3, 0.07);
@@ -267,17 +306,16 @@ export function buildStudio(M, pack) {
     }
     solid(cx - 0.5, cz - 0.5, cx + 0.5, cz + 0.5, F, F + 1);
   };
-  chair(99.9, 44.2, -2.4, 0xb4683c);                     // terracotta velvet, angled to the sea
-  parts.rbox('fabric', 100.6, F, 45.15, 0.5, 0.36, 0.4, 0.06, 0xb4683c);
-  parts.cyl('metal', 99.1, F, 43.4, 0.16, 0.16, 0.03, 0x1d1d1d, 20);
-  parts.cyl('metal', 99.1, F, 43.4, 0.012, 0.012, 1.55, 0x1d1d1d, 8);
-  const shade = new THREE.CylinderGeometry(0.16, 0.24, 0.26, 20, 1, true);
-  shade.translate(99.1, F + 1.55, 43.4);
+  parts.cyl('metal', 98.85, F, 44.75, 0.16, 0.16, 0.03, 0x1d1d1d, 20);
+  parts.cyl('brass', 98.85, F, 44.75, 0.012, 0.012, 1.55, 0xb08d57, 8);
+  const shade = new THREE.CylinderGeometry(0.12, 0.2, 0.24, 20, 1, true);
+  shade.translate(98.95, F + 1.55, 44.85);
   parts.add('glow', shade, 0xf3e6cf);
-  parts.cyl('wood', 99.2, F, 45.1, 0.22, 0.22, 0.5, 0x8a6240, 18);
-  parts.box('paint', 99.08, F + 0.5, 45.0, 99.3, F + 0.54, 45.16, 0x1f3a5f);                 // a book on the side table
-  parts.cyl('paper', 99.32, F + 0.5, 45.2, 0.04, 0.035, 0.08, 0xf5f1e8, 12);                  // chai
-  solid(98.9, 43.1, 99.4, 43.7, F, F + 1.6);
+  parts.cyl('wood', 99.0, F, 48.15, 0.22, 0.22, 0.5, 0x8a6240, 18);
+  parts.box('paint', 98.88, F + 0.5, 48.05, 99.1, F + 0.54, 48.21, 0x1f3a5f);                 // a book on the side table
+  parts.cyl('paper', 99.12, F + 0.5, 48.25, 0.04, 0.035, 0.08, 0xf5f1e8, 12);                  // chai
+  solid(98.6, 44.45, 99.1, 45.05, F, F + 1.6);
+  solid(98.78, 47.93, 99.22, 48.37, F, F + 0.6);
 
   // ---- daybed facing the sea, coffee table, big rug
   parts.box('fabric', 101.6, F, 46.0, 105.4, F + 0.012, 49.6, 0xcfc3b0);

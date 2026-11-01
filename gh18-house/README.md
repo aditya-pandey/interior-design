@@ -96,7 +96,7 @@ python3 film/post.py ../renders/film/GH-18_film.mp4       # edit, grade, titles,
 
 ## By the sea (`/play/`, work in progress on branch `play-v1`)
 
-A free-roam page: GH-18 alone on an imagined coast. Drive the Baleno along a ~3 km coastal highway loop, get out and walk, and spend time in her glass studio on the beach (library, her paintings and poems, a daybed facing the sea, loungers for the sunset, her music). Not linked from the tour, and `noindex`.
+A free-roam page: GH-18 alone on an imagined coast. Drive the Baleno along a ~3 km coastal highway loop, get out and walk, and spend time in her glass studio on the beach (a round bookshelf reading nook, her paintings and poems, a daybed facing the sea, loungers for the sunset, her music). Not linked from the tour, and `noindex`.
 
 - **Controls:** W / S drive, brake and reverse; A / D steer; Space handbrake; C camera (chase / driver's seat / high); F get out or in; E read, look, play music, lie down; Shift walk faster; drag to look; P play / pause music, N next; T time of day; G go to the studio; R back home; L lights; H horn; M sound. Phones get on-screen steering and pedals (on foot: Gas walks, arrows turn).
 - **Code:** `viewer/src/play/`: `site.js` (layout), `beach.js` (land, sand, sea, highway, palms, lamps, ground model), `studio.js` (her studio), `vehicle.js` (car physics), `carmodel.js` (the Baleno with split wheels, a turning steering wheel, lamps, suspension), `collide.js` (2D collisions), `audio.js` (synthesised engine, road, wind, tyres, surf), `music.js` (YouTube player for her songs), `main.js` (everything else).
