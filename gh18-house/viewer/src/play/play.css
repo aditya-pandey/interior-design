@@ -1,0 +1,61 @@
+:root { --ink: #f6f1e8; --panel: rgba(24, 21, 18, 0.62); --line: rgba(255, 255, 255, 0.14); --accent: #e0a35a; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #1d1a17; color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-user-select: none; user-select: none; touch-action: none; }
+#app canvas { display: block; }
+#loading { position: fixed; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: #1d1a17; z-index: 30; }
+#loading b { font-size: 28px; letter-spacing: 0.08em; }
+#loading span { opacity: 0.7; }
+#start { position: fixed; inset: 0; display: grid; place-items: center; background: linear-gradient(180deg, rgba(20, 16, 12, 0.15), rgba(20, 16, 12, 0.7)); z-index: 20; padding: 16px; }
+#start[hidden], #hud[hidden] { display: none; }
+#start .card { max-width: 460px; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+#start h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: 0.04em; }
+#start h1 small { font-weight: 400; opacity: 0.7; margin-left: 6px; }
+#start p { margin: 0 0 14px; line-height: 1.45; opacity: 0.9; }
+#go { font: inherit; font-weight: 600; font-size: 16px; padding: 12px 20px; border-radius: 999px; border: 0; background: var(--accent); color: #2a1b0c; cursor: pointer; width: 100%; }
+#go:hover { filter: brightness(1.08); }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-top: 16px; font-size: 13px; opacity: 0.85; }
+.keys.touch { display: none; }
+body.touch .keys.desktop { display: none; }
+body.touch .keys.touch { display: block; }
+kbd { display: inline-block; min-width: 22px; padding: 1px 5px; margin-right: 3px; border-radius: 5px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.08); font: 600 12px Inter, sans-serif; text-align: center; }
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#hud button { pointer-events: auto; font: 600 13px Inter, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 13px; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#hud button.on { background: var(--accent); color: #2a1b0c; }
+#bar { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 250px; display: flex; flex-wrap: wrap; gap: 6px; }
+#map { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; width: 200px; height: 200px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); }
+#speedo { position: absolute; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); text-align: right; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+#speedo b { display: block; font-size: 54px; line-height: 1; font-variant-numeric: tabular-nums; }
+#speedo span { font-size: 13px; opacity: 0.85; margin-right: 8px; }
+#speedo i { font-style: normal; font-weight: 700; font-size: 15px; padding: 2px 8px; border-radius: 6px; background: var(--panel); }
+#credit { position: absolute; left: 12px; bottom: max(8px, env(safe-area-inset-bottom)); font-size: 10.5px; opacity: 0.7; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+#touch { display: none; }
+body.touch #touch { display: block; }
+body.touch #speedo { bottom: 150px; }
+body.touch #credit { display: none; }
+#touch .steer, #touch .pedals { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); display: flex; gap: 12px; }
+#touch .steer { left: 16px; }
+#touch .pedals { right: 16px; }
+#touch button { width: 84px; height: 84px; border-radius: 22px; font-size: 22px; touch-action: none; }
+#touch .pedals button { font-size: 15px; }
+#touch .pedals [data-k="gas"] { height: 110px; }
+@media (max-width: 640px) {
+  #bar { right: 12px; top: auto; bottom: 130px; justify-content: center; }
+  body.touch #bar { bottom: 124px; }
+  #map { width: 120px; height: 120px; }
+  #hud button { padding: 7px 10px; font-size: 12px; }
+  body.touch #speedo { bottom: auto; top: 140px; right: 14px; }
+  #speedo b { font-size: 40px; }
+}
+/* wide screens: the start card sits to the left so the opening shot of the car stays visible */
+@media (min-width: 900px) { #start { justify-items: start; padding-left: 6vw; } }
+/* phones held sideways: smaller map, speed under it, clear of the pedals */
+@media (pointer: coarse) and (max-height: 500px) {
+  #map { width: 104px; height: 104px; }
+  body.touch #speedo { top: 124px; bottom: auto; right: 14px; }
+  #speedo b { font-size: 34px; }
+  #bar { right: 130px; }
+}

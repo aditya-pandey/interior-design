@@ -94,6 +94,15 @@ python3 film/post.py ../renders/film/GH-18_film.mp4       # edit, grade, titles,
 - **Score:** `film/score.py` synthesises the score.
 - **Context:** the neighbourhood (flanking houses, street, trees, lamps) appears only in the film view (`?cinema`). It is scenery, not part of `house.json`.
 
+## Drive (`/play/`, work in progress on branch `play-v1`)
+
+A free-roam page: drive the Baleno out of GH-18's parking and around a generated Celebrity Homes colony (roads, row houses, a park with a chhatri, street trees and lamps, speed breakers, the colony gate and the main road outside). Not linked from the tour, and `noindex`.
+
+- **Controls:** W / S or arrows (S brakes, then reverses), A / D steer, Space handbrake, C camera (chase / driver's seat / high), L lights, T time of day (evening, dusk, night, day), H horn, R back home, M sound. Phones get on-screen steering and pedals; gamepads work too.
+- **Code:** `viewer/src/play/`, with `world.js` (colony generator, colliders), `vehicle.js` (car physics: bicycle model with tyre grip, automatic gearbox), `carmodel.js` (the Baleno with split, spinning and steering wheels, lamps, suspension), `collide.js` (2D separating-axis collisions), `audio.js` (engine, horn and tyres synthesised with Web Audio) and `main.js` (scene, time of day, cameras, HUD, minimap, `window.play` test API).
+- **Build:** a separate Vite config (`vite.play.config.js`), run after the tour's build by `npm run build`. The tour's own output is unchanged (byte-identical). Dev server: `npm run dev:play`.
+- **Test:** `npm run build && node scripts/play_shots.mjs [outDir]` drives a fixed route headless and saves screenshots.
+
 ## Versions
 
 | Version | Data | Plans | Site |

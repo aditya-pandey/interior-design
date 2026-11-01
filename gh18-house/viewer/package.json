@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build -c vite.play.config.js",
+    "dev:play": "vite -c vite.play.config.js --open /play/",
+    "play:shots": "node scripts/play_shots.mjs",
     "preview": "vite preview",
     "shots": "node scripts/shots.mjs",
     "film": "node film/render.mjs gpu && python3 film/post.py ../renders/film/GH-18_film.mp4"

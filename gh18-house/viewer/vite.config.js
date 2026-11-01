@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 // so the shared model doesn't say whose house it is or where it is.
 const PUBLIC = process.env.PUBLIC_BUILD === '1';
 
-const stripPrivate = {
+export const stripPrivate = {   // also used by vite.play.config.js
   name: 'strip-private-house-data',
   enforce: 'pre',
   transform(code, id) {

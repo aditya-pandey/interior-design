@@ -8,6 +8,7 @@
 - `house-design-v1` is the working branch. Changes are made there and merged into `main` to go live.
 - The first Claude session worked on an auto-named branch, `claude/zen-shannon-ilvm07`, which was then the default. It was renamed to `house-design-v1` and `main` was created from it. The owner has since deleted the old branch (and with it an unneeded Imgbot pull request).
 - **What is where (31 Oct 2026):** `main` has everything up to F16 (materials schedule + Materials view, with the car-colour fix). `house-design-v1` is one step ahead: **F17**, the R1 issue of the architect's drawing. F17 waits for the owner's approval before it is merged into `main`.
+- `play-v1` (branched from `house-design-v1`, 1 Nov 2026): the drive page `/play/` (§6.8), in progress. Not merged.
 **Live sites:**
 - GitHub Pages: https://aditya-pandey.github.io/interior-design/
 - Netlify, from the same repository's `main` branch (production branch set to `main`). Netlify sometimes lags behind GitHub Pages.
@@ -557,6 +558,20 @@ It runs three sections and writes `plans/r1/services_report.txt`.
 - **Post:** `post.py` does the edit, grade, letterbox titles, score (`score.py` synthesises it) and the encode.
 - **Context:** `?cinema` adds a neighbourhood (`context.js`); it is scenery only.
 - **Output:** 54 s, 1920 × 1080 at 24 fps, 2.39:1. The mp4 is not committed.
+
+### 6.8 Drive (`/play/`, branch `play-v1`, in progress)
+
+- **What:** a free-roam page. The R1 house (built with the tour's own `buildHouse`) stands in a generated colony; the user drives the Baleno out of the parking and around. Started on 1 Nov 2026 at the user's request ("Drive first"). Not merged to `main`; not linked from the tour; `noindex`.
+- **Build:** `vite.play.config.js` is a second, separate build (`npm run build` runs both). It writes `dist/play/index.html` plus its own chunks and relies on the tour's build for textures and models. The tour's output was verified byte-identical before and after. `play/index.html` carries `<base href="../">`, so runtime fetches (`textures/`, `models/`) resolve from the site root, as on the tour's extra pages.
+- **World (`src/play/world.js`):** a 3 × 3 grid of blocks, each two back-to-back rows of ten 9.381 m plots (GH-18 is plot 0 of the centre block, front row). The block across the road from GH-18 is a park. Ring of colony roads (7 m, with 1.8 m verges), a boundary wall, the gate (sign, boom barrier, guard cabin) at X = 0 on the north wall, and a main road with a median and shops beyond it. Houses are procedural (seeded): plinth, 2–3 floors or stilt + 3, slab bands, windows (some lit after dark), balconies, stone panels, mumty and black water tanks, front yard with gate. Trees (neem, ashoka, gulmohar, shrubs) and lamps are instanced. Every plot is one solid collider (gates closed). It is scenery, not design: replace it with the real colony (e.g. OpenStreetMap) later without touching the car.
+- **Car (`vehicle.js`, `carmodel.js`):** planar bicycle model with slip angles, a grip limit, weight transfer, handbrake, automatic 5-speed gearbox, and a low-speed blend to rolling without slip (which turns about the rear axle; zeroing the sideways velocity there made the car stall in tight turns). Tuned to a 920 kg Baleno: 0–100 km/h in about 10 s. The glb's four wheels are one mesh; they are split by quadrant into four wheels that spin and steer. Like the tour, the 3.79 m model is stretched to 3.99 m along its length only, and the wheels are un-stretched so they stay round. Head, tail and reverse lamps have their own materials.
+- **Collisions (`collide.js`):** the car's box against convex polygons and circles in a 6 m grid (separating axes), push out, small bounce. The house contributes its ground-floor colliders from `buildHouse` (minus the plan's stand-in car).
+- **Look:** sky + PMREM environment from the same sky; sun shadows follow the car. Times: evening (default, sun WSW at 9°), dusk, night (moonlight + a pool of 6 lamp lights that follow the car), day. Lights are physically based: the sun is ~3, so lamps are ~18 cd and headlights ~220 cd. Brighter values wash the night out.
+- **Cameras:** an opening shot from the street at GH-18 and the car; chase (keeps out of walls and tree canopies), driver's seat (right-hand drive), high. Drag to look around; it eases back when driving.
+- **Sound (`audio.js`):** synthesised, so nothing to license: 4-cylinder engine note (rpm / 30 Hz), tyre squeal from slip, two-tone horn, thuds for speed breakers and knocks. It starts on the "Start the engine" click (browser rule).
+- **Test API (`window.play`):** `ready`, `setTime(name)`, `camera(mode)`, `teleport(x, z, yawDeg)`, `home()`, `look(yaw, pitch, zoom)`, `drive(seconds, {throttle, brake, steer, handbrake})` (fixed-step, deterministic), `render()`, `state()`, `hits()`, `info()`. `scripts/play_shots.mjs` drives a route and saves screenshots. In headless SwiftShader use `?headless` (no real-time loop); the normal page renders too slowly there to click through.
+- **Numbers (desktop):** about 250 draw calls and 0.73 M triangles.
+- **Next, if wanted:** a character on foot (get in / out of the car), the real colony layout, nicer parked cars, radio music in the car.
 
 ---
 
