@@ -62,10 +62,11 @@ body.touch #credit { display: none; }
 /* ---- on foot, prompts, overlays, music */
 body.on-foot #speedo { display: none; }
 #hud button:disabled { opacity: 0.4; }
-#prompt { position: absolute; left: 50%; bottom: max(28px, env(safe-area-inset-bottom)); transform: translateX(-50%); font-size: 15px !important; padding: 10px 18px !important; }
+#prompt { position: fixed; z-index: 14; pointer-events: auto; font: 600 15px Inter, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; backdrop-filter: blur(8px); left: 50%; bottom: max(28px, env(safe-area-inset-bottom)); transform: translateX(-50%); font-size: 15px !important; padding: 10px 18px !important; }
 body.touch #prompt { bottom: 140px; }
+#prompt[hidden], #toast[hidden] { display: none; }
 #prompt kbd { margin-right: 6px; }
-#toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; backdrop-filter: blur(8px); }
+#toast { position: fixed; z-index: 14; color: var(--ink); left: 50%; top: 22%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; backdrop-filter: blur(8px); }
 #overlay { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(15, 12, 10, 0.72); backdrop-filter: blur(6px); }
 #overlay[hidden] { display: none; }
 #overlay .content { position: relative; max-width: min(720px, 100%); max-height: 100%; overflow: auto; }
@@ -91,3 +92,45 @@ body.touch #prompt { bottom: 140px; }
 .m-ctrl input { flex: 1; accent-color: var(--accent); }
 body.touch #music { bottom: 128px; }
 @media (max-width: 640px) { #music { left: 50%; transform: translateX(-50%); bottom: auto; top: 70px; } }
+/* ---- the home tour panel (the opening view) */
+#tour { position: fixed; left: 12px; top: max(12px, env(safe-area-inset-top)); z-index: 12; width: 270px; max-height: calc(100vh - 24px); overflow: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+#tour[hidden] { display: none; }
+.t-head { display: flex; align-items: baseline; gap: 8px; }
+.t-head b { font-size: 20px; letter-spacing: 0.04em; }
+.t-head span { flex: 1; font-size: 12px; opacity: 0.75; }
+.t-menu { font: 600 14px Inter, sans-serif; color: var(--ink); background: none; border: 0; cursor: pointer; }
+#tour.collapsed .t-body { display: none; }
+#tour h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; margin: 14px 0 6px; }
+.t-row, .t-rooms { display: flex; flex-wrap: wrap; gap: 6px; }
+#tour button[data-view], #tour button[data-floor], #tour button[data-time], #tour button[data-room] {
+  font: 500 12.5px Inter, sans-serif; color: var(--ink); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+#tour button.on { background: var(--accent); color: #2a1b0c; }
+.t-walk { width: 100%; margin-top: 16px; font: 600 14px Inter, sans-serif; padding: 11px; border-radius: 999px; border: 0; background: var(--accent); color: #2a1b0c; cursor: pointer; }
+.t-hint { font-size: 11.5px; opacity: 0.6; margin: 10px 0 0; line-height: 1.4; }
+body.touring #prompt { display: none; }
+@media (max-width: 640px) { #tour { width: auto; right: 12px; } }
+/* ---- birthday banner, the message card */
+#bday { position: fixed; left: 50%; top: 16%; transform: translate(-50%, -10px); z-index: 30; text-align: center; opacity: 0; transition: opacity 1.2s ease, transform 1.2s ease; pointer-events: none;
+  font-family: Georgia, 'Times New Roman', serif; color: #fff7ea; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55); }
+#bday.show { opacity: 1; transform: translate(-50%, 0); }
+#bday b { display: block; font-style: italic; font-weight: 600; font-size: clamp(30px, 6vw, 56px); }
+#bday span { font-size: 28px; color: #ffb0b9; }
+#msg { position: fixed; left: 50%; top: 12%; transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 12px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px; padding: 10px 12px 10px 18px; font-family: Georgia, serif; font-style: italic; font-size: 16px; backdrop-filter: blur(8px); }
+#msg[hidden] { display: none; }
+#msg button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.1); color: var(--ink); cursor: pointer; }
+/* ---- the photo album */
+#overlay.album-wrap .content { width: min(760px, 100%); }
+.album { background: #f6f1e6; color: #3a2a1c; border-radius: 8px; padding: 22px 22px 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55); }
+.album .cover { height: min(62vh, 520px); display: grid; place-content: center; text-align: center; background: #8fae9f; color: #e9cb8a; border-radius: 6px; border: 3px double #d9b46a; }
+.album .cover h2 { font: italic 600 clamp(30px, 6vw, 52px) Georgia, serif; margin: 0; }
+.album .cover p { margin: 6px 0 0; font-size: 22px; }
+.album .cover .hint { font: 13px Inter, sans-serif; color: #f4ecd8; opacity: 0.8; margin-top: 30px; }
+.album figure { margin: 0; text-align: center; }
+.album img { max-width: 100%; max-height: min(62vh, 520px); border: 10px solid #fff; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25); transform: rotate(-0.6deg); }
+.album figcaption { font: italic 15px Georgia, serif; margin-top: 8px; min-height: 18px; }
+.album nav { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font: 13px Inter, sans-serif; color: #7a6448; }
+.album nav button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #d8ccb8; background: #fff; font-size: 22px; color: #3a2a1c; cursor: pointer; }
+.album nav button:disabled { opacity: 0.3; }
+#overlay.album-wrap .close { background: rgba(58, 42, 28, 0.15); color: #3a2a1c; }

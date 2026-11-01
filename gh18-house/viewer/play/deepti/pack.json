@@ -210,5 +210,40 @@
    "w": 581,
    "h": 185
   }
- ]
+ ],
+ "album": {
+  "title": "Deepti's Corner",
+  "photos": [
+   {
+    "file": "photos/photo_01.jpg",
+    "w": 1254,
+    "h": 1254
+   },
+   {
+    "file": "photos/photo_02.jpg",
+    "w": 1280,
+    "h": 853
+   },
+   {
+    "file": "photos/photo_03.jpg",
+    "w": 1050,
+    "h": 1400
+   },
+   {
+    "file": "photos/photo_04.jpg",
+    "w": 1050,
+    "h": 1400
+   },
+   {
+    "file": "photos/photo_05.jpg",
+    "w": 1050,
+    "h": 1400
+   }
+  ]
+ },
+ "studioMessage": null,
+ "birthday": {
+  "month": 11,
+  "day": 11
+ }
 }

@@ -326,7 +326,19 @@ export function buildStudio(M, pack) {
   solid(102.35, 46.4, 104.65, 47.4, F, F + 1);
   parts.rbox('wood', 103.5, F + 0.3, 48.4, 1.2, 0.05, 0.65, 0.02, 0xb88c5e);
   for (const [lx, lz] of [[-0.5, -0.25], [0.5, -0.25], [-0.5, 0.25], [0.5, 0.25]]) parts.cyl('wood', 103.5 + lx, F, 48.4 + lz, 0.025, 0.025, 0.3, 0x8a6240, 8);
-  parts.cyl('paper', 103.2, F + 0.35, 48.35, 0.09, 0.07, 0.12, 0xe8e1d4, 16);                // a bowl of shells
+  parts.cyl('paper', 103.05, F + 0.35, 48.3, 0.09, 0.07, 0.12, 0xe8e1d4, 16);               // a bowl of shells
+  // her photo album, "Deepti's Corner", on the coffee table
+  if (pack && pack.album && pack.album.photos?.length) {
+    const cover = new THREE.MeshStandardMaterial({ map: albumCover(pack.album.title || "Deepti's Corner"), roughness: 0.8 });
+    const linen = new THREE.MeshStandardMaterial({ color: 0x8fae9f, roughness: 0.9 });
+    const pages = new THREE.MeshStandardMaterial({ color: 0xf4efe4, roughness: 0.9 });
+    const book = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.045, 0.27), [pages, linen, cover, linen, pages, pages]);
+    book.position.set(103.85, F + 0.35 + 0.0225, 48.45);
+    book.rotation.y = 0.18;
+    book.castShadow = true;
+    group.add(book);
+    interact.push({ kind: 'album', label: `Open “${pack.album.title || "Deepti's Corner"}”`, pos: [103.85, F + 0.4, 48.45], r: 1.7 });
+  }
   solid(102.9, 48.07, 104.1, 48.73, F, F + 0.4);
 
   // ---- credenza on the south wall with the radio
@@ -576,4 +588,25 @@ function fitText(g, s, x, y, maxW) {
   const w = g.measureText(s).width;
   if (w <= maxW) { g.fillText(s, x, y); return; }
   g.save(); g.translate(x, y); g.scale(maxW / w, 1); g.fillText(s, 0, 0); g.restore();
+}
+
+// the album's cover: sage linen, a thin gold border, the title in gold
+function albumCover(title) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 408;
+  const g = c.getContext('2d');
+  g.fillStyle = '#8fae9f'; g.fillRect(0, 0, 512, 408);
+  const r = rng(9);
+  for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(255,255,255,${r() * 0.06})`; g.fillRect(r() * 512, r() * 408, 2, 1); g.fillStyle = `rgba(0,0,0,${r() * 0.05})`; g.fillRect(r() * 512, r() * 408, 1, 2); }
+  g.strokeStyle = '#d9b46a'; g.lineWidth = 3; g.strokeRect(26, 26, 460, 356);
+  g.fillStyle = '#e3c27d'; g.textAlign = 'center';
+  g.font = 'italic 600 54px Georgia, serif';
+  g.fillText(title, 256, 220);
+  g.font = '22px Georgia, serif';
+  g.fillText('❦', 256, 268);
+  // the book lies with its top face up and its spine to the left: the texture is seen from above
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
 }

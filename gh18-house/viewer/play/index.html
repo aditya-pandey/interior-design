@@ -6,32 +6,22 @@
   <script>if (!location.pathname.endsWith('/')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
   <base href="../" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>GH-18 · By the sea</title>
+  <title>GH-18 · 3D Home Tour</title>
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1d1a17" />
   <link rel="icon" href="site/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
   <div id="app"></div>
-  <div id="loading"><b>GH-18</b><span>Building the coast…</span></div>
-  <div id="start" hidden>
-    <div class="card">
-      <h1>GH-18 <small>by the sea</small></h1>
-      <p>The Baleno is parked at home. Take the coast road, or walk along the beach to the glass studio on the sand: her paintings, her poems, her books and her music.</p>
-      <button id="go">Start</button>
-      <div class="keys desktop">
-        <span><kbd>W</kbd><kbd>S</kbd> drive / brake, reverse</span><span><kbd>A</kbd><kbd>D</kbd> steer</span>
-        <span><kbd>Space</kbd> handbrake</span><span><kbd>C</kbd> camera</span>
-        <span><kbd>F</kbd> get out / in</span><span><kbd>E</kbd> read, look, sit</span>
-        <span><kbd>Shift</kbd> walk faster</span><span>drag to look around</span>
-        <span><kbd>P</kbd> music · <kbd>N</kbd> next</span><span><kbd>T</kbd> time of day</span>
-        <span><kbd>G</kbd> go to the studio</span><span><kbd>R</kbd> back home</span>
-      </div>
-      <p class="keys touch">Steer with the arrows, pedals on the right. Out of the car, Gas walks and the arrows turn.</p>
-    </div>
-  </div>
+  <div id="loading"><b>GH-18</b><span>Building the house…</span></div>
+  <aside id="tour" hidden></aside>
+  <button id="prompt" hidden></button>
+  <div id="toast" hidden></div>
+  <div id="bday" hidden><b>Happy birthday, Deepti</b><span>♥</span></div>
+  <div id="msg" hidden><span>A message for you ♥</span><button id="msg-stop" aria-label="Stop">■</button></div>
   <div id="hud" hidden>
     <div id="bar">
+      <button data-act="tour" title="Back to the home tour">Home tour</button>
       <button data-act="cam" title="Camera (C)">Camera</button>
       <button data-act="foot" title="Get out / in (F)">Get out (F)</button>
       <button data-act="lights" title="Headlights (L)">Lights</button>
@@ -44,8 +34,6 @@
     </div>
     <canvas id="map" width="220" height="220"></canvas>
     <div id="speedo"><b id="kmh">0</b><span>km/h</span><i id="gear">D</i></div>
-    <button id="prompt" hidden></button>
-    <div id="toast" hidden></div>
     <div id="touch">
       <div class="steer"><button data-k="left">◀</button><button data-k="right">▶</button></div>
       <div class="pedals"><button data-k="brake">Brake</button><button data-k="gas">Gas</button></div>
