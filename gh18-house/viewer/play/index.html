@@ -6,22 +6,32 @@
   <script>if (!location.pathname.endsWith('/')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
   <base href="../" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>GH-18 · 3D Home Tour</title>
+  <title>GH-18 · 3D Home Tour · R1</title>
+  <script>window.GH18_REV = 'r1';</script>
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#1d1a17" />
+  <style>
+    /* shown over the tour, before the drive's own styles load */
+    #play-prompt { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 50; font: 600 15px Inter, system-ui, sans-serif;
+      color: #f6f1e8; background: rgba(24, 21, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 11px 20px; cursor: pointer; }
+    #play-prompt kbd { display: inline-block; min-width: 22px; padding: 1px 6px; margin-right: 6px; border-radius: 5px; border: 1px solid rgba(255,255,255,.3); font: 600 12px Inter, sans-serif; }
+    #play-prompt[hidden], #play-loading[hidden] { display: none; }
+    #play-loading { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: #1d1a17; color: #f6f1e8; font: 32px Georgia, serif; }
+  </style>
   <link rel="icon" href="site/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <div id="app"></div>
-  <div id="loading"><b>GH-18</b><span>Building the house…</span></div>
-  <aside id="tour" hidden></aside>
+  <!--TOUR-->
+  <button id="play-prompt" hidden><kbd>F</kbd> Get in the car</button>
+  <div id="play-app"></div>
+  <div id="play-loading" hidden><span>♪</span></div>
   <button id="prompt" hidden></button>
   <div id="toast" hidden></div>
   <div id="bday" hidden><b>Happy birthday, Deepti</b><span>♥</span></div>
   <div id="msg" hidden><span>A message for you ♥</span><button id="msg-stop" aria-label="Stop">■</button></div>
   <div id="hud" hidden>
     <div id="bar">
-      <button data-act="tour" title="Back to the home tour">Home tour</button>
+      <button data-act="tour" title="Back to the home tour (starts over)">Home tour</button>
       <button data-act="cam" title="Camera (C)">Camera</button>
       <button data-act="foot" title="Get out / in (F)">Get out (F)</button>
       <button data-act="lights" title="Headlights (L)">Lights</button>
@@ -47,6 +57,6 @@
       <input id="m-vol" type="range" min="0" max="100" value="70" aria-label="Volume" /></div>
   </aside>
   <div id="overlay" hidden><div class="content"></div></div>
-  <script type="module" src="/src/play/main.js"></script>
+  <script type="module" src="/src/play/entry.js"></script>
 </body>
 </html>

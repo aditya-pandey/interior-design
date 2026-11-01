@@ -16,6 +16,18 @@ import { stripPrivate } from './vite.config.js';
 // only for private builds: the public site build (PUBLIC_BUILD=1, as on GitHub Pages and Netlify)
 // leaves it out unless PLAY_PERSONAL=1 is set on purpose. Without it the studio's frames hang empty.
 const PERSONAL = process.env.PUBLIC_BUILD !== '1' || process.env.PLAY_PERSONAL === '1';
+
+// The page opens with the home tour itself (src/main.js, as on /v1/): its markup is taken from the tour's
+// index.html (everything in <body> except its script tag) so the two never drift apart.
+const tourMarkup = {
+  name: 'tour-markup',
+  transformIndexHtml(html) {
+    if (!html.includes('<!--TOUR-->')) return html;
+    const src = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf8');
+    const body = src.slice(src.indexOf('<body>') + 6, src.indexOf('</body>')).replace(/<script[^>]*src="\/src\/main\.js"[^>]*><\/script>/, '');
+    return html.replace('<!--TOUR-->', body.trim());
+  },
+};
 const playPage = {
   name: 'play-page',
   apply: 'build',
@@ -33,7 +45,7 @@ const playPage = {
 export default defineConfig(({ command }) => ({
   base: './',
   publicDir: command === 'serve' ? '../assets' : false,
-  plugins: [stripPrivate, playPage],
+  plugins: [stripPrivate, tourMarkup, playPage],
   server: { port: 5174, fs: { allow: ['..'] } },
   build: {
     outDir: 'dist',

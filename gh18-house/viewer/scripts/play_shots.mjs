@@ -21,6 +21,17 @@ try {
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[page]', m.text()); });
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
   await page.goto(`http://localhost:${PORT}/play/?headless&birthday`);
+  // 1) the home tour itself (as on /v1/), then walking up to the car in its walk mode
+  await page.waitForFunction(() => window.viewer && window.viewer.ready, null, { timeout: 180000 });
+  await page.evaluate(() => window.viewer.settle(3));
+  await page.screenshot({ path: path.join(out, '00_tour.png') });
+  await page.evaluate(() => { window.viewer.walkPose(6900, 24300, 0, -16, -6); window.viewer.settle(2); });
+  await page.waitForTimeout(600);
+  await page.evaluate(() => window.viewer.settle(1));
+  await page.screenshot({ path: path.join(out, '00b_car_prompt.png') });
+  console.log('prompt shown:', await page.evaluate(() => !document.getElementById('play-prompt').hidden));
+  // 2) get in: the drive takes over
+  await page.evaluate(() => window.playEntry.start());
   await page.waitForFunction(() => window.play && window.play.ready, null, { timeout: 180000 });
   console.log('info', JSON.stringify(await page.evaluate(() => window.play.info())));
   const shot = async (name, fn) => {
@@ -30,11 +41,7 @@ try {
   };
   const only = process.env.SHOTS ? process.env.SHOTS.split(',') : null;
   const plan = [
-    ['01_tour', () => { play.tour('overview'); return play.state(); }],
-    ['02_room', () => { play.room('Family Lounge'); return play.state(); }],
-    ['03_walk', () => { play.tour('overview'); return play.walk(); }],
-    ['04_car', () => play.stroll(1.6, 'KeyW', 113)],
-    ['05_in_car', () => { play.enter(); play.render(); return play.state(); }],
+    ['05_in_car', () => { play.render(); return play.state(); }],
     ['06_coast', () => { play.drive(1.5, { throttle: 0.5 }); play.drive(2.6, { throttle: 0.3, steer: 1 }); play.drive(1.0, { throttle: 0.6, steer: -0.2 }); return play.drive(4, { throttle: 0.8 }); }],
     ['07_driver', () => { play.camera('driver'); return play.drive(0.6, { throttle: 0.5, steer: 0.6 }); }],
     ['08_arrive', () => { play.camera('chase'); play.teleport(91, 36.5, 0); return play.exit(); }],
