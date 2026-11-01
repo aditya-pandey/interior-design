@@ -32,6 +32,14 @@ export class VehicleSim {
     this.impact = 0;                       // last collision speed, m/s (sound)
     this.reversing = false;
     this.wheelSpin = 0;
+    this.shiftT = 0;                       // > 0 while a gear change cuts the drive
+    this.surface = 'road';
+    this.savePrev();
+  }
+
+  // the state at the start of the last step, so the renderer can draw between steps
+  savePrev() {
+    this.px = this.x; this.pz = this.z; this.pyaw = this.yaw; this.psteer = this.steer; this.pspin = this.wheelSpin;
   }
 
   get forward() { return [Math.sin(this.yaw), Math.cos(this.yaw)]; }
@@ -47,8 +55,12 @@ export class VehicleSim {
   }
 
   // input: {throttle 0..1, brake 0..1, steer -1..1 (+ = left), handbrake bool}
-  step(dt, input, world) {
+  // surfaceAt(x, z) -> 'road' | 'sand' | 'water' | 'ground' changes grip and rolling drag
+  step(dt, input, world, surfaceAt) {
     const s = this.s;
+    this.savePrev();
+    this.surface = surfaceAt ? surfaceAt(this.x, this.z) : 'road';
+    const SURF = { road: [1, 0], ground: [0.9, 260], sand: [0.72, 900], water: [0.6, 2600] }[this.surface] || [1, 0];
     const [fx, fz] = this.forward, [lx, lz] = this.left;
     let u = this.vx * fx + this.vz * fz;            // forward speed
     let v = this.vx * lx + this.vz * lz;            // leftward speed
@@ -79,18 +91,19 @@ export class VehicleSim {
     const wheelRpm = (Math.abs(u) / s.wheelRadius) * 60 / (2 * Math.PI);
     this.rpm = Math.max(s.idle, Math.min(s.redline, wheelRpm * ratio * s.final));
     if (!this.reversing) {
-      if (this.rpm > 5300 && this.gear < s.gears.length) this.gear++;
+      if (this.rpm > 5300 && this.gear < s.gears.length && input.throttle > 0.05) { this.gear++; this.shiftT = 0.22; }
       else if (this.gear > 1 && wheelRpm * s.gears[this.gear - 2] * s.final < 3000) this.gear--;
     } else this.gear = 1;
     let Fx = 0;
-    if (drive !== 0) {
+    this.shiftT = Math.max(0, this.shiftT - dt);
+    if (drive !== 0 && this.shiftT <= 0.05) {
       const f = Math.min(s.maxAccelForce, s.power / Math.max(Math.abs(u), 2));
       Fx += drive * f * (this.reversing && Math.abs(u) > s.maxReverse ? 0 : 1);
       if (!this.reversing && this.rpm >= s.redline - 10 && this.gear === s.gears.length) Fx = 0;
     }
     const sgn = Math.abs(u) > 0.05 ? Math.sign(u) : 0;
     const Fb = brake * s.brakeForce + (input.handbrake ? s.handbrakeForce : 0);
-    Fx -= sgn * (s.rollResist + s.drag * u * u);
+    Fx -= sgn * (s.rollResist + SURF[1] + s.drag * u * u);
     // braking can't push the car backwards: clamp it to what stops the car this step
     const stopF = Math.abs(u) * s.mass / dt;
     Fx -= sgn * Math.min(Fb, stopF);
@@ -104,10 +117,11 @@ export class VehicleSim {
     const au = Math.max(Math.abs(u), 0.5);
     const af = Math.atan2(v + this.a * this.r, au) - d * Math.sign(u || 1);
     const ar = Math.atan2(v - this.b * this.r, au);
-    const muR = input.handbrake ? s.muHandbrake : s.mu;
-    const Fyf = Math.max(-s.mu * Nf, Math.min(s.mu * Nf, -Cf * af));
+    const muF = s.mu * SURF[0];
+    const muR = (input.handbrake ? s.muHandbrake : s.mu) * SURF[0];
+    const Fyf = Math.max(-muF * Nf, Math.min(muF * Nf, -Cf * af));
     const Fyr = Math.max(-muR * Nr, Math.min(muR * Nr, -Cr * ar));
-    this.slip = Math.min(1, Math.max(Math.abs(Fyr) / (muR * Nr), Math.abs(Fyf) / (s.mu * Nf)) * Math.min(1, Math.abs(u) / 8)
+    this.slip = Math.min(1, Math.max(Math.abs(Fyr) / (muR * Nr), Math.abs(Fyf) / (muF * Nf)) * Math.min(1, Math.abs(u) / 8)
       * (Math.max(Math.abs(af), Math.abs(ar)) > 0.12 ? 1 : 0.3));
 
     // integrate (semi-implicit Euler)
@@ -125,6 +139,7 @@ export class VehicleSim {
     this.ax = this.ax + ((du - v * this.r) - this.ax) * Math.min(1, dt * 8);
     this.ay = this.ay + ((u * this.r) - this.ay) * Math.min(1, dt * 8);
 
+    this.r *= 1 - Math.min(1, dt * 0.6);           // a touch of yaw damping (tyre scrub, dampers): calmer, smoother
     this.yaw += this.r * dt;
     const [nfx, nfz] = this.forward, [nlx, nlz] = this.left;
     this.vx = nfx * u + nlx * v;

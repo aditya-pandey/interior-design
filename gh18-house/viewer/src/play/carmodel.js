@@ -82,6 +82,8 @@ export async function loadBaleno(url, length) {
     else if (n === 'revsf.4') o.material = mats.reverse;
   });
 
+  const steering = extractSteeringWheel(model, body);
+
   const bb = new THREE.Box3().setFromObject(model);
   const dims = bb.getSize(new THREE.Vector3());
   const front = wheels.filter((w) => w.front), rear = wheels.filter((w) => !w.front);
@@ -102,7 +104,7 @@ export async function loadBaleno(url, length) {
   eye.position.set(-0.37, 1.16, -0.18);
   body.add(eye);
 
-  return { root, body, model, wheels, mats, beams, eye, dims, wheelbase: zf - zr, track, axleZ: (zf + zr) / 2, scale: k, nativeSize: size0 };
+  return { root, body, model, wheels, mats, beams, eye, dims, steering, wheelbase: zf - zr, track, axleZ: (zf + zr) / 2, scale: k, nativeSize: size0 };
 }
 
 // Turn a (possibly quantized, indexed) glTF geometry into a plain float, non-indexed one in the
@@ -134,4 +136,49 @@ function subset(g, starts) {
     out.setAttribute(name, new THREE.BufferAttribute(arr, size));
   }
   return out;
+}
+
+// The steering wheel is not a separate part in the file: it is merged into the interior. Its hub badge
+// is separate, though, and gives the wheel's centre and the steering column's axis (the normal of the
+// badge's plane, found once with a PCA of its vertices: tilted ~21 degrees). Every interior triangle
+// inside a thin disc around that axis (rim, spokes, buttons) is moved into a group that turns about it.
+const WHEEL_C = new THREE.Vector3(-0.311, 0.998, 0.375), WHEEL_N = new THREE.Vector3(0.01, -0.353, 0.935).normalize();
+function extractSteeringWheel(model, body) {
+  model.updateMatrixWorld(true);
+  const pivot = new THREE.Group(), turn = new THREE.Group();
+  pivot.position.copy(WHEEL_C);
+  pivot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), WHEEL_N);
+  body.add(pivot);
+  pivot.add(turn);
+  body.updateMatrixWorld(true);
+  const toPivot = new THREE.Matrix4().copy(pivot.matrixWorld).invert();
+  const v = new THREE.Vector3(), d = new THREE.Vector3();
+  const moved = [];
+  model.traverse((o) => {
+    if (!o.isMesh || /glass/.test(o.material.name || '')) return;
+    const g = bake(o.geometry, new THREE.Matrix4());
+    const p = g.attributes.position, keep = [], move = [];
+    for (let i = 0; i < p.count; i += 3) {
+      let inside = true;
+      for (let k = 0; k < 3 && inside; k++) {
+        v.fromBufferAttribute(p, i + k).applyMatrix4(o.matrixWorld).sub(WHEEL_C);
+        const a = v.dot(WHEEL_N);
+        d.copy(v).addScaledVector(WHEEL_N, -a);
+        inside = a > -0.10 && a < 0.045 && d.length() < 0.215;
+      }
+      (inside ? move : keep).push(i);
+    }
+    if (!move.length) return;
+    const mg = subset(g, move);
+    mg.applyMatrix4(new THREE.Matrix4().multiplyMatrices(toPivot, o.matrixWorld));
+    moved.push(new THREE.Mesh(mg, o.material));
+    o.geometry = subset(g, keep);
+  });
+  // centre on the rim (not the badge), so the wheel turns without wobbling
+  const bb = new THREE.Box3();
+  for (const m of moved) { m.geometry.computeBoundingBox(); bb.union(m.geometry.boundingBox); }
+  const c = bb.getCenter(new THREE.Vector3());
+  for (const m of moved) { m.geometry.translate(-c.x, -c.y, 0); m.castShadow = true; turn.add(m); }
+  turn.position.set(c.x, c.y, 0);
+  return turn;           // rotation.z turns the wheel (+ = anticlockwise, as the driver sees it = steering left)
 }

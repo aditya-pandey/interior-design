@@ -1,5 +1,6 @@
 // 2D collision for the car (plan view, metres): convex polygons and circles in a uniform grid,
-// tested against the car's oriented box with the separating-axis theorem.
+// tested against the car's oriented box with the separating-axis theorem. "Fields" are tested
+// everywhere: objects with test(corners) -> {n, depth} | null (e.g. the sea fence).
 
 const CELL = 6;
 
@@ -7,10 +8,12 @@ export class CollisionWorld {
   constructor(items) {
     this.grid = new Map();
     this.items = [];
+    this.fields = [];
     for (const it of items) this.add(it);
   }
 
   add(it) {
+    if (it.field) { this.fields.push(it); return; }
     let bb;
     if (it.circle) {
       const [x, z, r] = it.circle;
@@ -56,6 +59,10 @@ export class CollisionWorld {
     let best = null;
     for (const it of this.near(x0, z0, x1, z1)) {
       const hit = it.circle ? boxCircle(corners, cx, cz, it.circle) : sat(corners, cx, cz, it.poly, it.center);
+      if (hit && (!best || hit.depth > best.depth)) best = hit;
+    }
+    for (const f of this.fields) {
+      const hit = f.test(corners);
       if (hit && (!best || hit.depth > best.depth)) best = hit;
     }
     return best;

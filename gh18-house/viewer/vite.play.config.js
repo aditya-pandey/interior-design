@@ -11,6 +11,11 @@ import { stripPrivate } from './vite.config.js';
 // The page sits one folder down but fetches textures/ and models/ relative to the site root, so
 // play/index.html carries <base href="../">; the built page's asset links (emitted as ../assets/...)
 // are rewritten to match that base.
+//
+// play/deepti/ is her personal pack (paintings, poems, music list). It is copied into dist/play/deepti/
+// only for private builds: the public site build (PUBLIC_BUILD=1, as on GitHub Pages and Netlify)
+// leaves it out unless PLAY_PERSONAL=1 is set on purpose. Without it the studio's frames hang empty.
+const PERSONAL = process.env.PUBLIC_BUILD !== '1' || process.env.PLAY_PERSONAL === '1';
 const playPage = {
   name: 'play-page',
   apply: 'build',
@@ -19,6 +24,9 @@ const playPage = {
     let html = fs.readFileSync(f, 'utf8');
     html = html.replace(/(src|href)="\.\.\/assets\//g, '$1="assets/');
     fs.writeFileSync(f, html);
+    const out = path.resolve(__dirname, 'dist/play/deepti');
+    fs.rmSync(out, { recursive: true, force: true });
+    if (PERSONAL) fs.cpSync(path.resolve(__dirname, 'play/deepti'), out, { recursive: true });
   },
 };
 

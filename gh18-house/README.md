@@ -94,14 +94,15 @@ python3 film/post.py ../renders/film/GH-18_film.mp4       # edit, grade, titles,
 - **Score:** `film/score.py` synthesises the score.
 - **Context:** the neighbourhood (flanking houses, street, trees, lamps) appears only in the film view (`?cinema`). It is scenery, not part of `house.json`.
 
-## Drive (`/play/`, work in progress on branch `play-v1`)
+## By the sea (`/play/`, work in progress on branch `play-v1`)
 
-A free-roam page: drive the Baleno out of GH-18's parking and around a generated Celebrity Homes colony (roads, row houses, a park with a chhatri, street trees and lamps, speed breakers, the colony gate and the main road outside). Not linked from the tour, and `noindex`.
+A free-roam page: GH-18 alone on an imagined coast. Drive the Baleno along a ~3 km coastal highway loop, get out and walk, and spend time in her glass studio on the beach (library, her paintings and poems, a daybed facing the sea, loungers for the sunset, her music). Not linked from the tour, and `noindex`.
 
-- **Controls:** W / S or arrows (S brakes, then reverses), A / D steer, Space handbrake, C camera (chase / driver's seat / high), L lights, T time of day (evening, dusk, night, day), H horn, R back home, M sound. Phones get on-screen steering and pedals; gamepads work too.
-- **Code:** `viewer/src/play/`, with `world.js` (colony generator, colliders), `vehicle.js` (car physics: bicycle model with tyre grip, automatic gearbox), `carmodel.js` (the Baleno with split, spinning and steering wheels, lamps, suspension), `collide.js` (2D separating-axis collisions), `audio.js` (engine, horn and tyres synthesised with Web Audio) and `main.js` (scene, time of day, cameras, HUD, minimap, `window.play` test API).
-- **Build:** a separate Vite config (`vite.play.config.js`), run after the tour's build by `npm run build`. The tour's own output is unchanged (byte-identical). Dev server: `npm run dev:play`.
-- **Test:** `npm run build && node scripts/play_shots.mjs [outDir]` drives a fixed route headless and saves screenshots.
+- **Controls:** W / S drive, brake and reverse; A / D steer; Space handbrake; C camera (chase / driver's seat / high); F get out or in; E read, look, play music, lie down; Shift walk faster; drag to look; P play / pause music, N next; T time of day; G go to the studio; R back home; L lights; H horn; M sound. Phones get on-screen steering and pedals (on foot: Gas walks, arrows turn).
+- **Code:** `viewer/src/play/`: `site.js` (layout), `beach.js` (land, sand, sea, highway, palms, lamps, ground model), `studio.js` (her studio), `vehicle.js` (car physics), `carmodel.js` (the Baleno with split wheels, a turning steering wheel, lamps, suspension), `collide.js` (2D collisions), `audio.js` (synthesised engine, road, wind, tyres, surf), `music.js` (YouTube player for her songs), `main.js` (everything else).
+- **Personal pack:** `viewer/play/deepti/` holds her paintings, poems and song list. It is copied into the build only for private builds: a public build (`PUBLIC_BUILD=1`, as on GitHub Pages and Netlify) leaves it out unless `PLAY_PERSONAL=1` is set on purpose.
+- **Build:** a separate Vite config (`vite.play.config.js`), run after the tour's build by `npm run build`. The tour's own output is unchanged. Dev server: `npm run dev:play` (http://localhost:5174/play/).
+- **Test:** `npm run build && node scripts/play_shots.mjs [outDir]` drives, walks and screenshots a fixed route headless.
 
 ## Versions
 

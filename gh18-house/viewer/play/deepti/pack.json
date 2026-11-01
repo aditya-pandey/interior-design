@@ -1,0 +1,214 @@
+{
+ "note": "Personal content for /play/: her paintings, poems and music. Copied into dist only for private builds (see vite.play.config.js).",
+ "title": "Deepti's studio",
+ "music": [
+  {
+   "id": "3GehUGLqxMg",
+   "url": "https://youtu.be/3GehUGLqxMg"
+  },
+  {
+   "id": "o-7b6ctrQX0",
+   "url": "https://www.youtube.com/watch?v=o-7b6ctrQX0"
+  }
+ ],
+ "poems": [
+  {
+   "title": "Wat should I do",
+   "stanzas": [
+    [
+     "If i stay, i will loose myself",
+     "And if I go , I’ll loose You",
+     "If I wait, it will never be me",
+     "But if I don’t, it will never be you",
+     "So what should I do???",
+     "Go left where there is nothing right",
+     "Or go right where there is nothing left.."
+    ]
+   ]
+  },
+  {
+   "title": "Aakhein : rooh ka aaina",
+   "date": "10-10-2026",
+   "stanzas": [
+    [
+     "Jo dil bayan nahi karta wo aakhen kar jaati hai,",
+     "Kya kahe ki ye kbhi kabhi dil mei ghar kar jaati hen..",
+     "Lafzo ki zarurat nhi kareeb aane ke liye,",
+     "Wo kaam to unki aakhen palke utha ke hi karr jaati hai.."
+    ],
+    [
+     "Aakhen hi sachhai ka aaina hoti hai,",
+     "Naa chah karr bhi wo saara sach falsafa karr jaati hai",
+     "Jinke ehsaas dil mei dafan hote hai,",
+     "Unki aakhen hi unki zindagi ki kahani kehh jaati hai.."
+    ],
+    [
+     "Kabhi kabhi khamosh rehkar bhi hazaar baatein karr jaati hai,",
+     "Kabhi ek nazar mei dil ke saare raaz khol jaati hai,",
+     "Jo labon tak aate aate tham jaati hai,",
+     "Wahi baat aakhen bina kahe samjh jaati hai.."
+    ],
+    [
+     "Kuch nazrein bas yun hi dil ko chhoo jaati hain,",
+     "Kuch bin mile hi rooh se rishta bana jaati hain..",
+     "Har ehsaas ko alfaazon mein piroya nahi jaata,",
+     "Kuch kahaniyan aankhein khamoshi se suna jaati hai.."
+    ],
+    [
+     "Kabhi sawaal, kabhi jawaab ban jaati hain,",
+     "Kabhi kisi ke intezaar ka hisaab ban jaati hai..",
+     "Aur ajeeb hai in aankhon ka falsafa bhi,",
+     "Jo dil chhupana chahe, wahi beparda kar jaati hai.."
+    ],
+    [
+     "Yun toh chehre par muskurahat har koi saja leta hai,",
+     "Par aankhon mein chhupe ehsaas kaun chhupa paata hai..",
+     "Jo dil bayan nahi karta wo aakhen kar jaati hai,",
+     "Kya kahe ki ye kbhi kabhi dil mei ghar kar jaati hen.."
+    ]
+   ]
+  }
+ ],
+ "art": [
+  {
+   "file": "art/buddha.jpg",
+   "w": 793,
+   "h": 993
+  },
+  {
+   "file": "art/elephant.jpg",
+   "w": 1400,
+   "h": 747
+  },
+  {
+   "file": "art/elephant_cutout.png",
+   "w": 430,
+   "h": 450
+  },
+  {
+   "file": "art/horses.jpg",
+   "w": 1600,
+   "h": 800
+  },
+  {
+   "file": "art/small_01.jpg",
+   "w": 194,
+   "h": 584
+  },
+  {
+   "file": "art/small_02.jpg",
+   "w": 175,
+   "h": 571
+  },
+  {
+   "file": "art/small_03.jpg",
+   "w": 313,
+   "h": 360
+  },
+  {
+   "file": "art/small_04.jpg",
+   "w": 433,
+   "h": 325
+  },
+  {
+   "file": "art/small_05.jpg",
+   "w": 442,
+   "h": 324
+  },
+  {
+   "file": "art/small_06.jpg",
+   "w": 436,
+   "h": 314
+  },
+  {
+   "file": "art/small_07.jpg",
+   "w": 424,
+   "h": 308
+  },
+  {
+   "file": "art/small_08.jpg",
+   "w": 427,
+   "h": 306
+  },
+  {
+   "file": "art/small_09.jpg",
+   "w": 228,
+   "h": 295
+  },
+  {
+   "file": "art/small_10.jpg",
+   "w": 329,
+   "h": 294
+  },
+  {
+   "file": "art/small_11.jpg",
+   "w": 221,
+   "h": 287
+  },
+  {
+   "file": "art/small_12.jpg",
+   "w": 227,
+   "h": 284
+  },
+  {
+   "file": "art/small_13.jpg",
+   "w": 219,
+   "h": 277
+  },
+  {
+   "file": "art/small_14.jpg",
+   "w": 225,
+   "h": 268
+  },
+  {
+   "file": "art/small_15.jpg",
+   "w": 218,
+   "h": 260
+  },
+  {
+   "file": "art/small_16.jpg",
+   "w": 237,
+   "h": 235
+  },
+  {
+   "file": "art/small_17.jpg",
+   "w": 225,
+   "h": 232
+  },
+  {
+   "file": "art/small_18.jpg",
+   "w": 226,
+   "h": 222
+  },
+  {
+   "file": "art/small_19.jpg",
+   "w": 277,
+   "h": 216
+  },
+  {
+   "file": "art/small_20.jpg",
+   "w": 224,
+   "h": 214
+  },
+  {
+   "file": "art/small_21.jpg",
+   "w": 210,
+   "h": 206
+  },
+  {
+   "file": "art/small_22.jpg",
+   "w": 274,
+   "h": 207
+  },
+  {
+   "file": "art/small_23.jpg",
+   "w": 202,
+   "h": 206
+  },
+  {
+   "file": "art/small_24.jpg",
+   "w": 581,
+   "h": 185
+  }
+ ]
+}
