@@ -257,15 +257,15 @@ function applyTime(t) {
 // photo-scanned textures (play/textures/, if fetched): the coast and the studio's surfaces
 function applyScans() {
   const b = beach.materials, m = studio.mats;
-  scans.apply(b.sand, 'sand', { normalScale: 0.8 });
+  scans.apply(b.sand, 'sand', { normalScale: 0.8, tone: 0xf1ebdf, ao: 0.45 });     // white coral sand
   scans.apply(b.land, 'ground');
   scans.apply(b.pad, 'asphalt');
   scans.apply(m.deck, 'deck');
   scans.apply(m.floor, 'floor_oak', { normalScale: 0.6 });
   scans.apply(m.wood, 'oak', { normalScale: 0.5 });
   scans.apply(m.ply, 'plywood', { normalScale: 0.4 });
-  scans.apply(m.plaster, 'plaster', { normalScale: 0.6 });
-  scans.apply(m.plinth, 'plaster');
+  scans.apply(m.plaster, 'plaster', { normalScale: 0.6, relief: true, ao: 0.3 });   // clean white walls, real trowel texture
+  scans.apply(m.plinth, 'plaster', { relief: true, ao: 0.4 });
   scans.apply(m.fabric, 'linen', { repeat: 4, normalScale: 0.7 });
   for (const f of studio.frameMats()) scans.apply(f, 'dark_wood', { repeat: 2 });
   scans.sky('sky_day', renderer).then((h) => {

@@ -42,7 +42,7 @@ export async function loadScans() {
     const e = manifest.textures?.[key];
     if (!e) return Promise.resolve(null);
     return (pending[key] ||= Promise.all([e.color && load(e.color, true), e.normal && load(e.normal), e.rough && load(e.rough), e.ao && load(e.ao)])
-      .then(([map, normalMap, roughnessMap, aoMap]) => (map ? { map, normalMap, roughnessMap, aoMap, size: e.size_m || 1, mean: meanColour(map.image), asset: e.asset } : null)));
+      .then(([map, normalMap, roughnessMap, aoMap]) => (map || normalMap ? { map, normalMap, roughnessMap, aoMap, size: e.size_m || 1, mean: map ? meanColour(map.image) : null, asset: e.asset } : null)));
   };
   return {
     manifest,
@@ -52,7 +52,7 @@ export async function loadScans() {
     //         vertex-coloured materials white, as the vertices carry the tone)
     //   repeat: UV repeats per scan tile (default 1 / size, for UVs in metres); uv: false keeps the
     //         generated maps' repeat (for models with 0..1 UVs)
-    async apply(mat, key, { tone, repeat, normalScale = 1, roughness } = {}) {
+    async apply(mat, key, { tone, repeat, normalScale = 1, roughness, relief = false, ao = 0.7 } = {}) {
       const s = await get(key);
       if (!s) return false;
       const rep = repeat ?? 1 / s.size;
@@ -60,11 +60,14 @@ export async function loadScans() {
       // what it should average to: the given tone, else what the material looked like before
       // (its generated texture's average times its colour), else its colour
       const target = tone ? new THREE.Color(tone) : mat.map?.image ? meanColour(mat.map.image).multiply(mat.color) : mat.color.clone();
-      mat.map = prep(s.map);
-      mat.color.setRGB(Math.min(4, target.r / Math.max(0.02, s.mean.r)), Math.min(4, target.g / Math.max(0.02, s.mean.g)), Math.min(4, target.b / Math.max(0.02, s.mean.b)));
+      // a scan with only relief (no colour photo) keeps the material's own colour map
+      // relief: only the scan's surface (normal, roughness, AO), not its colour (e.g. a stained plaster)
+      const colour = s.map && !relief;
+      if (colour) mat.map = prep(s.map);
+      if (colour) mat.color.setRGB(Math.min(4, target.r / Math.max(0.02, s.mean.r)), Math.min(4, target.g / Math.max(0.02, s.mean.g)), Math.min(4, target.b / Math.max(0.02, s.mean.b)));
       if (s.normalMap) { mat.normalMap = prep(s.normalMap); mat.normalScale = new THREE.Vector2(normalScale, normalScale); }
       if (s.roughnessMap) { mat.roughnessMap = prep(s.roughnessMap); mat.roughness = roughness ?? 1; }
-      if (s.aoMap) { mat.aoMap = prep(s.aoMap); mat.aoMap.channel = 0; mat.aoMapIntensity = 0.7; }
+      if (s.aoMap) { mat.aoMap = prep(s.aoMap); mat.aoMap.channel = 0; mat.aoMapIntensity = ao; }
       mat.needsUpdate = true;
       return true;
     },
