@@ -18,6 +18,7 @@ import { buildNightSky } from './night.js';
 import { buildClouds } from './clouds.js';
 import { buildSpray } from './spray.js';
 import { buildDressing, createFootprints } from './dressing.js';
+import { Ambience, measureSfx } from './ambience.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -106,7 +107,7 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
-let clouds, spray, dressing, footprints;
+let clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -206,6 +207,8 @@ async function init() {
   driver.onPadConnect = () => flash('Controller connected · RT gas · LT brake · RB handbrake · left stick steer · Y get out · View camera');
   dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
+  ambience = new Ambience(audio);
+  footprints.onStep = () => ambience.footstep(groundUnderfoot());
   music = new Music(pack?.music, document.getElementById('ytplayer'));
   music.onChange = updateMusicUI;
   if (!pack) document.getElementById('music-btn').hidden = true;
@@ -294,6 +297,7 @@ function applyTime(t, regen = true) {
   renderer.toneMappingExposure = t.exposure;
   scene.fog.color.set(t.fog);
   state.stars = t.stars ?? 0;
+  state.sunEl = t.el;
   scene.fog.near = (400 - 220 * state.stars) * t.fogK;   // more haze at night (far hills fade into the sky)
   scene.fog.far = (4200 - 1900 * state.stars) * t.fogK;  // and in the morning mist
   if (!regen) scene.environmentIntensity = t.env * (photo?.norm || 1);
@@ -695,6 +699,24 @@ function lieDown(seat) {
   }
   flash('Watch the sun go down · E to get up');
 }
+// what's underfoot (for the footsteps), and whether she's indoors (outside sounds quieter)
+function inHouse(x, z) { return x > 0 && x < 9.4 && z > 0 && z < 22.3; }
+function inStudio(x, z) { return x > STUDIO.x0 - 1 && x < STUDIO.x0 + STUDIO.w + 1 && z > STUDIO.z0 - 1.2 && z < STUDIO.z0 + STUDIO.d + 2.6; }
+function groundUnderfoot() {
+  const x = head.position.x, z = head.position.z, f = walker.foot;
+  if (inHouse(x, z) && f > 0.3) return 'tile';
+  if (inStudio(x, z) && f > 0.4) return 'wood';
+  if (f > 0.08 && f < 0.2) return 'wood';                     // the boardwalk
+  const surf = surfaceAt(x, z);
+  if (surf === 'road') return 'road';
+  if (surf === 'sand' || surf === 'water') return coastDist(x, z) > -5.5 ? 'wet' : 'sand';
+  return 'sand';
+}
+function isIndoors() {
+  if (state.mode !== 'foot') return false;
+  const x = head.position.x, z = head.position.z;
+  return (inHouse(x, z) && walker.foot > 0.3) || (x > STUDIO.x0 && x < STUDIO.x0 + STUDIO.w && z > STUDIO.z0 && z < STUDIO.z0 + STUDIO.d && walker.foot > 0.4);
+}
 function getUp() {
   if (!state.lying) return;
   const { seat } = state.lying;
@@ -1023,10 +1045,16 @@ function frame(dt = 1 / 60, show = true) {
     audio.update({
       rpm: sim.rpm, throttle: state.mode === 'drive' ? (lastInput.throttle || (lastInput.brake && sim.reversing ? 1 : 0)) : 0,
       slip: sim.slip, speed: sim.speed, gear: sim.gear, surface: sim.surface,
-      shoreDist: state.explore ? -coastDist(camera.position.x, camera.position.z) : 999, inside: state.mode === 'drive' && state.cam === 'driver',
+      shoreDist: 999,                                  // (the sea is ambience.js now) inside: state.mode === 'drive' && state.cam === 'driver',
       engineOn: state.mode === 'drive' || state.engineOff > 0,
     });
     if (sim.impact > prevImpact + 0.5) audio.thud(sim.impact / 8);
+    // the coast's own sounds: waves breaking in time with the sea, wind, palms, birds, crickets
+    palmTimer -= dt;
+    if (palmTimer <= 0) { palmTimer = 0.5; nearPalms = beach.palms.filter((p) => (p.x - camera.position.x) ** 2 + (p.z - camera.position.z) ** 2 < 225).length; }
+    camera.getWorldDirection(fwdV);
+    const rl = Math.hypot(fwdV.x, fwdV.z) || 1;
+    ambience.update(dt, { x: camera.position.x, z: camera.position.z, rx: -fwdV.z / rl, rz: fwdV.x / rl, t: clock, sunEl: state.sunEl ?? 10, night: state.stars, indoors: isIndoors(), palms: nearPalms });
   }
   prevImpact = sim.impact;
   hudTimer -= dt;
@@ -1109,6 +1137,7 @@ window.play = {
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
+  sound: () => ({ audio, ambience, measureSfx }),
   footprints: () => footprints,
   dressing: () => dressing.counts,
   _driver: () => driver,

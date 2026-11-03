@@ -93,6 +93,7 @@ export function createFootprints(scene) {
       last = [x, z];
       if (walked < 0.66) return;
       walked = 0; left = !left;
+      this.onStep?.(left);
       if (!onSand) return;
       const side = left ? 0.1 : -0.1, rx = Math.cos(yaw), rz = -Math.sin(yaw);
       const fx = x + rx * side, fz = z + rz * side;
