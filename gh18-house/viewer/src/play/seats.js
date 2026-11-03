@@ -46,6 +46,23 @@ export function houseSeats(house) {
   return out;
 }
 
+// where to stand up: in front of the seat if that's clear, else back where she was before sitting down,
+// else the first clear spot round it. isFree(x, z) says whether she can stand there (metres).
+export function standSpot(s, prev, isFree) {
+  if (isFree(s.stand[0], s.stand[1])) return [s.stand[0], s.stand[1]];
+  if (prev && isFree(prev[0], prev[1])) return [prev[0], prev[1]];
+  const [cx, cz] = s.centre, base = Math.atan2(s.look[1], s.look[0]);
+  for (const r of [0.5, 0.75, 1.0, 1.3]) {
+    const R = Math.max(s.size[0], s.size[1]) / 2 + r;
+    for (let k = 0; k < 16; k++) {
+      const a = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);
+      const x = cx + Math.cos(a) * R, z = cz + Math.sin(a) * R;
+      if (isFree(x, z)) return [x, z];
+    }
+  }
+  return prev || [s.stand[0], s.stand[1]];
+}
+
 // the seat she's next to and facing: within ~1.4 m of its front (or its side, for beds), on her floor
 export function nearestSeat(seats, x, z, foot, dirX, dirZ, floorOf) {
   let best = null, bestD = Infinity;

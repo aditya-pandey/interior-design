@@ -60,6 +60,8 @@ export function improveWalker() {
       const n = Math.max(1, Math.ceil(step / SUB));
       const ang = Math.atan2(this.vel.y, this.vel.x), len = (step / n) * 1000;
       let moved = 0;
+      // already overlapping something (put down too close to furniture)? then let her walk out of it
+      const trapped = this.blocked(x, y, this.foot);
       for (let i = 0; i < n; i++) {
         let ok = false;
         for (const t of TRY) {
@@ -67,7 +69,7 @@ export function improveWalker() {
           if (l < len * 0.15) continue;
           const nx = x + Math.cos(ang + t) * l, ny = y + Math.sin(ang + t) * l;
           const h = this.standAt(nx, ny, this.foot);
-          if (h === null || this.blocked(nx, ny, h)) continue;
+          if (h === null || (!trapped && this.blocked(nx, ny, h))) continue;
           x = nx; y = ny; this.foot = h; ok = true; moved += l;
           break;
         }

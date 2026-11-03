@@ -20,7 +20,7 @@ import { createPost } from './post.js';
 import { loadScans } from './textures.js';
 import { createSkids } from './skids.js';
 import { improveWalker } from './walkfeel.js';
-import { houseSeats } from './seats.js';
+import { houseSeats, standSpot } from './seats.js';
 improveWalker();
 import './play.css';
 
@@ -158,7 +158,7 @@ async function init() {
     return {
       kind: 'lounger', label: s.label, pos: [s.centre[0], base + 0.5, s.centre[1]], r,
       seat: { x: s.centre[0], z: s.centre[1], y: base, eye: [s.eye[0], base + s.eye[1], s.eye[2]], look: s.look, pitch: s.pitch, lie: s.lie,
-        stand: [s.stand[0], s.stand[1], Math.atan2(s.look[0], s.look[1]), base], flash: (s.lie ? 'Lie back' : 'Sit back') + ' · E to get up' },
+        stand: [s.stand[0], s.stand[1], Math.atan2(s.look[0], s.look[1]), base], spot: s, flash: (s.lie ? 'Lie back' : 'Sit back') + ' · E to get up' },
     };
   });
 
@@ -584,7 +584,9 @@ function showPoem(p) {
 function showArt(url) {
   showOverlay(`<button class="close" aria-label="Close">×</button><figure class="art"><img src="${url}" alt="A painting by Deepti"><figcaption>Painted by Deepti</figcaption></figure>`, 'dark');
 }
+let prevSeatPos = null;
 function lieDown(seat) {
+  prevSeatPos = [head.position.x, head.position.z];
   walker.active = false;
   if (seat.eye) {
     // the reading nook: curled up in the ring, looking out across the studio
@@ -605,7 +607,13 @@ function getUp() {
   if (!state.lying) return;
   const { seat } = state.lying;
   state.lying = null;
-  if (seat.stand) placeHer(seat.stand[0], seat.stand[1], seat.stand[2], seat.stand[3]);       // in the house: in front of it
+  if (seat.stand) {
+    // in the house: in front of it if that's clear (a coffee table is often there), else where she was
+    const base = seat.stand[3];
+    const free = (x, z) => { const h = walker.standAt(x * 1000, z * 1000, base); return h !== null && Math.abs(h - base) < 0.3 && !walker.blocked(x * 1000, z * 1000, h); };
+    const [sx, sz] = standSpot(seat.spot, prevSeatPos, free);
+    placeHer(sx, sz, seat.stand[2], base);
+  }
   else if (seat.eye) placeHer(seat.x + 1.1, seat.z, Math.PI / 2, 0.6);
   else placeHer(seat.x - 0.95, seat.z, 0, 0.6);                 // beside the lounger, facing the sea
 }

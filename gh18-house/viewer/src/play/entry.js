@@ -11,7 +11,7 @@
 
 import house from '../../../house_r1.json';
 import { improveWalker } from './walkfeel.js';
-import { houseSeats, nearestSeat } from './seats.js';
+import { houseSeats, nearestSeat, standSpot } from './seats.js';
 
 const params = new URLSearchParams(location.search);
 const CAR = { x: 7.615, z: 21.945 };          // the Baleno in GH-18's parking (house_r1.json GF-O07)
@@ -62,19 +62,22 @@ function animate(cam, to, toYaw, toPitch, done) {
 function sitDown(s) {
   const v = window.viewer, w = v.walker(), cam = w.camera;
   const base = baseAt(w, s);
-  seated = { seat: s, base };
+  seated = { seat: s, base, prev: [cam.position.x, cam.position.z] };
   w.active = false;
   const to = cam.position.clone().set(s.eye[0], base + s.eye[1], s.eye[2]);
   animate(cam, to, yawFor(s.look[0], s.look[1]), s.lie ? s.pitch : -s.pitch);
 }
 function standUp(now = false) {
   if (!seated) return;
-  const v = window.viewer, w = v.walker(), cam = w.camera, { seat, base } = seated;
+  const v = window.viewer, w = v.walker(), cam = w.camera, { seat, base, prev } = seated;
   seated = null;
   const yaw = yawFor(seat.look[0], seat.look[1]);
-  const done = () => { w.place(seat.stand[0] * 1000, seat.stand[1] * 1000, base, yaw, 0); w.active = w.controls.isLocked || matchMedia('(pointer: coarse)').matches; };
+  // a clear spot to stand on (in front of a sofa there is often a coffee table)
+  const free = (x, z) => { const h = w.standAt(x * 1000, z * 1000, base); return h !== null && Math.abs(h - base) < 0.3 && !w.blocked(x * 1000, z * 1000, h); };
+  const [sx, sz] = standSpot(seat, prev, free);
+  const done = () => { w.place(sx * 1000, sz * 1000, base, yaw, 0); w.active = w.controls.isLocked || matchMedia('(pointer: coarse)').matches || !!v.headless; };
   if (now) return done();
-  animate(cam, cam.position.clone().set(seat.stand[0], base + 1.6, seat.stand[1]), yaw, 0, done);
+  animate(cam, cam.position.clone().set(sx, base + 1.6, sz), yaw, 0, done);
 }
 
 function watch() {
