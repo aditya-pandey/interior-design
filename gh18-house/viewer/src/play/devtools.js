@@ -52,14 +52,14 @@ export function createDevTools({ sim, car, scene, state, onReplayStart }) {
     const t = sim.tel, s = sim.s;
     if (!t.Nf) return;
     const kmh = sim.speed * 3.6, g9 = 9.81;
-    const aids = [t.abs && 'ABS', t.tcs && 'TRACTION', Math.abs(t.assist) > 0.01 && `COUNTER-STEER ${D(t.assist).trim()}°`, t.locked && 'HANDBRAKE LOCK'].filter(Boolean).join('  ') || '—';
+    const aids = [t.abs && "ABS", t.tcs && "TRACTION", t.esc && "STABILITY", Math.abs(t.assist) > 0.01 && `COUNTER-STEER ${D(t.assist).trim()}°`, t.locked && 'HANDBRAKE LOCK'].filter(Boolean).join('  ') || '—';
     pre.textContent =
       `${kmh.toFixed(0).padStart(4)} km/h   gear ${sim.reversing ? 'R' : sim.gear}   ${Math.round(sim.rpm)} rpm   ${t.surface}${rec ? '   ● REC ' + (recSteps * 1 / 240).toFixed(1) + ' s' : ''}${replay ? '   ▶ REPLAY' : ''}\n` +
       `throttle ${bar(lastInput.throttle)}  brake ${bar(lastInput.brake)}\n` +
       `steer in ${sbar(-lastInput.steer, 6)}  wheels ${D(t.steer)}°\n` +
       `slip angle  front ${D(t.af)}°  rear ${D(t.ar)}°   (peak ${D(s.peakSlip)}° / ${D(s.peakSlipRear)}°)\n` +
       `slide angle ${D(sim.drift)}°   yaw ${D(sim.r)}°/s\n` +
-      `g  lateral ${(sim.ay / g9).toFixed(2).padStart(5)}  long ${(sim.ax / g9).toFixed(2).padStart(5)}\n` +
+      `g  lateral ${(sim.ayT / g9).toFixed(2).padStart(5)}  long ${(sim.axT / g9).toFixed(2).padStart(5)}   roll ${D(sim.roll)}°  pitch ${D(sim.pitch)}°\n` +
       `load  front ${Math.round(t.Nf)} N  rear ${Math.round(t.Nr)} N\n` +
       `grip used  front ${(t.useF * 100).toFixed(0).padStart(3)} %  rear ${(t.useR * 100).toFixed(0).padStart(3)} %\n` +
       `aids  ${aids}`;

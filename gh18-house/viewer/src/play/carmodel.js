@@ -101,12 +101,113 @@ export async function loadBaleno(url, length) {
     body.add(sl, sl.target);
     beams.push(sl);
   }
-  // driver's eye (right-hand drive: the driver sits on the car's right, -X)
+  // driver's eye (right-hand drive: the driver sits on the car's right, -X): a normal seated position,
+  // ~0.6 m behind the wheel's centre and a little above it
   const eye = new THREE.Object3D();
-  eye.position.set(-0.37, 1.16, -0.18);
+  eye.position.set(-0.335, 1.2, -0.27);
   body.add(eye);
+  // daylight through the glass, filling the cabin (shadows from the roof would leave it black)
+  const cabin = new THREE.PointLight(0xfff4e8, 0, 2.6, 2);
+  cabin.position.set(-0.1, 1.28, 0.05);
+  body.add(cabin);
 
-  return { root, body, model, wheels, mats, beams, eye, dims, steering, wheelbase: zf - zr, track, axleZ: (zf + zr) / 2, scale: k, nativeSize: size0 };
+  return { root, body, model, wheels, mats, beams, eye, cabin, dims, steering, wheelbase: zf - zr, track, axleZ: (zf + zr) / 2, scale: k, nativeSize: size0 };
+}
+
+// ---- a leather three-spoke steering wheel, in the pivot's frame: the wheel in the XY plane, the
+// driver on the -Z side. Rim with thicker grips and a flattened bottom, satin-silver spoke inserts,
+// piano-black switch panels, a padded hub with a chrome emblem.
+function steeringWheel(R) {
+  const g = new THREE.Group();
+  g.name = 'steering_wheel';
+  const grain = leatherNormal();
+  const leather = new THREE.MeshPhysicalMaterial({ color: 0x1b1b1d, roughness: 0.58, normalMap: grain, normalScale: new THREE.Vector2(0.22, 0.22), sheen: 0.4, sheenRoughness: 0.5, sheenColor: 0x444444 });
+  const plastic = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.5 });
+  const gloss = new THREE.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05 });
+  const silver = new THREE.MeshPhysicalMaterial({ color: 0xb9bcc0, metalness: 0.9, roughness: 0.32 });
+  const chrome = new THREE.MeshPhysicalMaterial({ color: 0xe6e8ea, metalness: 1, roughness: 0.12 });
+  const btn = new THREE.MeshStandardMaterial({ color: 0x55585c, metalness: 0.6, roughness: 0.4 });
+  // rim: a torus whose tube swells at the 9-and-3 grips, flattened at the bottom
+  const rim = new THREE.TorusGeometry(R, 0.0185, 18, 120);
+  const p = rim.attributes.position, c = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const a = Math.atan2(y, x);
+    c.set(Math.cos(a) * R, Math.sin(a) * R, 0);
+    const grip = 1 + 0.16 * Math.exp(-Math.pow((Math.abs(Math.cos(a)) - 1) * 9, 2)) * (Math.sin(a) > -0.2 ? 1 : 0.6);
+    let nx = c.x + (x - c.x) * grip, ny = c.y + (y - c.y) * grip;
+    const flat = -R * 0.86;                                         // flat-bottomed
+    if (ny < flat) ny = flat + (ny - flat) * 0.35;
+    p.setXYZ(i, nx, ny, z * grip);
+  }
+  rim.computeVertexNormals();
+  g.add(new THREE.Mesh(rim, leather));
+  // spokes: left, right, and a bottom one, from the hub out to the rim
+  const spoke = (ang, w, len, mat, z0, dz) => {
+    const sh = new THREE.Shape();
+    sh.moveTo(0, -w / 2); sh.lineTo(len, -w * 0.38); sh.lineTo(len, w * 0.38); sh.lineTo(0, w / 2); sh.closePath();
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: dz, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 2 });
+    geo.rotateZ(ang); geo.translate(0, 0, z0);
+    const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m);
+  };
+  for (const side of [1, -1]) {
+    const ang = side > 0 ? -0.12 : Math.PI + 0.12;
+    spoke(ang, 0.06, R - 0.004, plastic, -0.026, 0.016);
+    spoke(ang, 0.012, R - 0.03, silver, -0.031, 0.004);               // the silver insert
+    // switch panel on the spoke, facing the driver
+    const pnl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.042, 0.006), gloss);
+    pnl.position.set(Math.cos(ang) * 0.095, Math.sin(ang) * 0.095 + 0.004, -0.034);
+    pnl.rotation.z = ang + (side > 0 ? 0 : Math.PI);
+    g.add(pnl);
+    for (let k = 0; k < 4; k++) {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.002, 12), btn);
+      b.rotation.x = Math.PI / 2;
+      b.position.set(pnl.position.x + ((k % 2) - 0.5) * 0.026 * side, pnl.position.y + (Math.floor(k / 2) - 0.5) * 0.018, -0.0385);
+      g.add(b);
+    }
+  }
+  spoke(-Math.PI / 2, 0.05, R - 0.004, plastic, -0.024, 0.016);
+  spoke(-Math.PI / 2, 0.01, R - 0.05, silver, -0.029, 0.004);
+  // hub (the airbag cover), with a chrome emblem
+  const hs = new THREE.Shape();
+  const hw = 0.056, hh = 0.047, r = 0.02;
+  hs.moveTo(-hw + r, -hh); hs.lineTo(hw - r, -hh); hs.quadraticCurveTo(hw, -hh, hw, -hh + r); hs.lineTo(hw, hh - r); hs.quadraticCurveTo(hw, hh, hw - r, hh);
+  hs.lineTo(-hw + r, hh); hs.quadraticCurveTo(-hw, hh, -hw, hh - r); hs.lineTo(-hw, -hh + r); hs.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+  const hub = new THREE.ExtrudeGeometry(hs, { depth: 0.022, bevelEnabled: true, bevelSize: 0.01, bevelThickness: 0.012, bevelSegments: 5, curveSegments: 10 });
+  hub.translate(0, 0.006, -0.05);
+  const hubM = new THREE.Mesh(hub, leather); hubM.castShadow = true; g.add(hubM);
+  const emb = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.003, 32), chrome);
+  emb.scale.set(1.3, 1, 0.85); emb.rotation.x = Math.PI / 2; emb.position.set(0, 0.008, -0.0635);
+  g.add(emb);
+  // a fine highlight line of stitching round the inside of the rim
+  const st = new THREE.Mesh(new THREE.TorusGeometry(R - 0.012, 0.0012, 4, 120), new THREE.MeshStandardMaterial({ color: 0x5a5a5e, roughness: 0.7 }));
+  st.position.z = -0.006; g.add(st);
+  g.traverse((o) => { if (o.isMesh) o.receiveShadow = true; });
+  return g;
+}
+function leatherNormal() {
+  const S = 256, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const ctx = c.getContext('2d'), img = ctx.createImageData(S, S);
+  const h = new Float32Array(S * S);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) {                           // pebbled grain: soft bumps
+    const x = rnd() * S, y = rnd() * S, rr = 2 + rnd() * 4;
+    for (let yy = -6; yy <= 6; yy++) for (let xx = -6; xx <= 6; xx++) {
+      const d = Math.hypot(xx, yy) / rr; if (d > 1) continue;
+      const k = ((Math.floor(y + yy) + S) % S) * S + ((Math.floor(x + xx) + S) % S);
+      h[k] += (1 - d * d) * 0.5;
+    }
+  }
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const dx = h[y * S + (x + 1) % S] - h[y * S + (x - 1 + S) % S], dy = h[((y + 1) % S) * S + x] - h[((y - 1 + S) % S) * S + x];
+    const n = new THREE.Vector3(-dx, dy, 1).normalize(), i = (y * S + x) * 4;
+    img.data[i] = (n.x * 0.5 + 0.5) * 255; img.data[i + 1] = (n.y * 0.5 + 0.5) * 255; img.data[i + 2] = (n.z * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(14, 3);
+  return t;
 }
 
 // ---- the finish: the file's materials are flat; give them what a real car's surfaces do
@@ -247,7 +348,10 @@ function extractSteeringWheel(model, body) {
   const bb = new THREE.Box3();
   for (const m of moved) { m.geometry.computeBoundingBox(); bb.union(m.geometry.boundingBox); }
   const c = bb.getCenter(new THREE.Vector3());
-  for (const m of moved) { m.geometry.translate(-c.x, -c.y, 0); m.castShadow = true; turn.add(m); }
+  for (const m of moved) { m.geometry.translate(-c.x, -c.y, 0); m.castShadow = true; m.visible = false; turn.add(m); }
   turn.position.set(c.x, c.y, 0);
+  // the file's wheel is low on detail: a modelled one takes its place (same size, same pivot)
+  const R = Math.max(0.16, Math.min(0.2, ((bb.max.x - bb.min.x) + (bb.max.y - bb.min.y)) / 4 - 0.016));
+  turn.add(steeringWheel(R));
   return turn;           // rotation.z turns the wheel (+ = anticlockwise, as the driver sees it = steering left)
 }

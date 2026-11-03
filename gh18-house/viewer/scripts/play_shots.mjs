@@ -42,7 +42,18 @@ try {
   const only = process.env.SHOTS ? process.env.SHOTS.split(',') : null;
   const plan = [
     ['05_in_car', () => { play.render(); return play.state(); }],
-    ['06_coast', () => { play.drive(1.5, { throttle: 0.5 }); play.drive(2.6, { throttle: 0.3, steer: 1 }); play.drive(1.0, { throttle: 0.6, steer: -0.2 }); return play.drive(4, { throttle: 0.8 }); }],
+    ['06_coast', () => {
+      // out of the gate and west along the highway: a simple lane-keeping driver (lane centre z = 26.2)
+      play.drive(1.5, { throttle: 0.5 });
+      let st;
+      for (let k = 0; k < 75; k++) {
+        st = play.state();
+        const yaw = st.yaw * Math.PI / 180, want = Math.PI / 2 + Math.max(-0.5, Math.min(0.5, (st.z - 26.2) * 0.12));
+        const steer = Math.max(-1, Math.min(1, (want - yaw) * 2.2));
+        st = play.drive(0.1, { throttle: st.kmh < 50 ? 0.6 : 0.2, steer }, false);
+      }
+      return play.drive(0.05, { throttle: 0.3 });
+    }],
     ['07_driver', () => { play.camera('driver'); return play.drive(0.6, { throttle: 0.5, steer: 0.6 }); }],
     ['08_arrive', () => { play.camera('chase'); play.teleport(91, 36.5, 0); return play.exit(); }],
     ['09_inside', () => play.foot(104.2, 43.6, -20, 0.2, 0.6)],

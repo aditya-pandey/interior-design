@@ -63,8 +63,8 @@ const TESTS = [
     const s = mk(); run(s, 1, { throttle: 0.2 }); run(s, 6, (t, q) => ({ steer: 1, throttle: q.speed < 1.5 ? 0.2 : 0, brake: q.speed > 2 ? 0.2 : 0 }));
     const L = s.s.wheelbase, d = Math.abs(s.steer); return L / Math.sin(d) + (s.s.track || 1.52) / 2;
   }],
-  ['body_roll', 'body roll in the skidpad corner (drawn)', '°', [2, 4.5], () => { const s = mk(60); run(s, 6, hold(60, { steer: 1 })); return deg(Math.abs(s.ay) * (s.s.bodyRoll ?? 0.011)); }],
-  ['brake_dive', 'nose dive braking from 100 km/h (drawn)', '°', [1, 3], () => { const s = mk(100); let mx = 0; run(s, 1.5, { brake: 1 }, (t, q) => { mx = Math.max(mx, Math.abs(q.ax)); }); return deg(mx * (s.s.bodyPitch ?? 0.01)); }],
+  ['body_roll', 'body roll in the skidpad corner', '°', [2, 4.5], () => { const s = mk(60); run(s, 6, hold(60, { steer: 1 })); return s.roll != null ? deg(Math.abs(s.roll)) : deg(Math.abs(s.ay) * 0.011); }],
+  ['brake_dive', 'nose dive braking from 100 km/h', '°', [1, 3], () => { const s = mk(100); let mx = 0; run(s, 1.5, { brake: 1 }, (t, q) => { mx = Math.max(mx, q.pitch != null ? Math.abs(q.pitch) : Math.abs(q.ax) * 0.01); }); return deg(mx); }],
   ['sand_0_50', '0–50 km/h on sand', 's', [5, 12], () => { const s = mk(0, 'sand'); let t = 0; while (kmh(s) < 50 && t < 30) { step(s, { throttle: 1 }); t += DT; } return t; }],
   ['sand_grip', 'cornering grip on sand at 40 km/h, full lock', 'g', [0.5, 0.75], () => { const s = mk(40, 'sand'); run(s, 6, hold(40, { steer: 1 })); return Math.abs(s.ay) / 9.81; }],
   ['standstill_creep', 'parked, no input, 10 s: how far it creeps', 'm', [0, 0.01], () => { const s = mk(); run(s, 10, {}); return Math.hypot(s.x, s.z); }],

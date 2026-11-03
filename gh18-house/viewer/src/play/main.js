@@ -689,14 +689,15 @@ function updateMusicUI() {
 
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {
-  x: 0, z: 0, yaw: 0, steer: 0, spin: 0,
-  copyFrom(s) { this.x = s.x; this.z = s.z; this.yaw = s.yaw; this.steer = s.steer; this.spin = s.wheelSpin; },
+  x: 0, z: 0, yaw: 0, steer: 0, spin: 0, roll: 0, pitch: 0,
+  copyFrom(s) { this.x = s.x; this.z = s.z; this.yaw = s.yaw; this.steer = s.steer; this.spin = s.wheelSpin; this.roll = s.roll; this.pitch = s.pitch; },
   blend(s, a) {
     this.x = s.px + (s.x - s.px) * a; this.z = s.pz + (s.z - s.pz) * a;
     let dy = s.yaw - s.pyaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     this.yaw = s.pyaw + dy * a;
     this.steer = s.psteer + (s.steer - s.psteer) * a;
     this.spin = s.pspin + (s.wheelSpin - s.pspin) * a;
+    this.roll = s.roll; this.pitch = s.pitch;
   },
 };
 const body = { pitch: 0, roll: 0, vp: 0, vr: 0 };
@@ -710,14 +711,14 @@ function updateCar(dt) {
   const front = (H.FL + H.FR) / 2, rear = (H.RL + H.RR) / 2, left = (H.FL + H.RL) / 2, right = (H.FR + H.RR) / 2;
   const gy = (front + rear) / 2;
   // body on springs: a damped spring towards the pitch / roll the accelerations and the ground ask for
-  const tp = -Math.atan2(front - rear, car.wheelbase) - sim.ax * sim.s.bodyPitch;
-  const tr = Math.atan2(left - right, car.track) + sim.ay * sim.s.bodyRoll;
+  const tp = -Math.atan2(front - rear, car.wheelbase);           // the ground's slope; roll and pitch from the
+  const tr = Math.atan2(left - right, car.track);                 // springs come from the simulation
   const K = sim.s.bodySpring, C = sim.s.bodyDamp;
   body.vp += ((tp - body.pitch) * K - body.vp * C) * dt; body.pitch += body.vp * dt;
   body.vr += ((tr - body.roll) * K - body.vr * C) * dt; body.roll += body.vr * dt;
   car.root.position.set(pose.x, gy, pose.z);
   car.root.rotation.y = pose.yaw;
-  car.body.rotation.set(body.pitch, 0, body.roll);
+  car.body.rotation.set(body.pitch + pose.pitch, 0, body.roll + pose.roll);
   for (const w of car.wheels) {
     w.steer.rotation.y = w.front ? pose.steer : 0;
     w.spin.rotation.x = pose.spin * (sim.s.wheelRadius / w.radius);
@@ -769,7 +770,9 @@ function placeCamera(snap, dt) {
     const yaw = pose.yaw + look.yaw * 1.4 + pose.steer * 0.35, pitch = -0.07 - look.pitch * 0.6 + body.pitch * 0.5;
     camLook.set(camPos.x + Math.sin(yaw) * 10, camPos.y + Math.sin(pitch) * 10, camPos.z + Math.cos(yaw) * 10);
     camera.near = 0.03;
-    cam.fov = damp(cam.fov, 72 + Math.min(kmh, 140) * 0.04, 4, dt);
+    // a natural field of view from the seat (wider ones stretch the dashboard and the wheel)
+    cam.fov = damp(cam.fov, 56 + Math.min(kmh, 140) * 0.035, 4, dt);
+    car.cabin.intensity = (sun.userData.dir?.y > 0 ? sun.intensity * 0.32 : 0) + hemi.intensity * 0.6;
     camera.fov = cam.fov;
     camera.position.copy(camPos);
     camera.lookAt(camLook);
@@ -777,6 +780,7 @@ function placeCamera(snap, dt) {
     return;
   }
   camera.near = 0.1;
+  car.cabin.intensity = 0;
   // opening shot from the beach side of the road, looking back at the car and GH-18
   if (!state.driven && state.cam === 'chase') {
     tmpV.set(HOME.x - 4.6, 1.8, HOME.z + 10.5);
@@ -983,7 +987,8 @@ window.play = {
   home: goHome,
   studio: goStudio,
   look: (yaw = 0, pitch = 0, zoom = 1) => { Object.assign(look, { yaw, pitch, zoom, last: performance.now() / 1000 + 1e6 }); placeCamera(true, 1 / 60); },
-  drive: (seconds, input = {}) => {
+  // (draw = false: physics only, for scripted driving loops; call render() after)
+  drive: (seconds, input = {}, draw = true) => {
     const inp = { ...NO_INPUT, ...input };
     lastInput = inp;
     const n = Math.round(seconds / STEP), per = Math.round(1 / 60 / STEP);
@@ -992,6 +997,7 @@ window.play = {
       if (i % per === per - 1) { pose.copyFrom(sim); updateCar(1 / 60); }       // (skid marks, suspension)
     }
     pose.copyFrom(sim);
+    if (!draw) return window.play.state();
     for (let i = 0; i < 30; i++) { updateCar(1 / 30); placeCamera(false, 1 / 30); }
     hudTimer = 0; lampTimer = 0;
     frame(1 / 60);

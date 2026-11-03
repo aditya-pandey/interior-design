@@ -46,6 +46,11 @@ export class VehicleSim {
     this.slip = 0;                         // 0..1, how hard the tyres are sliding (sound, skid marks)
     this.drift = 0;                        // body slip angle, rad (+ = sliding to the left)
     this.tel = {};                         // per-step telemetry (see step())
+    this.roll = 0; this.rollRate = 0;      // body roll, rad (+ when cornering left: leans out to the right)
+    this.pitch = 0; this.pitchRate = 0;    // body pitch, rad (+ = nose down, under braking)
+    this.aF = 0; this.aR = 0;              // slip angles as the tyres actually feel them (they take a moment to build)
+    this.hbT = 1;                          // seconds since the handbrake was let go
+    this.ayT = 0; this.axT = 0;            // true accelerations (m/s², sideways left / forward), unfiltered
     this.impact = 0;                       // last collision speed, m/s (sound)
     this.reversing = false;
     this.wheelSpin = 0;
@@ -84,11 +89,13 @@ export class VehicleSim {
 
     // steering: less lock at speed, a smooth ramp, and (while the tail is out and the driver isn't
     // already steering against it) a little automatic counter-steer, as driving games do
-    const maxLock = s.maxSteer / (1 + Math.abs(u) / s.lockSpeedFalloff);
+    this.hbT = input.handbrake ? 0 : Math.min(5, this.hbT + dt);
+    const aidK = Math.min(1, this.hbT / s.aidReturn);           // aids stand aside while the handbrake is on
+    const maxLock = s.maxSteer / (1 + Math.max(0, Math.abs(u) - s.lockFreeSpeed) / s.lockSpeedFalloff);
     const beta = Math.abs(u) > 4 ? Math.atan2(v, Math.abs(u)) : 0;
-    const assist = Math.max(-s.counterSteerMax, Math.min(s.counterSteerMax, beta * s.counterSteer)) * (1 - Math.min(1, Math.abs(input.steer)) * s.counterSteerYield);
+    const assist = Math.max(-s.counterSteerMax, Math.min(s.counterSteerMax, beta * s.counterSteer)) * (1 - Math.min(1, Math.abs(input.steer)) * s.counterSteerYield) * aidK;
     const target = Math.max(-s.maxSteer, Math.min(s.maxSteer, input.steer * maxLock + (u >= 0 ? assist : 0)));
-    const rate = (Math.abs(target) > Math.abs(this.steer) && Math.sign(target) === Math.sign(this.steer || target) ? s.steerRate : s.steerReturn) * (1 + Math.abs(beta) * s.steerRateSlide);
+    const rate = (Math.abs(target) > Math.abs(this.steer) && Math.sign(target) === Math.sign(this.steer || target) ? s.steerRate : s.steerReturn) * (1 + Math.abs(beta) * s.steerRateSlide) / (1 + Math.abs(u) / s.steerRateFalloff);
     this.steer += Math.max(-rate * dt, Math.min(rate * dt, target - this.steer));
     const d = this.steer;
 
@@ -124,19 +131,25 @@ export class VehicleSim {
     const sgn = Math.abs(u) > 0.05 ? Math.sign(u) : 0;
     const resist = sgn * (s.rollResist + SURF[1] + s.drag * u * u);
 
-    // axle loads, with the load moving fore and aft (ax is smoothed: the body takes a moment to pitch)
-    const L = s.wheelbase, a = this.a, b = this.b;
-    const Nf = Math.max(500, s.mass * G * b / L - s.mass * this.ax * s.cgHeight / L);
-    const Nr = Math.max(500, s.mass * G * a / L + s.mass * this.ax * s.cgHeight / L);
-    const N0f = s.mass * G * b / L, N0r = s.mass * G * a / L;
-    // grip falls off a little with load (a heavily loaded tyre grips proportionally less)
-    const Df = s.mu * SURF[0] * Nf * (1 - s.loadSens * (Nf / N0f - 1));
-    const Dr = s.muRear * SURF[0] * Nr * (1 - s.loadSens * (Nr / N0r - 1));
+    // ---- wheel loads. Fore-aft: the load moves with the (smoothed) acceleration. Side to side: in a
+    // corner the outside wheels carry more; the split between the axles (roll stiffness) is a balance
+    // tool: more of it at the front = more understeer. A heavily loaded tyre grips proportionally less,
+    // so an axle whose load is shared unevenly grips less in total.
+    const L = s.wheelbase, a = this.a, b = this.b, m = s.mass;
+    const N0f = m * G * b / L, N0r = m * G * a / L;
+    const Nf = Math.max(500, N0f - m * this.ax * s.cgHeight / L);
+    const Nr = Math.max(500, N0r + m * this.ax * s.cgHeight / L);
+    const dLat = m * this.ay * s.cgHeight / s.track;                 // total sideways load transfer, N
+    const tf = dLat * s.rollFront, tr = dLat * (1 - s.rollFront);
+    const wheelGrip = (N, N0) => Math.max(0, N) * (1 - s.loadSens * (Math.max(0, N) / N0 - 1));
+    const NfL = Nf / 2 - tf, NfR = Nf / 2 + tf, NrL = Nr / 2 - tr, NrR = Nr / 2 + tr;     // (left accel: load to the right)
+    const Df = s.mu * SURF[0] * (wheelGrip(NfL, N0f / 2) + wheelGrip(NfR, N0f / 2));
+    const Dr = s.muRear * SURF[0] * (wheelGrip(NrL, N0r / 2) + wheelGrip(NrR, N0r / 2));
 
-    // longitudinal demand per axle: drive at the front; brakes split front / rear (ABS keeps them
+    // ---- longitudinal demand per axle: drive at the front; brakes split front / rear (ABS keeps them
     // inside the grip); the handbrake locks the rear
     const Fb = brake * s.brakeForce;
-    const stopF = Math.abs(u) * s.mass / dt;                   // never more than stops the car this step
+    const stopF = Math.abs(u) * m / dt;                       // never more than stops the car this step
     const bF = Math.min(Fb, stopF);
     let FxF = Fdrive - sgn * bF * s.frontBrake;
     let FxR = -sgn * bF * (1 - s.frontBrake);
@@ -145,11 +158,16 @@ export class VehicleSim {
     FxR = Math.max(-s.absRear * Dr, Math.min(s.absRear * Dr, FxR));     // brake proportioning keeps the rear turning
     const locked = input.handbrake && Math.abs(u) > 0.8;
 
-    // slip angles (rad). Below ~2 m/s the formula is blended with plain rolling (below).
+    // ---- slip angles. A tyre needs to roll a little way (its relaxation length) before its sideways
+    // force builds, which softens turn-in and takes the edge off sudden inputs.
     const au = Math.max(Math.abs(u), s.lowSpeedSlip);
     const vF = v + a * this.r, vR = v - b * this.r;
-    const af = Math.atan2(vF, au) - d * Math.sign(u || 1);
-    const ar = Math.atan2(vR, au);
+    const afNow = Math.atan2(vF, au) - d * Math.sign(u || 1);
+    const arNow = Math.atan2(vR, au);
+    const relax = Math.min(1, (Math.hypot(u, v) * dt) / s.relaxLength);
+    this.aF += (afNow - this.aF) * relax;
+    this.aR += (arNow - this.aR) * relax;
+    const af = this.aF, ar = this.aR;
     // sideways force: the magic-formula curve of the grip left over after driving / braking
     const Fyf = -magic(af, s) * Math.sqrt(Math.max(0, Df * Df - FxF * FxF));
     let Fyr;
@@ -173,22 +191,33 @@ export class VehicleSim {
     this.slipF = Math.max(slideF, spin) * sp6;            // per axle, for skid marks
     this.slipR = slideR * sp6;
     this.drift = Math.atan2(v, Math.max(Math.abs(u), 0.1)) * (Math.abs(u) > 3 ? 1 : 0);   // body slip angle
+
+    // ---- stability aid: if the car rotates faster than the steering asks for (the tail coming round),
+    // a correcting yaw moment, as stability control does by braking single wheels. It stands aside
+    // while the handbrake is held (so drifts can start) and fades back in after.
+    const rMax = 0.92 * s.mu * SURF[0] * G / Math.max(Math.abs(u), 3);            // the most the grip allows
+    const rRef = Math.max(-rMax, Math.min(rMax, u * Math.tan(d) / (L * (1 + s.understeerK * u * u))));
+    const over = (Math.sign(this.r) !== Math.sign(rRef) && Math.abs(this.r) > 0.1) || Math.abs(this.r) > Math.abs(rRef) + 0.05;
+    const escOn = over && Math.abs(u) > 5 && Math.abs(this.drift) > s.escSlide;
+    const Mesc = escOn ? -s.escGain * s.inertia * (this.r - rRef) * aidK : 0;
+
     // telemetry for the debug overlay and the test harness (forces in N, angles in rad, per axle)
     const T = this.tel;
-    T.af = af; T.ar = ar; T.Nf = Nf; T.Nr = Nr; T.Df = Df; T.Dr = Dr;
+    T.af = af; T.ar = ar; T.Nf = Nf; T.Nr = Nr; T.Df = Df; T.Dr = Dr; T.N = [NfL, NfR, NrL, NrR];
     T.FxF = FxF; T.FxR = FxR; T.Fyf = Fyf * kRoll; T.Fyr = Fyr * (locked ? 1 : kRoll);
     T.steer = d; T.assist = u >= 0 ? assist : 0; T.locked = locked; T.surface = this.surface;
     T.abs = brake > 0 && (Math.abs(FxF0) > Math.abs(FxF) + 1 || Math.abs(FxR0) > Math.abs(FxR) + 1);
     T.tcs = Fdrive !== 0 && Math.abs(FxF0) > Math.abs(FxF) + 1;
+    T.esc = escOn && aidK > 0.5;
     T.useF = Math.hypot(FxF, Fyf) / Math.max(1, Df); T.useR = locked ? 1 : Math.hypot(FxR, Fyr) / Math.max(1, Dr);
 
-    // integrate (semi-implicit Euler); the steered front force acts along the wheel's heading
+    // ---- integrate (semi-implicit Euler); the steered front force acts along the wheel's heading
     const cd = Math.cos(d), sd = Math.sin(d);
     const Fu = FxF * cd - FyfE * sd + FxR - resist;
     const Fv = FxF * sd + FyfE * cd + FyrE;
-    const Mz = a * (FxF * sd + FyfE * cd) - b * FyrE;
-    const du = Fu / s.mass + v * this.r;
-    const dv = Fv / s.mass - u * this.r;
+    const Mz = a * (FxF * sd + FyfE * cd) - b * FyrE + Mesc * kRoll;
+    const du = Fu / m + v * this.r;
+    const dv = Fv / m - u * this.r;
     u += du * dt; v += dv * dt; this.r += (Mz / s.inertia) * dt;
     if (sgn !== 0 && Math.sign(u) !== sgn && drive === 0) u = 0;     // brakes stop the car, don't reverse it
     if (sgn === 0 && drive === 0 && !locked) u *= 0.9;
@@ -198,8 +227,15 @@ export class VehicleSim {
     const rKin = u * Math.tan(d) / L, vKin = b * rKin;
     this.r = rKin + (this.r - rKin) * k;
     v = vKin + (v - vKin) * k;
-    this.ax = this.ax + ((du - v * this.r) - this.ax) * Math.min(1, dt * s.accelFilter);
-    this.ay = this.ay + ((u * this.r) - this.ay) * Math.min(1, dt * s.accelFilter);
+    // true accelerations of the body (what the driver feels): forces over mass
+    this.axT = Fu / m; this.ayT = Fv / m * k + (u * this.r) * (1 - k);
+    this.ax = this.ax + (this.axT - this.ax) * Math.min(1, dt * s.accelFilter);
+    this.ay = this.ay + (this.ayT - this.ay) * Math.min(1, dt * s.accelFilter);
+    // ---- the body on its springs: roll and pitch from the accelerations, with damping
+    const rollAcc = (m * this.ayT * s.rollArm - s.rollStiff * this.roll - s.rollDamp * this.rollRate) / s.rollInertia;
+    this.rollRate += rollAcc * dt; this.roll += this.rollRate * dt;
+    const pitchAcc = (-m * this.axT * s.pitchArm - s.pitchStiff * this.pitch - s.pitchDamp * this.pitchRate) / s.pitchInertia;
+    this.pitchRate += pitchAcc * dt; this.pitch += this.pitchRate * dt;
 
     this.yaw += this.r * dt;
     const [nfx, nfz] = this.forward, [nlx, nlz] = this.left;

@@ -1,0 +1,196 @@
+{
+ "when": "2026-11-03T16:01:00.903Z",
+ "sim": "src/play/vehicle.js",
+ "results": {
+  "accel_0_100": {
+   "value": 11.267,
+   "unit": "s",
+   "target": [
+    11,
+    12
+   ],
+   "ok": true,
+   "what": "0–100 km/h, full throttle"
+  },
+  "top_speed": {
+   "value": 175.921,
+   "unit": "km/h",
+   "target": [
+    165,
+    182
+   ],
+   "ok": true,
+   "what": "speed after 60 s flat out"
+  },
+  "brake_100_0": {
+   "value": 44.031,
+   "unit": "m",
+   "target": [
+    38,
+    45
+   ],
+   "ok": true,
+   "what": "braking distance 100–0 km/h"
+  },
+  "skidpad_g": {
+   "value": 0.884,
+   "unit": "g",
+   "target": [
+    0.85,
+    0.95
+   ],
+   "ok": true,
+   "what": "steady cornering grip at 60 km/h, full lock"
+  },
+  "turn_in": {
+   "value": 0.158,
+   "unit": "s",
+   "target": [
+    0.15,
+    0.25
+   ],
+   "ok": true,
+   "what": "step steer at 60 km/h: time to 63 % of the final yaw rate"
+  },
+  "yaw_overshoot": {
+   "value": 10.186,
+   "unit": "%",
+   "target": [
+    0,
+    12
+   ],
+   "ok": true,
+   "what": "step steer at 60 km/h: yaw-rate overshoot"
+  },
+  "slalom_drift": {
+   "value": 5.465,
+   "unit": "°",
+   "target": [
+    0,
+    10
+   ],
+   "ok": true,
+   "what": "slalom at 100 km/h (0.6 Hz, ±0.6): biggest slide angle"
+  },
+  "liftoff_tighten": {
+   "value": 1.159,
+   "unit": "×",
+   "target": [
+    1,
+    1.3
+   ],
+   "ok": true,
+   "what": "lift off mid-corner at 80 km/h: yaw rate after / before"
+  },
+  "liftoff_drift": {
+   "value": 2.653,
+   "unit": "°",
+   "target": [
+    0,
+    12
+   ],
+   "ok": true,
+   "what": "lift off mid-corner at 80 km/h: biggest slide angle"
+  },
+  "trailbrake_drift": {
+   "value": 6.649,
+   "unit": "°",
+   "target": [
+    0,
+    15
+   ],
+   "ok": true,
+   "what": "brake hard mid-corner at 80 km/h: biggest slide angle"
+  },
+  "handbrake_turn": {
+   "value": 95.851,
+   "unit": "°",
+   "target": [
+    60,
+    120
+   ],
+   "ok": true,
+   "what": "handbrake turn from 60 km/h (steer + handbrake 1 s): rotation"
+  },
+  "handbrake_recover": {
+   "value": 1.158,
+   "unit": "s",
+   "target": [
+    0.3,
+    2
+   ],
+   "ok": true,
+   "what": "flick the tail out at 70 km/h (handbrake 0.5 s), then straighten up with 60 % throttle: time until it grips again (slide < 3°; NaN = it spun out)"
+  },
+  "turning_circle": {
+   "value": 4.844,
+   "unit": "m",
+   "target": [
+    4.6,
+    5.2
+   ],
+   "ok": true,
+   "what": "turning circle, kerb to kerb (outer front wheel radius)"
+  },
+  "body_roll": {
+   "value": 3.427,
+   "unit": "°",
+   "target": [
+    2,
+    4.5
+   ],
+   "ok": true,
+   "what": "body roll in the skidpad corner"
+  },
+  "brake_dive": {
+   "value": 2.162,
+   "unit": "°",
+   "target": [
+    1,
+    3
+   ],
+   "ok": true,
+   "what": "nose dive braking from 100 km/h"
+  },
+  "sand_0_50": {
+   "value": 8.096,
+   "unit": "s",
+   "target": [
+    5,
+    12
+   ],
+   "ok": true,
+   "what": "0–50 km/h on sand"
+  },
+  "sand_grip": {
+   "value": 0.65,
+   "unit": "g",
+   "target": [
+    0.5,
+    0.75
+   ],
+   "ok": true,
+   "what": "cornering grip on sand at 40 km/h, full lock"
+  },
+  "standstill_creep": {
+   "value": 0,
+   "unit": "m",
+   "target": [
+    0,
+    0.01
+   ],
+   "ok": true,
+   "what": "parked, no input, 10 s: how far it creeps"
+  },
+  "physics_cost": {
+   "value": 0.031,
+   "unit": "ms",
+   "target": [
+    0,
+    1
+   ],
+   "ok": true,
+   "what": "physics time per 60 fps frame (4 steps)"
+  }
+ }
+}
