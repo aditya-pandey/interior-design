@@ -157,19 +157,65 @@ const soilTex = () => canvasTex(512, (g, S) => {
   }
   speckle(g, 20000, S, r, ['#c9b48e', '#a48f6b', '#8f8a5a', '#d6c6a4'], 0.15, 0.5, 1, 2.5);
 });
-// road: shoulders, white edge lines, two lanes, dashed white centre line; v runs along the road (12 m per tile)
+// road: a lived-in coastal road. One tile is 48 m: shoulders, worn white edge lines, two lanes with
+// darker polished tyre paths, a dashed centre line with chipped dashes, repair patches, cracks, and sand
+// blown onto the edges. u runs across the road, v along it.
+const ROAD_TILE = 48;
 const roadTex = () => {
-  const c = document.createElement('canvas');
-  c.width = 256; c.height = 512;
-  const g = c.getContext('2d'), W = 256, Hh = 512;
-  const total = 2 * ROAD_HALF, px = (m) => (m / total) * W;
-  g.fillStyle = '#4d4c4a'; g.fillRect(0, 0, W, Hh);
-  g.fillStyle = '#6d6a64'; g.fillRect(0, 0, px(SHOULDER), Hh); g.fillRect(W - px(SHOULDER), 0, px(SHOULDER), Hh);
-  const r = rng(13);
-  speckle(g, 14000, 512, r, ['#3e3d3b', '#5c5a57', '#69665f', '#2f2e2d'], 0.2, 0.55, 1, 2);
-  g.fillStyle = '#e9e7e0';
-  g.fillRect(px(SHOULDER) - 3, 0, 5, Hh); g.fillRect(W - px(SHOULDER) - 2, 0, 5, Hh);
-  g.fillRect(W / 2 - 3, 0, 6, Hh * (4.5 / 12));                    // 4.5 m dash, 7.5 m gap
+  const W = 512, Hh = 2048, c = document.createElement('canvas');
+  c.width = W; c.height = Hh;
+  const g = c.getContext('2d'), r = rng(13);
+  const total = 2 * ROAD_HALF, px = (m) => (m / total) * W, py = (m) => (m / ROAD_TILE) * Hh;
+  g.fillStyle = '#4f4e4b'; g.fillRect(0, 0, W, Hh);
+  // aggregate and stains
+  speckle(g, 70000, Math.max(W, Hh), r, ['#3e3d3b', '#5c5a57', '#69665f', '#2f2e2d', '#57544e'], 0.15, 0.5, 1, 2.2);
+  for (let i = 0; i < 70; i++) {
+    const x = r() * W, y = r() * Hh, rr = 10 + r() * 60;
+    const grd = g.createRadialGradient(x, y, 0, x, y, rr);
+    grd.addColorStop(0, `rgba(${r() < 0.5 ? '30,29,28' : '95,92,86'},${0.08 + r() * 0.12})`); grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd; g.fillRect(x - rr, y - rr, rr * 2, rr * 2);
+  }
+  // tyre paths: darker, smoother bands in each lane
+  for (const lane of [SHOULDER + LANE * 0.5, total - SHOULDER - LANE * 0.5]) for (const off of [-0.8, 0.8]) {
+    const x = px(lane + off), w = px(0.55);
+    const grd = g.createLinearGradient(x - w, 0, x + w, 0);
+    grd.addColorStop(0, 'rgba(25,25,25,0)'); grd.addColorStop(0.5, 'rgba(25,25,25,0.16)'); grd.addColorStop(1, 'rgba(25,25,25,0)');
+    g.fillStyle = grd; g.fillRect(x - w, 0, w * 2, Hh);
+  }
+  // repair patches: darker, crisper rectangles with a sealed edge
+  for (let i = 0; i < 5; i++) {
+    const w = px(0.8 + r() * 2.2), h = py(0.8 + r() * 3), x = px(SHOULDER) + r() * (W - 2 * px(SHOULDER) - w), y = r() * (Hh - h);
+    g.fillStyle = `rgba(38,38,37,${0.6 + r() * 0.3})`; g.fillRect(x, y, w, h);
+    speckle(g, Math.round(w * h / 12), 1, r, ['#2a2a29', '#4a4946'], 0.2, 0.5, 1, 2);
+    g.strokeStyle = 'rgba(20,20,20,0.6)'; g.lineWidth = 2; g.strokeRect(x, y, w, h);
+  }
+  // shoulders a lighter, dustier grey
+  g.fillStyle = 'rgba(120,114,104,0.55)'; g.fillRect(0, 0, px(SHOULDER), Hh); g.fillRect(W - px(SHOULDER), 0, px(SHOULDER), Hh);
+  // paint, worn: lighter where the wheels run over it, with chips missing
+  const paint = (x, y, w, h) => {
+    g.fillStyle = 'rgba(236,233,224,0.82)'; g.fillRect(x, y, w, h);
+    g.fillStyle = '#4f4e4b';
+    for (let i = 0; i < h / 6; i++) { if (r() < 0.35) { g.globalAlpha = 0.3 + r() * 0.5; g.fillRect(x + r() * w - 2, y + r() * h, 2 + r() * 4, 2 + r() * 6); } }
+    g.globalAlpha = 1;
+  };
+  paint(px(SHOULDER) - 5, 0, 8, Hh); paint(W - px(SHOULDER) - 3, 0, 8, Hh);
+  for (let k = 0; k < 4; k++) paint(W / 2 - 5, py(k * 12), 10, py(4.5));                 // 4.5 m dash, 7.5 m gap
+  // cracks: thin dark wandering lines, a few branching
+  g.strokeStyle = 'rgba(18,18,18,0.75)';
+  for (let i = 0; i < 26; i++) {
+    let x = px(SHOULDER) + r() * (W - 2 * px(SHOULDER)), y = r() * Hh;
+    g.lineWidth = 0.8 + r() * 1.4; g.beginPath(); g.moveTo(x, y);
+    const n = 6 + Math.floor(r() * 14), ang = r() * Math.PI * 2;
+    for (let k = 0; k < n; k++) { x += Math.cos(ang + (r() - 0.5) * 1.6) * (4 + r() * 10); y += Math.sin(ang + (r() - 0.5) * 1.6) * (4 + r() * 10); g.lineTo(x, y); }
+    g.stroke();
+  }
+  // sand blown onto the edges, in drifts
+  for (const side of [0, 1]) for (let i = 0; i < 160; i++) {
+    const y = r() * Hh, depth = px(0.2 + r() * 1.3), x = side ? W - depth : 0;
+    const grd = g.createLinearGradient(side ? W : 0, 0, side ? W - depth : depth, 0);
+    grd.addColorStop(0, `rgba(222,210,186,${0.35 + r() * 0.35})`); grd.addColorStop(1, 'rgba(222,210,186,0)');
+    g.fillStyle = grd; g.fillRect(x, y, depth, 6 + r() * 30);
+  }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping;
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
@@ -270,7 +316,7 @@ export function buildBeach(M, opts = {}) {
     if (i) v += Math.hypot(p.x - ROAD[i - 1].x, p.z - ROAD[i - 1].z);
     const nx = -p.tz, nz = p.tx;                 // left of the travel direction
     rp.push(p.x + nx * ROAD_HALF, 0.01, p.z + nz * ROAD_HALF, p.x - nx * ROAD_HALF, 0.01, p.z - nz * ROAD_HALF);
-    ruv.push(0, v / 12, 1, v / 12);
+    ruv.push(0, v / ROAD_TILE, 1, v / ROAD_TILE);
     if (i < ROAD.length) { const a = i * 2; ridx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     void q;
   }
@@ -307,7 +353,7 @@ export function buildBeach(M, opts = {}) {
     palms.push({ x, z });
     if (r() < 0.4) palms.push({ x: x + 2 + r() * 3, z: z - 1 - r() * 2 });
   }
-  objects.push(...buildPalms(palms, low));
+  objects.push(...buildPalms(palms, low, time));
   for (const p of palms) colliders.push({ circle: [p.x, p.z, 0.28] });
 
   // street lights on the inner side of the loop, every ~50 m
@@ -388,6 +434,29 @@ function worldUV(g) {
   g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 }
 
+// ------------------------------------------------------------------ wind
+// bend an instanced plant with the wind: sway grows with height (squared), each instance out of step;
+// `flutter` adds a quicker shiver to leaves and blades. The breeze comes off the sea (towards -Z).
+export function windSway(mat, time, flutter, key, height = 9) {
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = time;
+    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      #ifdef USE_INSTANCING
+        vec3 ip = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);
+      #else
+        vec3 ip = vec3(0.0);
+      #endif
+      float hk = clamp(position.y / ${height.toFixed(1)}, 0.0, 1.5); hk *= hk;
+      float ph = ip.x * 0.37 + ip.z * 0.61;
+      float gust = 0.6 + 0.4 * sin(uTime * 0.23 + ip.x * 0.01);
+      float sway = (sin(uTime * 1.1 + ph) * 0.6 + sin(uTime * 2.3 + ph * 1.7) * 0.25 + 0.5) * gust;
+      transformed.z -= sway * 0.22 * hk * ${(height / 9).toFixed(2)};
+      transformed.x += sin(uTime * 0.9 + ph * 1.3) * 0.08 * hk * ${(height / 9).toFixed(2)};
+      transformed += normal * sin(uTime * 7.0 + position.x * 3.1 + position.z * 2.3 + ph) * ${flutter.toFixed(3)} * hk;`);
+  };
+  mat.customProgramCacheKey = () => 'gh18-wind-' + key;
+}
+
 // ------------------------------------------------------------------ palms
 function frondTexture() {
   const c = document.createElement('canvas');
@@ -412,10 +481,12 @@ function frondTexture() {
   return t;
 }
 
-function buildPalms(list, low) {
+function buildPalms(list, low, time) {
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8a7258, roughness: 0.95, vertexColors: true });
   const frondMat = new THREE.MeshStandardMaterial({ map: frondTexture(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.8 });
   const nutMat = new THREE.MeshStandardMaterial({ color: 0x6b5a2a, roughness: 0.7 });
+  // the sea breeze: the trunk leans and sways gently (more towards the top), the fronds flutter
+  for (const [m, flutter] of [[trunkMat, 0], [frondMat, 1], [nutMat, 0]]) windSway(m, time, flutter ? 0.11 : 0, 'palm' + flutter);
   const out = [];
   const variants = [0, 1, 2].map((k) => palmGeometry(k, low));
   const groups = variants.map(() => []);

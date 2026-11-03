@@ -17,6 +17,7 @@ import { playBirthday } from './birthday.js';
 import { buildNightSky } from './night.js';
 import { buildClouds } from './clouds.js';
 import { buildSpray } from './spray.js';
+import { buildDressing, createFootprints } from './dressing.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -105,7 +106,7 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
-let clouds, spray;
+let clouds, spray, dressing, footprints;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -136,6 +137,9 @@ async function init() {
   beach = buildBeach(M, { low: LOW });
   for (const m of beach.meshes) scene.add(m);
   for (const o of beach.objects) scene.add(o);
+  dressing = buildDressing({ low: LOW, time: beach.time });
+  for (const o of dressing.objects) scene.add(o);
+  footprints = createFootprints(scene);
   studio = buildStudio(M, pack);
   scene.add(studio.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
@@ -162,7 +166,7 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...studio.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
@@ -747,6 +751,7 @@ function updateFoot(dt) {
   const turn = (touchKeys.left ? 1 : 0) - (touchKeys.right ? 1 : 0);
   if (turn) orb.yaw += turn * 1.6 * dt;
   walker.update(dt);
+  footprints.step(head.position.x, head.position.z, orb.yaw, surfaceAt(head.position.x, head.position.z) === 'sand');
 }
 function placeFootCamera(dt) {
   camera.near = 0.05;
@@ -1104,6 +1109,8 @@ window.play = {
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
+  footprints: () => footprints,
+  dressing: () => dressing.counts,
   _driver: () => driver,
   quality: () => ({ ao: !!post?.gtao?.enabled, pr: renderer.getPixelRatio(), scans: !!scans, hdri: Object.keys(skyHDR) }),
   state: () => ({ mode: state.mode, explore: state.explore, birthday: state.birthday, x: +sim.x.toFixed(2), z: +sim.z.toFixed(2), yaw: +THREE.MathUtils.radToDeg(sim.yaw).toFixed(1), kmh: +(sim.speed * 3.6).toFixed(1), gear: sim.gear, surface: sim.surface }),
