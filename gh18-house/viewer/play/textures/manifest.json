@@ -1,0 +1,112 @@
+{
+ "note": "Poly Haven (CC0) textures for /play/, fetched by tools/fetch_play_textures.py",
+ "textures": {
+  "sand": {
+   "asset": "coast_sand_01",
+   "size_m": 3.0,
+   "source": "https://polyhaven.com/a/coast_sand_01",
+   "license": "CC0",
+   "color": "sand_color.jpg",
+   "normal": "sand_normal.jpg",
+   "rough": "sand_rough.jpg",
+   "ao": "sand_ao.jpg"
+  },
+  "ground": {
+   "asset": "dry_ground_01",
+   "size_m": 6.0,
+   "source": "https://polyhaven.com/a/dry_ground_01",
+   "license": "CC0",
+   "color": "ground_color.jpg",
+   "normal": "ground_normal.jpg",
+   "rough": "ground_rough.jpg",
+   "ao": "ground_ao.jpg"
+  },
+  "asphalt": {
+   "asset": "asphalt_02",
+   "size_m": 4.0,
+   "source": "https://polyhaven.com/a/asphalt_02",
+   "license": "CC0",
+   "color": "asphalt_color.jpg",
+   "normal": "asphalt_normal.jpg",
+   "rough": "asphalt_rough.jpg",
+   "ao": "asphalt_ao.jpg"
+  },
+  "deck": {
+   "asset": "wood_floor_deck",
+   "size_m": 2.4,
+   "source": "https://polyhaven.com/a/wood_floor_deck",
+   "license": "CC0",
+   "color": "deck_color.jpg",
+   "normal": "deck_normal.jpg",
+   "rough": "deck_rough.jpg",
+   "ao": "deck_ao.jpg"
+  },
+  "floor_oak": {
+   "asset": "laminate_floor_02",
+   "size_m": 2.4,
+   "source": "https://polyhaven.com/a/laminate_floor_02",
+   "license": "CC0",
+   "color": "floor_oak_color.jpg",
+   "normal": "floor_oak_normal.jpg",
+   "rough": "floor_oak_rough.jpg",
+   "ao": "floor_oak_ao.jpg"
+  },
+  "oak": {
+   "asset": "oak_veneer_01",
+   "size_m": 1.0,
+   "source": "https://polyhaven.com/a/oak_veneer_01",
+   "license": "CC0",
+   "color": "oak_color.jpg",
+   "normal": "oak_normal.jpg",
+   "rough": "oak_rough.jpg",
+   "ao": "oak_ao.jpg"
+  },
+  "dark_wood": {
+   "asset": "dark_wood",
+   "size_m": 1.0,
+   "source": "https://polyhaven.com/a/dark_wood",
+   "license": "CC0",
+   "color": "dark_wood_color.jpg",
+   "normal": "dark_wood_normal.jpg",
+   "rough": "dark_wood_rough.jpg",
+   "ao": "dark_wood_ao.jpg"
+  },
+  "plywood": {
+   "asset": "plywood",
+   "size_m": 1.2,
+   "source": "https://polyhaven.com/a/plywood",
+   "license": "CC0",
+   "color": "plywood_color.jpg",
+   "normal": "plywood_normal.jpg",
+   "rough": "plywood_rough.jpg",
+   "ao": "plywood_ao.jpg"
+  },
+  "plaster": {
+   "asset": "white_plaster_02",
+   "size_m": 2.0,
+   "source": "https://polyhaven.com/a/white_plaster_02",
+   "license": "CC0",
+   "color": "plaster_color.jpg",
+   "normal": "plaster_normal.jpg",
+   "rough": "plaster_rough.jpg",
+   "ao": "plaster_ao.jpg"
+  },
+  "linen": {
+   "asset": "fabric_pattern_05",
+   "size_m": 0.6,
+   "source": "https://polyhaven.com/a/fabric_pattern_05",
+   "license": "CC0",
+   "normal": "linen_normal.jpg",
+   "rough": "linen_rough.jpg",
+   "ao": "linen_ao.jpg"
+  }
+ },
+ "hdri": {
+  "sky_day": {
+   "asset": "kloofendal_48d_partly_cloudy_puresky",
+   "file": "sky_day.hdr",
+   "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+   "license": "CC0"
+  }
+ }
+}
