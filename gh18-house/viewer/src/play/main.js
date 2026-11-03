@@ -18,6 +18,10 @@ import { buildNightSky } from './night.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
+import { createSkids } from './skids.js';
+import { improveWalker } from './walkfeel.js';
+import { houseSeats } from './seats.js';
+improveWalker();
 import './play.css';
 
 // /play/ after "Get in the car" (entry.js runs the home tour first): GH-18 on a quiet coast. She starts
@@ -87,8 +91,9 @@ const TIMES = {
 const TIME_ORDER = ['evening', 'sunset', 'dusk', 'night', 'day'];
 
 // ------------------------------------------------------------------ state
-let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans;
-const skyHDR = {};                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
+let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids;
+const skyHDR = {};
+let seatSpots = [];                 // GH-18's sofas, chairs and beds, as things to interact with on foot                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
 const lampLights = [];
 const state = {
   time: 'evening', cam: 'chase', beamsOverride: null, started: false, sound: true, driven: false, lying: null, overlay: false, engineOff: 0,
@@ -146,6 +151,16 @@ async function init() {
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
   walker = new FootWalker(head, renderer.domElement, walkData);
   for (const c of walkData.colliders) c.bb = c.bb || bbOf(c.poly);
+  // sitting and lying down in the house
+  seatSpots = houseSeats(house).map((s) => {
+    const base = walker.heights(s.centre[0] * 1000, s.centre[1] * 1000).reduce((a, b) => (Math.abs(b - s.ffl) < Math.abs(a - s.ffl) ? b : a), s.ffl);
+    const r = Math.max(s.size[0], s.size[1]) / 2 + 1.1;
+    return {
+      kind: 'lounger', label: s.label, pos: [s.centre[0], base + 0.5, s.centre[1]], r,
+      seat: { x: s.centre[0], z: s.centre[1], y: base, eye: [s.eye[0], base + s.eye[1], s.eye[2]], look: s.look, pitch: s.pitch, lie: s.lie,
+        stand: [s.stand[0], s.stand[1], Math.atan2(s.look[0], s.look[1]), base], flash: (s.lie ? 'Lie back' : 'Sit back') + ' · E to get up' },
+    };
+  });
 
 
   for (let i = 0; i < (LOW ? 4 : 6); i++) {
@@ -156,6 +171,7 @@ async function init() {
 
   car = await loadBaleno('models/baleno.glb', CAR_ITEM.size[1] / 1000);
   scene.add(car.root);
+  skids = createSkids(scene);
   sim = new VehicleSim();
   sim.reset(HOME.x, HOME.z, HOME.yaw);
   audio = new CarAudio();
@@ -529,7 +545,7 @@ function findFocus() {
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? studio.interact : []) {
+  for (const it of state.explore ? [...studio.interact, ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -573,8 +589,8 @@ function lieDown(seat) {
   if (seat.eye) {
     // the reading nook: curled up in the ring, looking out across the studio
     state.lying = { seat, eye: new THREE.Vector3(...seat.eye) };
-    orb.yaw = Math.atan2(seat.look[0], seat.look[1]); orb.pitch = 0.05;
-    flash('Curl up and read · E to get up');
+    orb.yaw = Math.atan2(seat.look[0], seat.look[1]); orb.pitch = seat.pitch != null ? (seat.lie ? -seat.pitch : seat.pitch) : 0.05;
+    flash(seat.flash || 'Curl up and read · E to get up');
     return;
   }
   // a lounger: lying back, head turned to the sunset over the sea
@@ -589,7 +605,8 @@ function getUp() {
   if (!state.lying) return;
   const { seat } = state.lying;
   state.lying = null;
-  if (seat.eye) placeHer(seat.x + 1.1, seat.z, Math.PI / 2, 0.6);
+  if (seat.stand) placeHer(seat.stand[0], seat.stand[1], seat.stand[2], seat.stand[3]);       // in the house: in front of it
+  else if (seat.eye) placeHer(seat.x + 1.1, seat.z, Math.PI / 2, 0.6);
   else placeHer(seat.x - 0.95, seat.z, 0, 0.6);                 // beside the lounger, facing the sea
 }
 
@@ -635,7 +652,7 @@ function updateFoot(dt) {
 }
 function placeFootCamera(dt) {
   camera.near = 0.05;
-  const e = state.lying ? state.lying.eye : tmpV.set(head.position.x, walker.foot + 1.55, head.position.z);
+  const e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
   camera.position.copy(e);
   camera.rotation.set(-orb.pitch, orb.yaw + Math.PI, 0, 'YXZ');
   camera.fov = damp(camera.fov, 70, 6, dt);
@@ -693,6 +710,16 @@ function updateCar(dt) {
     w.axle.position.y = w.rest.y + (H[w.q] - gy);
   }
   if (car.steering) car.steering.rotation.z = pose.steer * 13.5;          // ~14:1 steering ratio
+  // skid marks behind sliding tyres (rubber on the road, grooves in the sand)
+  const onSand = sim.surface === 'sand' || sim.surface === 'ground';
+  for (const w of car.wheels) {
+    const sl = w.front ? sim.slipF : sim.slipR;
+    const k = onSand ? (Math.abs(sim.speed) > 0.8 ? 0.3 + sl * 0.4 : 0) : sl - 0.45;       // tracks in sand always
+    const wx = pose.x - rx * w.rest.x + fx * w.rest.z, wz = pose.z - rz * w.rest.x + fz * w.rest.z;
+    if (sim.surface === 'water') skids.lift(w.q);
+    else skids.add(w.q, wx, H[w.q], wz, k * 1.6, onSand);
+  }
+  skids.update();
   const inp = state.mode === 'drive' ? lastInput : NO_INPUT;
   const braking = (sim.speed > 0.3 && inp.brake > 0) || (sim.speed < -0.3 && inp.throttle > 0) || inp.handbrake;
   car.mats.tail.emissiveIntensity = (state.beams ? 0.7 : 0) + (braking ? 2.6 : 0);
@@ -749,7 +776,10 @@ function placeCamera(snap, dt) {
   // chase: the camera swings round behind the car's heading (a damped angle), not its position, so it
   // stays locked to the car without rubber-banding
   const high = state.cam === 'high';
-  const targetYaw = pose.yaw + look.yaw;
+  // in a slide the camera swings part-way towards where the car is going, not just where it points
+  const spd = Math.hypot(sim.vx, sim.vz), fwdMove = sim.speed > 3;
+  const slideYaw = fwdMove ? Math.atan2(Math.sin(Math.atan2(sim.vx, sim.vz) - pose.yaw), Math.cos(Math.atan2(sim.vx, sim.vz) - pose.yaw)) * Math.min(1, (spd - 3) / 5) : 0;
+  const targetYaw = pose.yaw + slideYaw * 0.6 + look.yaw;
   if (snap || !cam.init) { cam.yaw = targetYaw; cam.init = true; } else {
     let d = targetYaw - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
     cam.yaw += d * (1 - Math.exp(-dt * (high ? 2.5 : 4.2)));
@@ -827,7 +857,7 @@ function drawMap() {
 }
 
 // ------------------------------------------------------------------ loop
-const STEP = 1 / 120;
+const STEP = 1 / 240;                  // physics steps: the tyre model is stiff, so small steps keep it stable
 let acc = 0, last = performance.now(), lampTimer = 0, hudTimer = 0, prevImpact = 0, clock = 0, envTimer = 0;
 function stepSim(dt, input) {
   acc += Math.min(dt, 0.1);
@@ -941,8 +971,11 @@ window.play = {
   drive: (seconds, input = {}) => {
     const inp = { ...NO_INPUT, ...input };
     lastInput = inp;
-    const n = Math.round(seconds / STEP);
-    for (let i = 0; i < n; i++) sim.step(STEP, inp, collide, surfaceAt);
+    const n = Math.round(seconds / STEP), per = Math.round(1 / 60 / STEP);
+    for (let i = 0; i < n; i++) {
+      sim.step(STEP, inp, collide, surfaceAt);
+      if (i % per === per - 1) { pose.copyFrom(sim); updateCar(1 / 60); }       // (skid marks, suspension)
+    }
     pose.copyFrom(sim);
     for (let i = 0; i < 30; i++) { updateCar(1 / 30); placeCamera(false, 1 / 30); }
     hudTimer = 0; lampTimer = 0;

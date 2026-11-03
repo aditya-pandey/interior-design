@@ -15,7 +15,10 @@
     #play-prompt { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 50; font: 600 15px Inter, system-ui, sans-serif;
       color: #f6f1e8; background: rgba(24, 21, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 11px 20px; cursor: pointer; }
     #play-prompt kbd { display: inline-block; min-width: 22px; padding: 1px 6px; margin-right: 6px; border-radius: 5px; border: 1px solid rgba(255,255,255,.3); font: 600 12px Inter, sans-serif; }
-    #play-prompt[hidden], #play-loading[hidden] { display: none; }
+    #play-seat { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 50; font: 600 15px Inter, system-ui, sans-serif;
+      color: #f6f1e8; background: rgba(24, 21, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 11px 20px; cursor: pointer; }
+    #play-seat kbd { display: inline-block; min-width: 22px; padding: 1px 6px; margin-right: 6px; border-radius: 5px; border: 1px solid rgba(255,255,255,.3); font: 600 12px Inter, sans-serif; }
+    #play-prompt[hidden], #play-loading[hidden], #play-seat[hidden] { display: none; }
     #play-loading { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: #1d1a17; color: #f6f1e8; font: 32px Georgia, serif; }
   </style>
   <link rel="icon" href="site/favicon.svg" type="image/svg+xml" />
@@ -23,6 +26,7 @@
 <body>
   <!--TOUR-->
   <button id="play-prompt" hidden><kbd>F</kbd> Get in the car</button>
+  <button id="play-seat" hidden></button>
   <div id="play-app"></div>
   <div id="play-loading" hidden><span>♪</span></div>
   <button id="prompt" hidden></button>

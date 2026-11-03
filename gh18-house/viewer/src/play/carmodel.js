@@ -61,7 +61,7 @@ export async function loadBaleno(url, length) {
     for (const p of pieces) {
       p.geo.translate(-c.x, -c.y, -c.z);
       p.geo.scale(1, 1, 1 / k);
-      const m = new THREE.Mesh(p.geo, p.material);
+      const m = new THREE.Mesh(p.geo, wheelMaterial(p.material));
       m.castShadow = true;
       spin.add(m);
     }
@@ -70,7 +70,7 @@ export async function loadBaleno(url, length) {
   }
 
   // ---- lamps
-  const lamp = (color, emissive) => new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity: 0, roughness: 0.25, metalness: 0.1 });
+  const lamp = (color, emissive) => new THREE.MeshPhysicalMaterial({ color, emissive, emissiveIntensity: 0, roughness: 0.25, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04 });      // under a clear lens
   const mats = { head: lamp(0xf4f4f0, 0xfff6e8), tail: lamp(0x6e0d0d, 0xff2a1a), reverse: lamp(0xdddddd, 0xffffff) };
   model.traverse((o) => {
     if (!o.isMesh) return;
@@ -83,6 +83,8 @@ export async function loadBaleno(url, length) {
   });
 
   const steering = extractSteeringWheel(model, body);
+  finish(model);
+  root.add(contactShadow(size0.x + 0.25, length + 0.35));
 
   const bb = new THREE.Box3().setFromObject(model);
   const dims = bb.getSize(new THREE.Vector3());
@@ -105,6 +107,73 @@ export async function loadBaleno(url, length) {
   body.add(eye);
 
   return { root, body, model, wheels, mats, beams, eye, dims, steering, wheelbase: zf - zr, track, axleZ: (zf + zr) / 2, scale: k, nativeSize: size0 };
+}
+
+// ---- the finish: the file's materials are flat; give them what a real car's surfaces do
+const finished = new Map();
+function finish(model) {
+  model.traverse((o) => {
+    if (!o.isMesh) return;
+    const m = o.material, n = m.name || '';
+    if (finished.has(m)) { o.material = finished.get(m); return; }
+    let out = m;
+    if (n === 'primary') out = paint(m);
+    else if (/^glass/.test(n)) {
+      // glazing: clear, mirror-smooth, reflecting the sky
+      out = new THREE.MeshPhysicalMaterial({ name: n, color: m.color, transparent: true, opacity: Math.max(0.28, m.opacity), roughness: 0.02, metalness: 0, envMapIntensity: 1.8, depthWrite: false, side: m.side });
+    } else if (n === 'grill2.2') out = new THREE.MeshPhysicalMaterial({ name: n, color: 0xd9dbde, metalness: 1, roughness: 0.16 });          // chrome garnish
+    else if (n === 'mirhanl.7' || n === 'hd.7') { out = m.clone(); out.roughness = 0.35; out.envMapIntensity = 1.2; }
+    finished.set(m, out);
+    o.material = out;
+  });
+}
+// metallic paint under a clear coat: the base layer has metal flakes (a fine sparkle that fades with
+// distance; the file's body has no UVs, so the flakes come from the surface position), the clear coat on
+// top is smooth and mirror-like
+function paint(m) {
+  const p = new THREE.MeshPhysicalMaterial({
+    name: 'paint', color: m.color.clone().multiplyScalar(1.25), metalness: 0.62, roughness: 0.34,
+    clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.35,
+  });
+  p.onBeforeCompile = (sh) => {
+    sh.vertexShader = 'varying vec3 vFlake;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vFlake = position;');
+    sh.fragmentShader = 'varying vec3 vFlake;\nvec3 flakeHash(vec3 p){ p = fract(p * vec3(443.897, 441.423, 437.195)); p += dot(p, p.yzx + 19.19); return fract((p.xxy + p.yzz) * p.zyx); }\n' +
+      sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        float flakeFade = 1.0 - smoothstep(0.8, 7.0, length(vViewPosition));
+        vec3 fl = flakeHash(floor(vFlake * 1400.0)) - 0.5;
+        normal = normalize(normal + fl * 0.22 * flakeFade);`);
+  };
+  p.customProgramCacheKey = () => 'gh18-paint';
+  return p;
+}
+// the wheels: alloy rims (bright, metallic), rubber tyres (matt)
+function wheelMaterial(m) {
+  const n = m.name || '';
+  if (finished.has(m)) return finished.get(m);
+  let out = m;
+  if (n === 'reflector.5') out = new THREE.MeshPhysicalMaterial({ name: 'alloy', color: 0xc9cdd2, metalness: 0.95, roughness: 0.24, map: m.map || null, clearcoat: 0.5, clearcoatRoughness: 0.1 });
+  else if (/^wheel\./.test(n)) { out = m.clone(); out.roughness = 0.88; out.metalness = 0; }
+  finished.set(m, out);
+  return out;
+}
+// a soft dark patch under the car where the sky can't reach (the sun's shadow is separate)
+function contactShadow(w, l) {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 128;
+  const g = c.getContext('2d'), img = g.createImageData(64, 128);
+  for (let y = 0; y < 128; y++) for (let x = 0; x < 64; x++) {
+    const u = Math.abs(x - 31.5) / 32, v = Math.abs(y - 63.5) / 64;
+    const d = Math.max(0, 1 - Math.pow(Math.pow(u, 4) + Math.pow(v, 4), 0.25));    // rounded rectangle falloff
+    img.data.set([0, 0, 0, Math.min(255, Math.pow(d, 0.7) * 255 * 1.6)], (y * 64 + x) * 4);
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -6 }));
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0.015;
+  mesh.renderOrder = 1;
+  mesh.name = 'contact_shadow';
+  return mesh;
 }
 
 // Turn a (possibly quantized, indexed) glTF geometry into a plain float, non-indexed one in the
