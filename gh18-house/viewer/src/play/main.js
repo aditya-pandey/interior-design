@@ -23,6 +23,7 @@ import { createDevTools } from './devtools.js';
 import { DriverInput, stickCurve } from './input.js';
 import { improveWalker } from './walkfeel.js';
 import { houseSeats, standSpot } from './seats.js';
+import { sunPosition, sunEvents, momentHour, nearestMoment, MOMENTS, MOMENT_LABEL, fmtClock, blendKeys } from './skyclock.js';
 improveWalker();
 import './play.css';
 
@@ -90,7 +91,16 @@ const TIMES = {
   night: { label: 'Night', az: 252, el: -16, sun: 0.0, sunColor: 0x8899cc, hemi: 0.16, hemiSky: 0x34405e, exposure: 1.2, turb: 2, ray: 0.6, env: 0.1, fog: 0x0d121d, lamps: 3.2, glow: 1, beams: true, stars: 1, moon: { ...MOON, i: 0.34 } },
   day: { label: 'Day', az: 165, el: 55, sun: 3.0, sunColor: 0xfff5e8, hemi: 0.42, hemiSky: 0xdfe9ff, exposure: 0.62, turb: 2.2, ray: 2.2, env: 0.65, fog: 0xcfdde4, lamps: 0, glow: 0, beams: false, stars: 0, hdri: 'sky_day' },
 };
-const TIME_ORDER = ['evening', 'sunset', 'dusk', 'night', 'day'];
+const TIME_ORDER = MOMENTS;
+// the light by the sun's height: the setting side uses the looks above; the rising side is cooler and
+// misty at first (fogK < 1 thickens the haze)
+TIMES.dawn = { ...TIMES.dusk, label: 'Dawn', sunColor: 0xff9a74, hemi: 0.4, hemiSky: 0x8e9ccc, exposure: 1.05, turb: 6, ray: 3.4, env: 0.28, fog: 0x99a1ba, lamps: 1.8, glow: 0.7, stars: 0.25, fogK: 0.55 };
+TIMES.sunrise = { ...TIMES.sunset, label: 'Sunrise', sun: 1.4, sunColor: 0xffa77e, hemi: 0.36, hemiSky: 0xd9bccb, exposure: 0.95, turb: 6.5, ray: 3.2, env: 0.42, fog: 0xdcc6cc, lamps: 0, glow: 0.1, beams: false, fogK: 0.45 };
+TIMES.morning = { ...TIMES.evening, label: 'Morning', sun: 2.6, sunColor: 0xffe6c8, hemi: 0.42, hemiSky: 0xdbe6f5, exposure: 0.68, turb: 3.4, ray: 2.0, env: 0.6, fog: 0xd5dfe8, fogK: 0.85 };
+for (const t of Object.values(TIMES)) t.fogK ??= 1;
+const SETTING = [[-16, 'night'], [-3, 'dusk'], [1.2, 'sunset'], [8, 'evening'], [55, 'day']].map(([el, k]) => ({ ...TIMES[k], el }));
+const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'], [55, 'day']].map(([el, k]) => ({ ...TIMES[k], el }));
+const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -102,6 +112,8 @@ const state = {
   mode: 'drive',         // 'foot' (walking, first person) or 'drive'
   explore: false,        // set when she gets in at the start: the studio's interactions wait for it
   birthday: false, msgPlayed: false,
+  // the clock: hours (0..24), how many times faster than real time it runs (0 = stopped), the date
+  clock: { h: 17.4, speed: HEADLESS ? 0 : 20, date: PARAM_DATE, boost: 0 },
 };
 
 async function init() {
@@ -187,7 +199,7 @@ async function init() {
   const b = pack?.birthday, today = new Date();
   state.birthday = params.has('birthday') || !!(b && today.getMonth() + 1 === b.month && today.getDate() === b.day);
 
-  setTime(params.get('time') || 'evening');
+  if (params.get('clock')) { state.clock.h = +params.get('clock'); applyClock(true); } else setTime(params.get('time') || 'evening');
   buildMap();
   bindUI();
   pose.copyFrom(sim);
@@ -223,9 +235,8 @@ class FootWalker extends Walker {
 }
 
 // ------------------------------------------------------------------ time of day
-let timeBlend = null;            // {from, to, k, rate} while the sunset plays out on the lounger
 const waterAmb = new THREE.Color();
-function applyTime(t) {
+function applyTime(t, regen = true) {
   const dir = sunDir(t.az, t.el);
   for (const s of [sky, skyForEnv]) {
     const u = s.material.uniforms;
@@ -236,7 +247,7 @@ function applyTime(t) {
     u.mieDirectionalG.value = 0.82;
   }
   const photo = t.hdri && skyHDR[t.hdri];
-  if (photo) {
+  if (!regen) { /* keep the current reflections */ } else if (photo) {
     if (photo.norm == null) photo.norm = hdrNorm(photo);       // against the generated sky at this hour
     // a photographed sky: turned so its sun stands where ours is
     const a = THREE.MathUtils.degToRad(t.az), rotY = photo.phi - Math.atan2(Math.cos(a), -Math.sin(a));
@@ -244,8 +255,7 @@ function applyTime(t) {
     scene.environmentRotation.set(0, rotY, 0);
     scene.backgroundRotation.set(0, rotY, 0);
     scene.environmentIntensity = t.env * photo.norm;
-    scene.background = photo.background;
-    scene.backgroundIntensity = photo.norm;
+    scene.background = null;                     // (the photo lights the scene; the sky you see is the live one)
   } else {
     if (envRT) envRT.dispose();
     envRT = pmrem.fromScene(skyScene);
@@ -263,9 +273,10 @@ function applyTime(t) {
   renderer.toneMappingExposure = t.exposure;
   scene.fog.color.set(t.fog);
   state.stars = t.stars ?? 0;
-  scene.fog.near = 400 - 220 * state.stars;            // more haze at night: far hills fade into the sky
-  scene.fog.far = 4200 - 1900 * state.stars;
-  sky.visible = !photo && state.stars < 0.98;           // at full night the star dome covers it
+  scene.fog.near = (400 - 220 * state.stars) * t.fogK;   // more haze at night (far hills fade into the sky)
+  scene.fog.far = (4200 - 1900 * state.stars) * t.fogK;  // and in the morning mist
+  if (!regen) scene.environmentIntensity = t.env * (photo?.norm || 1);
+  sky.visible = state.stars < 0.98;                      // at full night the star dome covers it
   for (const k of ['cove', 'downlight', 'lamp', 'window_lit']) if (M[k]) M[k].emissiveIntensity = t.glow * 1.2;
   beach.materials.lamp.emissiveIntensity = t.lamps;
   studio.setNight(t.glow > 0.3);
@@ -274,7 +285,7 @@ function applyTime(t) {
   waterAmb.copy(new THREE.Color(t.hemiSky)).multiplyScalar(t.hemi * 0.9).add(new THREE.Color(t.fog).multiplyScalar(t.env * 0.35));
   beach.caustics.value.copy(sun.color).multiplyScalar(sun.intensity * Math.max(0, sun.userData.dir.y) * 0.3);
   post?.setBloom(0.2 + state.stars * 0.25, 2.2 - state.stars * 1.2);
-  lampTimer = 0;
+  if (regen) lampTimer = 0;
 }
 // photo-scanned textures (play/textures/, if fetched): the coast and the studio's surfaces
 function applyScans() {
@@ -293,7 +304,7 @@ function applyScans() {
   scans.sky('sky_day', renderer).then((h) => {
     if (!h) return;
     skyHDR.sky_day = { ...h, norm: null };
-    if (state.time === 'day') setTime('day');
+    applyClock(true);
   });
 }
 // how bright a photographed sky is next to the generated one: compare the average light from the
@@ -320,14 +331,49 @@ function skyRadiance(sc) {
   return sum / Math.max(1, n);
 }
 
+// jump the clock to a named moment of the day (sunrise, morning, day, evening, sunset, dusk, night)
 function setTime(name) {
-  const t = TIMES[name] || TIMES.evening;
-  state.time = TIMES[name] ? name : 'evening';
-  timeBlend = null;
-  applyTime(t);
-  setBeams(state.beamsOverride ?? t.beams);
+  if (!MOMENTS.includes(name)) name = 'evening';
+  state.clock.h = momentHour(name, state.clock.date);
+  state.clock.boost = 0;
+  applyClock(true);
+}
+// the look of the sky and light for the clock's time
+function clockLook() {
+  const { az, el } = sunPosition(state.clock.date, state.clock.h);
+  const rising = state.clock.h < sunEvents(state.clock.date).noon;
+  const t = blendKeys(rising ? RISING : SETTING, el, lerpTime);
+  t.az = az; t.el = el;
+  return t;
+}
+let lastEnvEl = null, envAge = 0, lastBeams = null, labelTimer = 0;
+function applyClock(force = false) {
+  const t = clockLook();
+  const regen = force || lastEnvEl == null || Math.abs(t.el - lastEnvEl) > 0.4 || envAge > 4;
+  if (regen) { lastEnvEl = t.el; envAge = 0; }
+  applyTime(t, regen);
+  state.time = nearestMoment(state.clock.h, state.clock.date);
+  if (lastBeams !== t.beams) { lastBeams = t.beams; setBeams(state.beamsOverride ?? t.beams); }
+  if (force) setBeams(state.beamsOverride ?? t.beams);
   const b = document.querySelector('[data-act="time"]');
-  if (b) b.textContent = t.label;
+  if (b) b.textContent = `${MOMENT_LABEL[state.time]} ${fmtClock(state.clock.h)}`;
+}
+// once a frame: the clock runs, and the light follows it (cheaply; the sky's reflections are
+// recomputed when the sun has moved enough)
+function tickClock(dt) {
+  const c = state.clock, speed = c.boost || c.speed;
+  envAge += dt; labelTimer -= dt;
+  if (!speed) return;
+  c.h = (c.h + (dt * speed) / 3600 + 24) % 24;     // speed: how many times faster than real time
+  // a boosted clock (watching the sunset from the lounger) runs on until it's dark
+  if (c.boost && sunPosition(c.date, c.h).el < -6) c.boost = 0;
+  if (labelTimer <= 0 || c.boost) { labelTimer = 0.25; applyClock(); }
+}
+const SPEEDS = [0, 1, 5, 20, 60, 180, 600];
+function clockSpeed(dir) {
+  const c = state.clock, i = SPEEDS.indexOf(c.speed);
+  c.speed = dir === 0 ? (c.speed ? 0 : 20) : SPEEDS[Math.max(0, Math.min(SPEEDS.length - 1, (i < 0 ? 3 : i) + dir))];
+  flash(c.speed ? `Time: ${c.speed === 1 ? 'real time' : `${c.speed}× (a day in ${Math.round(1440 / c.speed)} min)`}` : 'Time stopped');
 }
 function lerpTime(a, b, k) {
   const o = {};
@@ -341,6 +387,7 @@ function lerpTime(a, b, k) {
 
 function setBeams(on) {
   state.beams = on;
+  if (!car) return;                    // (the sky can be ready before the car has loaded)
   for (const b of car.beams) b.intensity = on ? 220 : 0;
   car.mats.head.emissiveIntensity = on ? 2.2 : 0;
   document.querySelector('[data-act="lights"]')?.classList.toggle('on', on);
@@ -394,6 +441,7 @@ function bindUI() {
     if (e.code === 'F3') { e.preventDefault(); dev.toggleOverlay(); return; }
     if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
     if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
+    if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
     const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: () => music.toggle(), KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
@@ -616,10 +664,14 @@ function lieDown(seat) {
   }
   // a lounger: lying back, head turned to the sunset over the sea
   state.lying = { seat, eye: new THREE.Vector3(seat.x, seat.y + 0.42, seat.z - 0.55) };
-  const az = THREE.MathUtils.degToRad(TIMES.sunset.az);
+  const az = THREE.MathUtils.degToRad(sunPosition(state.clock.date, sunEvents(state.clock.date).set).az);   // where the sun actually sets today
   orb.yaw = Math.atan2(-Math.sin(az), Math.cos(az)); orb.pitch = -0.06;
-  const from = TIMES[state.time] && state.time !== 'night' ? state.time : 'evening';
-  if (from === 'evening' || from === 'day' || from === 'sunset') timeBlend = { a: TIMES[from === 'day' ? 'evening' : from], steps: ['sunset', 'dusk'], k: 0 };
+  // the sunset plays out: if it's daytime, the clock moves to golden hour, then runs fast until dark
+  const c = state.clock, ev = sunEvents(c.date);
+  if (c.h > ev.rise && c.h < ev.set + 0.2) {
+    if (c.h < momentHour('evening', c.date)) { c.h = momentHour('evening', c.date); applyClock(true); }
+    c.boost = 90;                                // ~40 s from golden hour to dusk
+  }
   flash('Watch the sun go down · E to get up');
 }
 function getUp() {
@@ -931,16 +983,7 @@ function frame(dt = 1 / 60, show = true) {
   beach.update(clock);
   updateCar(dt);
   placeCamera(false, dt);
-  // the sunset plays out (lounger): blend through sunset to dusk over about a minute
-  if (timeBlend) {
-    timeBlend.k += dt / 30;
-    const seg = Math.min(timeBlend.steps.length - 1, Math.floor(timeBlend.k));
-    const from = seg === 0 ? timeBlend.a : TIMES[timeBlend.steps[seg - 1]], to = TIMES[timeBlend.steps[seg]];
-    const k = Math.min(1, timeBlend.k - seg);
-    envTimer -= dt;
-    if (envTimer <= 0) { envTimer = 0.4; applyTime(lerpTime(from, to, k)); }
-    if (timeBlend.k >= timeBlend.steps.length) { const end = timeBlend.steps[timeBlend.steps.length - 1]; setTime(end); }
-  }
+  tickClock(dt);
   const focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
   const d = sun.userData.dir || new THREE.Vector3(0, 1, 0);
   sun.target.position.set(focusX, 0, focusZ);
@@ -1040,6 +1083,7 @@ window.play = {
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
+  clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   _driver: () => driver,
   quality: () => ({ ao: !!post?.gtao?.enabled, pr: renderer.getPixelRatio(), scans: !!scans, hdri: Object.keys(skyHDR) }),
