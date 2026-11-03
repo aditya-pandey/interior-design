@@ -10,7 +10,8 @@
     "play:shots": "node scripts/play_shots.mjs",
     "preview": "vite preview",
     "shots": "node scripts/shots.mjs",
-    "film": "node film/render.mjs gpu && python3 film/post.py ../renders/film/GH-18_film.mp4"
+    "film": "node film/render.mjs gpu && python3 film/post.py ../renders/film/GH-18_film.mp4",
+    "drive:test": "node scripts/drive_harness.mjs --compare"
   },
   "dependencies": {
     "three": "0.170.0"

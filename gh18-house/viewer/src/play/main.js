@@ -19,6 +19,7 @@ import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
 import { createSkids } from './skids.js';
+import { createDevTools } from './devtools.js';
 import { improveWalker } from './walkfeel.js';
 import { houseSeats, standSpot } from './seats.js';
 improveWalker();
@@ -91,7 +92,7 @@ const TIMES = {
 const TIME_ORDER = ['evening', 'sunset', 'dusk', 'night', 'day'];
 
 // ------------------------------------------------------------------ state
-let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids;
+let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
 const skyHDR = {};
 let seatSpots = [];                 // GH-18's sofas, chairs and beds, as things to interact with on foot                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
 const lampLights = [];
@@ -174,6 +175,7 @@ async function init() {
   skids = createSkids(scene);
   sim = new VehicleSim();
   sim.reset(HOME.x, HOME.z, HOME.yaw);
+  dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
   music = new Music(pack?.music, document.getElementById('ytplayer'));
   music.onChange = updateMusicUI;
@@ -375,6 +377,10 @@ function bindUI() {
       if (['Escape', 'KeyE', 'Enter', 'Space'].includes(e.code)) closeOverlay();
       return;
     }
+    // driving dev tools: F3 overlay, F4 record / stop (saves a file), F6 replay the last recording
+    if (e.code === 'F3') { e.preventDefault(); dev.toggleOverlay(); return; }
+    if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
+    if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
     const act = { KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: () => music.toggle(), KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
@@ -704,9 +710,9 @@ function updateCar(dt) {
   const front = (H.FL + H.FR) / 2, rear = (H.RL + H.RR) / 2, left = (H.FL + H.RL) / 2, right = (H.FR + H.RR) / 2;
   const gy = (front + rear) / 2;
   // body on springs: a damped spring towards the pitch / roll the accelerations and the ground ask for
-  const tp = -Math.atan2(front - rear, car.wheelbase) - sim.ax * 0.010;
-  const tr = Math.atan2(left - right, car.track) + sim.ay * 0.011;
-  const K = 120, C = 16;
+  const tp = -Math.atan2(front - rear, car.wheelbase) - sim.ax * sim.s.bodyPitch;
+  const tr = Math.atan2(left - right, car.track) + sim.ay * sim.s.bodyRoll;
+  const K = sim.s.bodySpring, C = sim.s.bodyDamp;
   body.vp += ((tp - body.pitch) * K - body.vp * C) * dt; body.pitch += body.vp * dt;
   body.vr += ((tr - body.roll) * K - body.vr * C) * dt; body.roll += body.vr * dt;
   car.root.position.set(pose.x, gy, pose.z);
@@ -869,7 +875,7 @@ const STEP = 1 / 240;                  // physics steps: the tyre model is stiff
 let acc = 0, last = performance.now(), lampTimer = 0, hudTimer = 0, prevImpact = 0, clock = 0, envTimer = 0;
 function stepSim(dt, input) {
   acc += Math.min(dt, 0.1);
-  while (acc >= STEP) { sim.step(STEP, input, collide, surfaceAt); acc -= STEP; }
+  while (acc >= STEP) { sim.step(STEP, dev.stepInput(input), collide, surfaceAt); acc -= STEP; }
   pose.blend(sim, acc / STEP);
 }
 
@@ -954,6 +960,7 @@ function frame(dt = 1 / 60, show = true) {
     if (focus) pr.innerHTML = `<kbd>E</kbd> ${esc(focus.label)}`;
     drawMap();
   }
+  dev.frame();
   if (show) draw();
 }
 
@@ -981,7 +988,7 @@ window.play = {
     lastInput = inp;
     const n = Math.round(seconds / STEP), per = Math.round(1 / 60 / STEP);
     for (let i = 0; i < n; i++) {
-      sim.step(STEP, inp, collide, surfaceAt);
+      sim.step(STEP, dev.stepInput(inp), collide, surfaceAt);
       if (i % per === per - 1) { pose.copyFrom(sim); updateCar(1 / 60); }       // (skid marks, suspension)
     }
     pose.copyFrom(sim);
@@ -1011,6 +1018,7 @@ window.play = {
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
+  dev: () => dev,
   quality: () => ({ ao: !!post?.gtao?.enabled, pr: renderer.getPixelRatio(), scans: !!scans, hdri: Object.keys(skyHDR) }),
   state: () => ({ mode: state.mode, explore: state.explore, birthday: state.birthday, x: +sim.x.toFixed(2), z: +sim.z.toFixed(2), yaw: +THREE.MathUtils.radToDeg(sim.yaw).toFixed(1), kmh: +(sim.speed * 3.6).toFixed(1), gear: sim.gear, surface: sim.surface }),
   info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, wheel: !!car.steering, pack: !!pack, interact: studio.interact.length }),

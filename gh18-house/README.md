@@ -105,6 +105,7 @@ A free-roam page: GH-18 alone on an imagined coast. It opens with the home tour 
 - **Photo-scanned textures (optional):** on your own computer run `python3 tools/fetch_play_textures.py` from `gh18-house/` (~60 MB from Poly Haven, CC0), then commit `viewer/play/textures/`. Without them the page uses its generated textures.
 - **Build:** a separate Vite config (`vite.play.config.js`), run after the tour's build by `npm run build`. The tour's own output is unchanged. Dev server: `npm run dev:play` (http://localhost:5174/play/).
 - **Test:** `npm run build && node scripts/play_shots.mjs [outDir]` drives, walks and screenshots a fixed route headless.
+- **Driving tools:** in the game F3 shows a debug overlay, F4 records your driving to a file, F6 replays it. `npm run drive:test` runs the headless handling tests against their targets and compares with the baseline; all handling numbers are in `viewer/src/play/vehicleTuning.js`.
 
 ## Versions
 
