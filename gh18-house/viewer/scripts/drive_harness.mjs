@@ -18,6 +18,7 @@ const opt = (k) => { const i = args.indexOf(k); return i < 0 ? null : (args[i + 
 const simFile = opt('--sim') ? path.resolve(opt('--sim')) : path.join(here, '../src/play/vehicle.js');
 const { VehicleSim } = await import(pathToFileURL(simFile).href);
 const { steerLimit, rampKeySteer, AID_LEVELS } = await import(pathToFileURL(path.join(here, '../src/play/input.js')).href);
+const { ChaseCam } = await import(pathToFileURL(path.join(here, '../src/play/chasecam.js')).href);
 const DT = 1 / 240, N = { throttle: 0, brake: 0, steer: 0, handbrake: false };
 const deg = (r) => (r * 180) / Math.PI, kmh = (s) => s.speed * 3.6;
 const mk = (v0 = 0, surface = 'road') => { const s = new VehicleSim(); s.vz = v0 / 3.6; s._surf = () => surface; return s; };
@@ -30,6 +31,17 @@ function keyCorner(v) {
   const s = mk(v), st = { steer: 0 }; let mx = 0;
   run(s, 4, (t, q) => ({ ...hold(v)(t, q), steer: rampKeySteer(st, 1, q.speed, DT, Math.min(1, steerLimit(q.speed, q.s))) }), (t, q) => { mx = Math.max(mx, Math.abs(q.drift)); });
   return { slide: deg(mx), g: Math.abs(s.ayT ?? s.ay) / 9.81 };
+}
+// drive a manoeuvre with the chase camera following at 60 fps; each(frame t, sim, cam, view)
+const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+function withCam(s, secs, inp, opt, each) {
+  const cam = new ChaseCam(); const per = Math.round(1 / 60 / DT); let view = null;
+  run(s, secs, inp, (t, q) => {
+    if (Math.round(t / DT) % per !== 0) return;
+    view = cam.update(1 / 60, { x: q.x, z: q.z, y: 0, yaw: q.yaw, vx: q.vx, vz: q.vz, speed: q.speed, r: q.r, ax: q.axT ?? q.ax }, typeof opt === 'function' ? opt(t) : opt || {});
+    each?.(t, q, cam, view);
+  });
+  return cam;
 }
 // [id, what it means, unit, [min, max], function -> value]
 const TESTS = [
@@ -81,6 +93,33 @@ const TESTS = [
     const s = mk(70); s.aids = AID_LEVELS.off; run(s, 0.25, { steer: 1 }); run(s, 0.5, { steer: 1, handbrake: true }); let t = 0;
     while (t < 6) { step(s, { throttle: 0.6, steer: Math.max(-1, Math.min(1, s.drift * 3)) });  /* the driver counter-steers */ t += DT; if (Math.abs(s.drift) < 3 / 57.3 && Math.abs(s.r) < 0.3) break; }
     return kmh(s) < 12 ? NaN : t;
+  }],
+  // the chase camera (chasecam.js)
+  ['cam_corner_lead', 'camera: steady corner at 60 km/h: how far it looks into the turn', '°', [3, 15], () => {
+    const s = mk(60); const cam = withCam(s, 4, hold(60, { steer: 0.5 })); return deg(wrapA(cam.yaw - s.yaw)) * Math.sign(s.r);
+  }],
+  ['cam_slide_follow', 'camera: in a handbrake slide, how much of the slide angle it follows', '×', [0.3, 0.85], () => {
+    const s = mk(70); let best = 0, ratio = 0;
+    withCam(s, 1.2, (t) => (t < 0.25 ? { steer: 1 } : t < 0.75 ? { steer: 1, handbrake: true } : { throttle: 0.4 }), {}, (t, q, cam) => {
+      if (Math.abs(q.drift) > best && q.speed > 6) { best = Math.abs(q.drift); ratio = Math.abs(wrapA(cam.yaw - q.yaw)) / best; }
+    });
+    return ratio;
+  }],
+  ['cam_lookback', 'camera: time to swing round to look behind (B)', 's', [0.1, 0.35], () => {
+    const s = mk(60); let done = null;
+    withCam(s, 1.5, hold(60), (t) => ({ lookBack: t > 0.5 }), (t, q, cam) => { if (done == null && t > 0.5 && Math.abs(wrapA(cam.yaw - (q.yaw + Math.PI))) < 10 / 57.3) done = t - 0.5; });
+    return done ?? NaN;
+  }],
+  ['cam_brake_close', 'camera: braking hard from 100 km/h, how much closer it comes', 'm', [0.2, 1.2], () => {
+    const s = mk(100); let d0 = null, mn = Infinity;
+    withCam(s, 2, (t) => (t < 0.5 ? hold(100)(t, s) : { brake: 1 }), {}, (t, q, cam) => { if (t < 0.5) d0 = cam.dist; else mn = Math.min(mn, cam.dist); });
+    return d0 - mn;
+  }],
+  ['cam_slalom_smooth', 'camera: slalom at 100 km/h, RMS of its turning acceleration (lower = smoother)', '°/s²', [0, 260], () => {
+    const s = mk(100); const ys = [];
+    withCam(s, 6, (t) => ({ throttle: 0.5, steer: 0.6 * Math.sin(t * 2 * Math.PI * 0.6) }), {}, (t, q, cam) => ys.push(cam.yaw));
+    let sum = 0, n = 0; for (let i = 2; i < ys.length; i++) { const a2 = (wrapA(ys[i] - ys[i - 1]) - wrapA(ys[i - 1] - ys[i - 2])) * 3600; sum += a2 * a2; n++; }
+    return deg(Math.sqrt(sum / n));
   }],
   ['standstill_creep', 'parked, no input, 10 s: how far it creeps', 'm', [0, 0.01], () => { const s = mk(); run(s, 10, {}); return Math.hypot(s.x, s.z); }],
   ['physics_cost', 'physics time per 60 fps frame (4 steps)', 'ms', [0, 1], () => {

@@ -20,6 +20,7 @@ import { buildSpray } from './spray.js';
 import { buildDressing, createFootprints } from './dressing.js';
 import { Ambience, measureSfx } from './ambience.js';
 import { buildCosy } from './cosy.js';
+import { ChaseCam, headMotion } from './chasecam.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -532,7 +533,9 @@ function bindUI() {
   document.body.classList.toggle('touch', TOUCH);
 }
 
-const CAMS = ['chase', 'driver', 'high'];
+const CAMS = ['chase', 'driver', 'hood', 'high'];
+const chase = new ChaseCam(), head2 = {};
+const lookingBack = () => !!keys.KeyB || !!driver?.lookBack;
 function cycleCam() { if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
 function toggleBeams() { state.beamsOverride = !state.beams; setBeams(state.beamsOverride); }
 function cycleTime() { state.beamsOverride = null; setTime(TIME_ORDER[(TIME_ORDER.indexOf(state.time) + 1) % TIME_ORDER.length]); }
@@ -876,22 +879,27 @@ function placeCamera(snap, dt) {
   if (Math.abs(sim.speed) > 2 && now - look.last > 1.5) { look.yaw = damp(look.yaw, 0, 1.5, dt); look.pitch = damp(look.pitch, 0, 1.5, dt); }
   if (Math.hypot(pose.x - HOME.x, pose.z - HOME.z) > 3.8) state.driven = true;      // out of the gate
 
-  if (state.cam === 'driver') {
+  if (state.cam === 'driver' || state.cam === 'hood') {
+    // in the seat (or on the bonnet): the head moves with the g-forces, looks into the turn, turns to look back
     car.root.updateMatrixWorld(true);
-    car.eye.getWorldPosition(camPos);
-    // the head sways a little with the car: back under acceleration, out in the turns
-    // (left = (cos yaw, -sin yaw); in a left turn ay > 0 and the head moves to the right)
-    camPos.x += -fx * sim.ax * 0.004 - Math.cos(pose.yaw) * sim.ay * 0.005;
-    camPos.z += -fz * sim.ax * 0.004 + Math.sin(pose.yaw) * sim.ay * 0.005;
-    const yaw = pose.yaw + look.yaw * 1.4 + pose.steer * 0.35, pitch = -0.07 - look.pitch * 0.6 + body.pitch * 0.5;
+    const hm = headMotion(head2, dt || 1 / 60, { ax: sim.axT ?? sim.ax, ay: sim.ayT ?? sim.ay, steer: pose.steer, r: sim.r, speed: sim.speed, lookBack: lookingBack() });
+    const lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw);                       // the car's left
+    if (state.cam === 'hood') camPos.set(0, 1.08, 1.05).applyMatrix4(car.body.matrixWorld);
+    else car.eye.getWorldPosition(camPos);
+    const k = state.cam === 'hood' ? 0.4 : 1;
+    camPos.x += (fx * hm.back + lx * hm.side) * k; camPos.z += (fz * hm.back + lz * hm.side) * k;
+    const yaw = pose.yaw + look.yaw * 1.4 + hm.yaw * (state.cam === 'hood' ? 0.6 : 1), pitch = -0.07 - look.pitch * 0.6 + body.pitch * 0.5 + hm.pitch;
     camLook.set(camPos.x + Math.sin(yaw) * 10, camPos.y + Math.sin(pitch) * 10, camPos.z + Math.cos(yaw) * 10);
-    camera.near = 0.03;
+    camera.near = state.cam === 'hood' ? 0.1 : 0.03;
     // a natural field of view from the seat (wider ones stretch the dashboard and the wheel)
-    cam.fov = damp(cam.fov, 56 + Math.min(kmh, 140) * 0.035, 4, dt);
-    car.cabin.intensity = (sun.userData.dir?.y > 0 ? sun.intensity * 0.32 : 0) + hemi.intensity * 0.6;
+    cam.fov = damp(cam.fov, (state.cam === 'hood' ? 62 : 56) + Math.min(kmh, 140) * 0.035, 4, dt);
+    car.cabin.intensity = state.cam === 'driver' ? (sun.userData.dir?.y > 0 ? sun.intensity * 0.32 : 0) + hemi.intensity * 0.6 : 0;
     camera.fov = cam.fov;
     camera.position.copy(camPos);
+    const roll = hm.roll * k;
+    camera.up.set(lx * Math.sin(roll), Math.cos(roll), lz * Math.sin(roll));
     camera.lookAt(camLook);
+    camera.up.set(0, 1, 0);
     camera.updateProjectionMatrix();
     return;
   }
@@ -907,33 +915,13 @@ function placeCamera(snap, dt) {
     camera.position.copy(camPos); camera.lookAt(camLook); camera.updateProjectionMatrix();
     return;
   }
-  // chase: the camera swings round behind the car's heading (a damped angle), not its position, so it
-  // stays locked to the car without rubber-banding
-  const high = state.cam === 'high';
-  // in a slide the camera swings part-way towards where the car is going, not just where it points
-  const spd = Math.hypot(sim.vx, sim.vz), fwdMove = sim.speed > 3;
-  const slideYaw = fwdMove ? Math.atan2(Math.sin(Math.atan2(sim.vx, sim.vz) - pose.yaw), Math.cos(Math.atan2(sim.vx, sim.vz) - pose.yaw)) * Math.min(1, (spd - 3) / 5) : 0;
-  const targetYaw = pose.yaw + slideYaw * 0.6 + look.yaw;
-  if (snap || !cam.init) { cam.yaw = targetYaw; cam.init = true; } else {
-    let d = targetYaw - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
-    cam.yaw += d * (1 - Math.exp(-dt * (high ? 2.5 : 4.2)));
-  }
-  let dist = (high ? 13 : 6.3 + Math.min(kmh, 120) * 0.012) * look.zoom;
-  const ht = (high ? 8.5 : 2.25) * look.zoom + look.pitch * dist * 0.8;
-  // keep out of walls: shorten towards the car
-  let free = 1;
-  for (let i = 1; i <= 8; i++) {
-    const t = i / 8;
-    if (blockedAt(pose.x - Math.sin(cam.yaw) * dist * t, pose.z - Math.cos(cam.yaw) * dist * t)) { free = Math.max(0.45, (i - 1.5) / 8); break; }
-  }
-  cam.dist = snap ? dist * free : damp(cam.dist, dist * free, free < cam.dist / dist ? 12 : 3, dt);
-  // when boxed in (leaving GH-18's parking), sit a little higher and look down over the roof
-  const htB = ht + (1 - free) * 1.1;
-  cam.h = snap ? htB : damp(cam.h, htB, 4, dt);
-  camPos.set(pose.x - Math.sin(cam.yaw) * cam.dist, Math.max(0.7, cam.h + groundHeight(pose.x, pose.z)), pose.z - Math.cos(cam.yaw) * cam.dist);
-  camLook.set(pose.x + fx * (high ? 3 : 2.0), (high ? 0.4 : 1.05), pose.z + fz * (high ? 3 : 2.0));
-  cam.fov = snap ? 58 : damp(cam.fov, 58 + Math.min(kmh, 140) * 0.09, 3, dt);
-  camera.fov = cam.fov;
+  // chase / high: chasecam.js (leads into corners, follows slides, springs with speed and braking, smooths
+  // bumps, looks back on B)
+  if (snap) chase.init = false;
+  const v = chase.update(dt || 1 / 60, { x: pose.x, z: pose.z, y: groundHeight(pose.x, pose.z), yaw: pose.yaw, vx: sim.vx, vz: sim.vz, speed: sim.speed, r: sim.r, ax: sim.axT ?? sim.ax },
+    { mode: state.cam === 'high' ? 'high' : 'chase', lookYaw: look.yaw, lookPitch: look.pitch, zoom: look.zoom, lookBack: lookingBack(), blocked: blockedAt, impact: sim.impact });
+  camPos.set(v.x, v.y, v.z); camLook.set(v.lx, v.ly, v.lz);
+  cam.fov = camera.fov = v.fov;
   camera.position.copy(camPos);
   camera.lookAt(camLook);
   camera.updateProjectionMatrix();

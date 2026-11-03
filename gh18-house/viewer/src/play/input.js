@@ -97,6 +97,7 @@ export class DriverInput {
       const pressed = (i) => !!pad.buttons[i]?.pressed;
       for (const [i, name] of [[3, 'foot'], [8, 'camera'], [12, 'lights'], [13, 'time'], [9, 'music']]) if (pressed(i) && !this.prevButtons[i]) this.events.push(name);
       this.horn = pressed(1);
+      this.lookBack = pressed(11) || pressed(4);              // right-stick click or LB: look behind
       this.prevButtons = pad.buttons.map((b) => b.pressed);
     } else { this.padLook.x = this.padLook.y = 0; this.horn = false; }
     return { throttle, brake, steer, handbrake };
