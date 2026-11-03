@@ -16,7 +16,9 @@ found in Poly Haven's catalogue by keyword, and the choice is printed. Licence: 
 """
 import json
 import os
+import subprocess
 import sys
+import urllib.error
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,8 +48,15 @@ MAPS = (("color", ["Diffuse", "diff"]), ("normal", ["nor_gl"]), ("rough", ["Roug
 
 
 def get(url):
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
-        return r.read()
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
+            return r.read()
+    except urllib.error.URLError as e:
+        # python.org's Python on macOS often has no certificates installed (CERTIFICATE_VERIFY_FAILED);
+        # the system's curl trusts the Mac's own certificates, so use it instead
+        if "CERTIFICATE_VERIFY_FAILED" not in str(e):
+            raise
+        return subprocess.run(["curl", "-fsSL", "--retry", "3", "-A", UA["User-Agent"], url], check=True, capture_output=True).stdout
 
 
 def pick(kind, preferred, keywords, catalogue):
