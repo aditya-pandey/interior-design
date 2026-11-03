@@ -39,6 +39,8 @@ const playPage = {
     // the play's own textures (water normals; the Poly Haven scans once fetched): CC0, always copied
     const tex = path.resolve(__dirname, 'play/textures');
     if (fs.existsSync(tex)) fs.cpSync(tex, path.resolve(__dirname, 'dist/play/textures'), { recursive: true });
+    const mdl = path.resolve(__dirname, 'play/models');           // the protagonist (CC0, built by tools/character)
+    if (fs.existsSync(mdl)) fs.cpSync(mdl, path.resolve(__dirname, 'dist/play/models'), { recursive: true });
     const out = path.resolve(__dirname, 'dist/play/deepti');
     fs.rmSync(out, { recursive: true, force: true });
     if (PERSONAL) fs.cpSync(path.resolve(__dirname, 'play/deepti'), out, { recursive: true });
