@@ -23,6 +23,7 @@ const X1 = X0 + SW, Z1 = Z0 + SD;
 const H = 3.0;                       // floor to ceiling
 const T = 0.25;                      // solid wall thickness
 const DOOR = [103.0, 104.8];         // glass slider in the south wall
+export const BEACH_DOOR = [106.5, 108.3];   // glass slider in the north wall, out onto the deck and down to the beach
 const DECK = { x0: X0 - 1.0, x1: X1 + 1.0, z0: Z0 - 1.2, z1: Z1 + 2.6 };
 
 function rng(seed) {
@@ -190,7 +191,15 @@ export function buildStudio(M, pack) {
       solid(X1 - 0.08, a, X1 + 0.02, b);
     }
   };
-  glassRun(X0 + T, X1, 'x');
+  // the north wall: glass either side of a sliding door to the deck (the door stands open, slid behind the
+  // glass on its left)
+  glassRun(X0 + T, BEACH_DOOR[0], 'x');
+  glassRun(BEACH_DOOR[1], X1, 'x');
+  parts.box('glass', BEACH_DOOR[0] - 1.75, F, Z1 - 0.12, BEACH_DOOR[0] + 0.05, F + 2.5, Z1 - 0.08);
+  parts.box('metal', BEACH_DOOR[0] - 1.75, F + 2.47, Z1 - 0.14, BEACH_DOOR[0] + 0.05, F + 2.53, Z1 - 0.06, 0x1b1b1b);
+  parts.box('metal', BEACH_DOOR[0] - 0.02, F, Z1 - 0.14, BEACH_DOOR[0] + 0.04, F + 2.5, Z1 - 0.06, 0x1b1b1b);   // its handle edge
+  parts.box('metal', BEACH_DOOR[0], F + 2.5, Z1 - 0.07, BEACH_DOOR[1], F + H, Z1 + 0.02, 0x1b1b1b);              // header
+  parts.box('wood', BEACH_DOOR[0], F, Z1 - 0.08, BEACH_DOOR[1], F + 0.012, Z1 + 0.04, 0x9c7450);                 // threshold
   glassRun(Z0 + T, Z1, 'z');
   // roof: a thin white slab with deep eaves, oak soffit
   const R = { x0: X0 - 0.9, x1: X1 + 1.3, z0: Z0 - 0.9, z1: Z1 + 1.8 };

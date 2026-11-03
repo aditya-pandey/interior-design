@@ -147,7 +147,7 @@ export class Ambience {
 
   // x, z: the listener; right: unit vector to her right (for panning); t: the sea's clock (s);
   // sunEl: the sun's height (deg); indoors: inside the house or studio; palms: palms within ~15 m
-  update(dt, { x, z, rx = 1, rz = 0, t, sunEl, night, indoors, palms = 0 }) {
+  update(dt, { x, z, rx = 1, rz = 0, t, sunEl, night, indoors, palms = 0, fire = null, chimes = null }) {
     if (!this.init()) return;
     const ctx = this.audio.ctx, now = ctx.currentTime;
     const n = [0, 0], sL = coastDist(x, z, n);                   // listener's distance to the waterline (+ = at sea)
@@ -186,9 +186,44 @@ export class Ambience {
       else if (r < 0.9) SFX.whistle(ctx, dest, at, { gain: 0.03 * roomK });
       else SFX.crow(ctx, dest, at, { gain: 0.028 * roomK });
     }
+    this.extras(dt, now, x, z, fire, chimes, roomK);
     if (sunEl > -3 && near > 0.3 && this.gullT <= 0) {
       this.gullT = 9 + Math.random() * 18;
       SFX.gull(ctx, this.birdPan(ctx, Math.max(-0.8, Math.min(0.8, pan * 0.6 + (Math.random() - 0.5) * 0.6))), now + 0.05, { gain: 0.07 * near * roomK });
+    }
+  }
+  // the fire pit: a low roar and crackles; wind chimes in the gusts (called from update)
+  extras(dt, now, x, z, fire, chimes, roomK) {
+    const ctx = this.audio.ctx;
+    if (fire) {
+      const d = Math.hypot(x - fire.x, z - fire.z), k = fire.lit * Math.max(0, 1 - d / 22) ** 1.5 * roomK;
+      if (!this.roar) {
+        const s = ctx.createBufferSource(); s.buffer = noiseBuffer(ctx, 3, true); s.loop = true;
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320;
+        this.roar = ctx.createGain(); this.roar.gain.value = 0; s.connect(lp).connect(this.roar).connect(this.out); s.start();
+      }
+      this.roar.gain.setTargetAtTime(k * 0.06, now, 0.3);
+      this.crackT = (this.crackT ?? 0) - dt;
+      if (k > 0.02 && this.crackT <= 0) {
+        this.crackT = 0.04 + Math.random() * 0.35;
+        const src = ctx.createBufferSource(); src.buffer = this.stepBuf;
+        const hp = ctx.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 1500 + Math.random() * 2500; hp.Q.value = 1.5;
+        const g = ctx.createGain(); env(g, now, 0.001, k * (0.05 + Math.random() * 0.12), 0.015 + Math.random() * 0.03);
+        src.connect(hp).connect(g).connect(this.out); src.start(now, Math.random() * 0.2); src.stop(now + 0.08);
+      }
+    }
+    if (chimes && chimes.gust > 0.72) {
+      const d = Math.hypot(x - chimes.x, z - chimes.z), k = Math.max(0, 1 - d / 16) * roomK;
+      this.chimeT = (this.chimeT ?? 0) - dt;
+      if (k > 0.03 && this.chimeT <= 0) {
+        this.chimeT = 0.25 + Math.random() * 1.2 / (chimes.gust - 0.6);
+        const f = [1046.5, 1174.7, 1396.9, 1568, 1760, 2093][Math.floor(Math.random() * 6)];
+        for (const [m, a] of [[1, 1], [2.76, 0.35], [5.4, 0.12]]) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f * m;
+          env(g, now, 0.003, 0.03 * k * a, 2.6 / m);
+          o.connect(g).connect(this.out); o.start(now); o.stop(now + 3);
+        }
+      }
     }
   }
   birdPan(ctx, p) { const s = ctx.createStereoPanner(); s.pan.value = p; s.connect(this.birds); return s; }

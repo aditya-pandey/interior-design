@@ -19,6 +19,7 @@ import { buildClouds } from './clouds.js';
 import { buildSpray } from './spray.js';
 import { buildDressing, createFootprints } from './dressing.js';
 import { Ambience, measureSfx } from './ambience.js';
+import { buildCosy } from './cosy.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -107,7 +108,7 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
-let clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
+let cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -143,6 +144,8 @@ async function init() {
   footprints = createFootprints(scene);
   studio = buildStudio(M, pack);
   scene.add(studio.group);
+  cosy = buildCosy({ time: beach.time });
+  scene.add(cosy.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
   scene.add(sea.mesh);
@@ -167,13 +170,13 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
   walkData = {
-    colliders: [...houseWalk, ...studio.walk.colliders],
-    surfaces: [...data.surfaces, ...studio.walk.surfaces],
+    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders],
+    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces],
     stair: data.stair, levels: data.levels,
   };
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
@@ -298,6 +301,7 @@ function applyTime(t, regen = true) {
   scene.fog.color.set(t.fog);
   state.stars = t.stars ?? 0;
   state.sunEl = t.el;
+  state.glow = t.glow ?? 0;
   scene.fog.near = (400 - 220 * state.stars) * t.fogK;   // more haze at night (far hills fade into the sky)
   scene.fog.far = (4200 - 1900 * state.stars) * t.fogK;  // and in the morning mist
   if (!regen) scene.environmentIntensity = t.env * (photo?.norm || 1);
@@ -637,7 +641,7 @@ function findFocus() {
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? [...studio.interact, ...seatSpots] : seatSpots) {
+  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -777,7 +781,8 @@ function updateFoot(dt) {
 }
 function placeFootCamera(dt) {
   camera.near = 0.05;
-  const e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
+  let e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
+  if (state.lying?.seat.sway) e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(0, Math.sin(clock * 0.9) * 0.02, Math.sin(clock * 0.9) * 0.07));   // the hammock rocks
   camera.position.copy(e);
   camera.rotation.set(-orb.pitch, orb.yaw + Math.PI, 0, 'YXZ');
   camera.fov = damp(camera.fov, 70, 6, dt);
@@ -1025,6 +1030,7 @@ function frame(dt = 1 / 60, show = true) {
   clock += dt;
   if (night.update(dt, clock, state.stars, camera)) wish();
   clouds.update(clock, camera, skyLight);
+  cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
@@ -1054,7 +1060,7 @@ function frame(dt = 1 / 60, show = true) {
     if (palmTimer <= 0) { palmTimer = 0.5; nearPalms = beach.palms.filter((p) => (p.x - camera.position.x) ** 2 + (p.z - camera.position.z) ** 2 < 225).length; }
     camera.getWorldDirection(fwdV);
     const rl = Math.hypot(fwdV.x, fwdV.z) || 1;
-    ambience.update(dt, { x: camera.position.x, z: camera.position.z, rx: -fwdV.z / rl, rz: fwdV.x / rl, t: clock, sunEl: state.sunEl ?? 10, night: state.stars, indoors: isIndoors(), palms: nearPalms });
+    ambience.update(dt, { x: camera.position.x, z: camera.position.z, rx: -fwdV.z / rl, rz: fwdV.x / rl, t: clock, sunEl: state.sunEl ?? 10, night: state.stars, indoors: isIndoors(), palms: nearPalms, fire: cosy.fire, chimes: { ...cosy.chimes, gust: cosy.gust } });
   }
   prevImpact = sim.impact;
   hudTimer -= dt;
