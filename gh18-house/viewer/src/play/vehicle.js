@@ -50,6 +50,7 @@ export class VehicleSim {
     this.pitch = 0; this.pitchRate = 0;    // body pitch, rad (+ = nose down, under braking)
     this.aF = 0; this.aR = 0;              // slip angles as the tyres actually feel them (they take a moment to build)
     this.hbT = 1;                          // seconds since the handbrake was let go
+    this.aids = { counter: 1, esc: 1, tcs: true, abs: true };   // driving aids (input.js AID_LEVELS)
     this.ayT = 0; this.axT = 0;            // true accelerations (m/s², sideways left / forward), unfiltered
     this.impact = 0;                       // last collision speed, m/s (sound)
     this.reversing = false;
@@ -93,7 +94,7 @@ export class VehicleSim {
     const aidK = Math.min(1, this.hbT / s.aidReturn);           // aids stand aside while the handbrake is on
     const maxLock = s.maxSteer / (1 + Math.max(0, Math.abs(u) - s.lockFreeSpeed) / s.lockSpeedFalloff);
     const beta = Math.abs(u) > 4 ? Math.atan2(v, Math.abs(u)) : 0;
-    const assist = Math.max(-s.counterSteerMax, Math.min(s.counterSteerMax, beta * s.counterSteer)) * (1 - Math.min(1, Math.abs(input.steer)) * s.counterSteerYield) * aidK;
+    const assist = Math.max(-s.counterSteerMax, Math.min(s.counterSteerMax, beta * s.counterSteer)) * (1 - Math.min(1, Math.abs(input.steer)) * s.counterSteerYield) * aidK * this.aids.counter;
     const target = Math.max(-s.maxSteer, Math.min(s.maxSteer, input.steer * maxLock + (u >= 0 ? assist : 0)));
     const rate = (Math.abs(target) > Math.abs(this.steer) && Math.sign(target) === Math.sign(this.steer || target) ? s.steerRate : s.steerReturn) * (1 + Math.abs(beta) * s.steerRateSlide) / (1 + Math.abs(u) / s.steerRateFalloff);
     this.steer += Math.max(-rate * dt, Math.min(rate * dt, target - this.steer));
@@ -154,8 +155,14 @@ export class VehicleSim {
     let FxF = Fdrive - sgn * bF * s.frontBrake;
     let FxR = -sgn * bF * (1 - s.frontBrake);
     const FxF0 = FxF, FxR0 = FxR;
-    FxF = Math.max(-s.absFront * Df, Math.min(s.absFront * Df, FxF));   // wheelspin / ABS: capped at the grip
-    FxR = Math.max(-s.absRear * Dr, Math.min(s.absRear * Dr, FxR));     // brake proportioning keeps the rear turning
+    // traction control / ABS keep the front just inside its grip. Without them the wheels spin up or
+    // lock, and a sliding tyre only has its sliding friction, mostly used up along the road
+    const spinF = !this.aids.tcs && Fdrive !== 0 && Math.abs(FxF) > Df;
+    const lockF = !this.aids.abs && brake > 0 && Math.abs(FxF) > Df && !spinF;
+    if (spinF || lockF) FxF = Math.sign(FxF) * s.muSlide * Df;
+    else FxF = Math.max(-s.absFront * Df, Math.min(s.absFront * Df, FxF));   // wheelspin / ABS: capped at the grip
+    const capR = this.aids.abs ? s.absRear : 0.98;
+    FxR = Math.max(-capR * Dr, Math.min(capR * Dr, FxR));             // brake proportioning keeps the rear turning
     const locked = input.handbrake && Math.abs(u) > 0.8;
 
     // ---- slip angles. A tyre needs to roll a little way (its relaxation length) before its sideways
@@ -169,7 +176,8 @@ export class VehicleSim {
     this.aR += (arNow - this.aR) * relax;
     const af = this.aF, ar = this.aR;
     // sideways force: the magic-formula curve of the grip left over after driving / braking
-    const Fyf = -magic(af, s) * Math.sqrt(Math.max(0, Df * Df - FxF * FxF));
+    let Fyf = -magic(af, s) * Math.sqrt(Math.max(0, Df * Df - FxF * FxF));
+    if (lockF) { const sp = Math.hypot(u, vF) || 1; Fyf = -s.muSlide * Df * vF / sp * 0.6; }   // locked fronts don't steer
     let Fyr;
     if (locked) {
       // locked rear wheels slide: friction opposes the contact patch's motion
@@ -185,7 +193,7 @@ export class VehicleSim {
     const kRoll = Math.min(1, Math.max(0, (Math.abs(u) - s.rollBlend[0]) / s.rollBlend[1]));
     const FyfE = Fyf * kRoll, FyrE = Fyr * (locked ? 1 : kRoll);
     const slideF = Math.min(1, Math.abs(af) / (s.peakSlip * 1.4)), slideR = locked ? 1 : Math.min(1, Math.abs(ar) / (s.peakSlip * 1.4));
-    const spin = Math.abs(Fdrive) > 0.9 * Df ? 0.8 : 0;
+    const spin = spinF || lockF ? 1 : Math.abs(Fdrive) > 0.9 * Df ? 0.8 : 0;
     const sp6 = Math.min(1, Math.abs(u) / 6);
     this.slip = Math.min(1, Math.max(slideF, slideR, spin) * sp6);
     this.slipF = Math.max(slideF, spin) * sp6;            // per axle, for skid marks
@@ -199,7 +207,7 @@ export class VehicleSim {
     const rRef = Math.max(-rMax, Math.min(rMax, u * Math.tan(d) / (L * (1 + s.understeerK * u * u))));
     const over = (Math.sign(this.r) !== Math.sign(rRef) && Math.abs(this.r) > 0.1) || Math.abs(this.r) > Math.abs(rRef) + 0.05;
     const escOn = over && Math.abs(u) > 5 && Math.abs(this.drift) > s.escSlide;
-    const Mesc = escOn ? -s.escGain * s.inertia * (this.r - rRef) * aidK : 0;
+    const Mesc = escOn ? -s.escGain * s.inertia * (this.r - rRef) * aidK * this.aids.esc : 0;
 
     // telemetry for the debug overlay and the test harness (forces in N, angles in rad, per axle)
     const T = this.tel;
@@ -208,7 +216,8 @@ export class VehicleSim {
     T.steer = d; T.assist = u >= 0 ? assist : 0; T.locked = locked; T.surface = this.surface;
     T.abs = brake > 0 && (Math.abs(FxF0) > Math.abs(FxF) + 1 || Math.abs(FxR0) > Math.abs(FxR) + 1);
     T.tcs = Fdrive !== 0 && Math.abs(FxF0) > Math.abs(FxF) + 1;
-    T.esc = escOn && aidK > 0.5;
+    T.esc = escOn && aidK > 0.5 && this.aids.esc > 0;
+    T.spin = spinF; T.lockF = lockF;
     T.useF = Math.hypot(FxF, Fyf) / Math.max(1, Df); T.useR = locked ? 1 : Math.hypot(FxR, Fyr) / Math.max(1, Dr);
 
     // ---- integrate (semi-implicit Euler); the steered front force acts along the wheel's heading

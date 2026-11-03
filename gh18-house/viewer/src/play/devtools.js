@@ -62,7 +62,7 @@ export function createDevTools({ sim, car, scene, state, onReplayStart }) {
       `g  lateral ${(sim.ayT / g9).toFixed(2).padStart(5)}  long ${(sim.axT / g9).toFixed(2).padStart(5)}   roll ${D(sim.roll)}°  pitch ${D(sim.pitch)}°\n` +
       `load  front ${Math.round(t.Nf)} N  rear ${Math.round(t.Nr)} N\n` +
       `grip used  front ${(t.useF * 100).toFixed(0).padStart(3)} %  rear ${(t.useR * 100).toFixed(0).padStart(3)} %\n` +
-      `aids  ${aids}`;
+      `aids  [${sim.aidsLabel || ''}]  ${aids}`;
     g.clearRect(0, 0, cv.width, cv.height);
     // friction circles: x = sideways force / grip, y = drive (+) or braking (-) / grip
     circle(55, 50, 40, [t.Fyf / Math.max(1, t.Df), t.FxF / Math.max(1, t.Df)], 'front', Math.abs(t.af) > s.peakSlip);

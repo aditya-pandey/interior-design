@@ -17,6 +17,7 @@ const args = process.argv.slice(2);
 const opt = (k) => { const i = args.indexOf(k); return i < 0 ? null : (args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : true); };
 const simFile = opt('--sim') ? path.resolve(opt('--sim')) : path.join(here, '../src/play/vehicle.js');
 const { VehicleSim } = await import(pathToFileURL(simFile).href);
+const { steerLimit, rampKeySteer, AID_LEVELS } = await import(pathToFileURL(path.join(here, '../src/play/input.js')).href);
 const DT = 1 / 240, N = { throttle: 0, brake: 0, steer: 0, handbrake: false };
 const deg = (r) => (r * 180) / Math.PI, kmh = (s) => s.speed * 3.6;
 const mk = (v0 = 0, surface = 'road') => { const s = new VehicleSim(); s.vz = v0 / 3.6; s._surf = () => surface; return s; };
@@ -25,6 +26,11 @@ const run = (s, secs, inp, each) => { const n = Math.round(secs / DT); for (let 
 // hold a speed with the pedals (simple P controller) while doing something else
 const hold = (v, extra = {}) => (t, s) => { const e = v / 3.6 - s.speed; return { throttle: Math.max(0, Math.min(1, e * 1.5)), brake: Math.max(0, Math.min(1, -e * 0.8)), ...extra }; };
 
+function keyCorner(v) {
+  const s = mk(v), st = { steer: 0 }; let mx = 0;
+  run(s, 4, (t, q) => ({ ...hold(v)(t, q), steer: rampKeySteer(st, 1, q.speed, DT, Math.min(1, steerLimit(q.speed, q.s))) }), (t, q) => { mx = Math.max(mx, Math.abs(q.drift)); });
+  return { slide: deg(mx), g: Math.abs(s.ayT ?? s.ay) / 9.81 };
+}
 // [id, what it means, unit, [min, max], function -> value]
 const TESTS = [
   ['accel_0_100', '0–100 km/h, full throttle', 's', [11, 12], () => { const s = mk(); let t = 0; while (kmh(s) < 100 && t < 40) { step(s, { throttle: 1 }); t += DT; } return t; }],
@@ -67,6 +73,15 @@ const TESTS = [
   ['brake_dive', 'nose dive braking from 100 km/h', '°', [1, 3], () => { const s = mk(100); let mx = 0; run(s, 1.5, { brake: 1 }, (t, q) => { mx = Math.max(mx, q.pitch != null ? Math.abs(q.pitch) : Math.abs(q.ax) * 0.01); }); return deg(mx); }],
   ['sand_0_50', '0–50 km/h on sand', 's', [5, 12], () => { const s = mk(0, 'sand'); let t = 0; while (kmh(s) < 50 && t < 30) { step(s, { throttle: 1 }); t += DT; } return t; }],
   ['sand_grip', 'cornering grip on sand at 40 km/h, full lock', 'g', [0.5, 0.75], () => { const s = mk(40, 'sand'); run(s, 6, hold(40, { steer: 1 })); return Math.abs(s.ay) / 9.81; }],
+  // keyboard driving (input.js): holding a steering key carves the corner at the limit instead of scrubbing
+  ['key_corner_100_slide', 'keyboard: hold left at 100 km/h for 4 s (Assisted): biggest slide angle', '°', [0, 5], () => keyCorner(100).slide],
+  ['key_corner_100_g', 'keyboard: hold left at 100 km/h: sideways grip used', 'g', [0.7, 0.95], () => keyCorner(100).g],
+  ['key_corner_60_g', 'keyboard: hold left at 60 km/h: sideways grip used', 'g', [0.75, 0.95], () => keyCorner(60).g],
+  ['aidsoff_flick', 'aids off: the handbrake flick at 70 km/h, the driver counter-steering: time to grip again (NaN = spun out)', 's', [0.3, 4], () => {
+    const s = mk(70); s.aids = AID_LEVELS.off; run(s, 0.25, { steer: 1 }); run(s, 0.5, { steer: 1, handbrake: true }); let t = 0;
+    while (t < 6) { step(s, { throttle: 0.6, steer: Math.max(-1, Math.min(1, s.drift * 3)) });  /* the driver counter-steers */ t += DT; if (Math.abs(s.drift) < 3 / 57.3 && Math.abs(s.r) < 0.3) break; }
+    return kmh(s) < 12 ? NaN : t;
+  }],
   ['standstill_creep', 'parked, no input, 10 s: how far it creeps', 'm', [0, 0.01], () => { const s = mk(); run(s, 10, {}); return Math.hypot(s.x, s.z); }],
   ['physics_cost', 'physics time per 60 fps frame (4 steps)', 'ms', [0, 1], () => {
     const s = mk(80); const t0 = performance.now(); run(s, 10, (t) => ({ throttle: 0.5, steer: Math.sin(t) })); return (performance.now() - t0) / (10 * 60);

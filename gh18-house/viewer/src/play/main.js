@@ -20,6 +20,7 @@ import { createPost } from './post.js';
 import { loadScans } from './textures.js';
 import { createSkids } from './skids.js';
 import { createDevTools } from './devtools.js';
+import { DriverInput, stickCurve } from './input.js';
 import { improveWalker } from './walkfeel.js';
 import { houseSeats, standSpot } from './seats.js';
 improveWalker();
@@ -175,6 +176,9 @@ async function init() {
   skids = createSkids(scene);
   sim = new VehicleSim();
   sim.reset(HOME.x, HOME.z, HOME.yaw);
+  driver = new DriverInput(sim.s);
+  sim.aids = driver.aids; sim.aidsLabel = driver.aids.label;
+  driver.onPadConnect = () => flash('Controller connected · RT gas · LT brake · RB handbrake · left stick steer · Y get out · View camera');
   dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
   music = new Music(pack?.music, document.getElementById('ytplayer'));
@@ -347,24 +351,33 @@ const keys = {};
 const touchKeys = {};
 const look = { yaw: 0, pitch: 0, zoom: 1, last: -10 };
 const NO_INPUT = { throttle: 0, brake: 0, steer: 0, handbrake: false };
-let steerKey = 0;                // keyboard steering, eased in and out for a smooth wheel
+let driver;                      // input.js: keyboard / gamepad / touch shaping and the driving-aid level
 
 function readInput(dt) {
-  const k = (...c) => c.some((x) => keys[x]);
-  let throttle = k('KeyW', 'ArrowUp') || touchKeys.gas ? 1 : 0;
-  let brake = k('KeyS', 'ArrowDown') || touchKeys.brake ? 1 : 0;
-  const target = (k('KeyA', 'ArrowLeft') || touchKeys.left ? 1 : 0) - (k('KeyD', 'ArrowRight') || touchKeys.right ? 1 : 0);
-  const rate = target === 0 ? 5 : Math.sign(target) !== Math.sign(steerKey) ? 7 : 3.2;
-  steerKey += Math.max(-rate * dt, Math.min(rate * dt, target - steerKey));
-  let steer = steerKey;
-  const pad = navigator.getGamepads ? [...navigator.getGamepads()].find((p) => p) : null;
-  if (pad) {
-    const sx = pad.axes[0] || 0;
-    if (Math.abs(sx) > 0.1) steer = -Math.sign(sx) * ((Math.abs(sx) - 0.1) / 0.9) ** 1.4;
-    throttle = Math.max(throttle, pad.buttons[7]?.value || 0);
-    brake = Math.max(brake, pad.buttons[6]?.value || 0);
+  return driver.read(dt, keys, touchKeys, sim.speed);
+}
+// gamepad buttons, the right stick, the horn and rumble (once a frame)
+let padHorn = false;
+function padExtras(dt) {
+  for (const ev of driver.events || []) ({ foot: toggleFoot, camera: cycleCam, lights: toggleBeams, time: cycleTime, music: () => music.toggle() })[ev]?.();
+  if (driver.horn !== padHorn) { padHorn = driver.horn; horn(padHorn); }
+  const lx = driver.padLook.x, ly = driver.padLook.y;
+  if (state.mode === 'foot') {
+    orb.yaw -= lx * dt * 2.4;
+    orb.pitch = Math.max(-1.2, Math.min(1.2, orb.pitch + ly * dt * 1.6));
+  } else if (lx || ly) {
+    look.yaw -= lx * dt * 2.6;
+    look.pitch = Math.max(-0.35, Math.min(0.9, look.pitch + ly * dt * 1.4));
+    look.last = performance.now() / 1000;
   }
-  return { throttle, brake, steer, handbrake: !!keys.Space || !!(pad && pad.buttons[0]?.pressed) };
+  if (state.mode === 'drive') driver.rumble(dt, sim);
+}
+function cycleAids() {
+  const a = driver.cycleLevel();
+  sim.aids = a; sim.aidsLabel = a.label;
+  const b = document.querySelector('[data-act="aids"]');
+  if (b) b.textContent = a.label;
+  flash({ assisted: 'Driving aids: Assisted (stability, counter-steer, traction, ABS)', sport: 'Driving aids: Sport (light stability and counter-steer)', off: 'Driving aids: off (wheelspin, locking brakes, no catching)' }[driver.level]);
 }
 
 function bindUI() {
@@ -381,7 +394,7 @@ function bindUI() {
     if (e.code === 'F3') { e.preventDefault(); dev.toggleOverlay(); return; }
     if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
     if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
-    const act = { KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: () => music.toggle(), KeyN: () => music.next(), KeyG: goStudio }[e.code];
+    const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: () => music.toggle(), KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -394,7 +407,7 @@ function bindUI() {
       b.addEventListener('pointerdown', () => horn(true));
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => horn(false));
     } else {
-      b.addEventListener('click', () => ({ cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
+      b.addEventListener('click', () => ({ aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
     }
   }
   for (const b of document.querySelectorAll('#touch button')) {
@@ -659,7 +672,9 @@ function updateFoot(dt) {
   // the walker moves her "head" the way she looks
   head.rotation.set(0, orb.yaw + Math.PI, 0, 'YXZ');
   if (state.lying || state.overlay) return;
-  walker.stick.y = (touchKeys.gas ? 1 : 0) - (touchKeys.brake ? 1 : 0);
+  const pad = driver.pad;                      // left stick walks, as well as the on-screen buttons
+  walker.stick.y = (touchKeys.gas ? 1 : 0) - (touchKeys.brake ? 1 : 0) + (pad ? -stickCurve(pad.axes[1] || 0) : 0);
+  walker.stick.x = pad ? stickCurve(pad.axes[0] || 0) : 0;
   const turn = (touchKeys.left ? 1 : 0) - (touchKeys.right ? 1 : 0);
   if (turn) orb.yaw += turn * 1.6 * dt;
   walker.update(dt);
@@ -888,6 +903,7 @@ function loop() {
   last = now;
   const input = state.started ? readInput(dt) : NO_INPUT;
   lastInput = state.mode === 'drive' && !state.overlay ? input : { ...NO_INPUT, handbrake: true };
+  padExtras(dt);
   stepSim(dt, lastInput);
   if (state.mode === 'foot') updateFoot(dt);
   frame(dt);
@@ -1025,6 +1041,7 @@ window.play = {
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
   dev: () => dev,
+  _driver: () => driver,
   quality: () => ({ ao: !!post?.gtao?.enabled, pr: renderer.getPixelRatio(), scans: !!scans, hdri: Object.keys(skyHDR) }),
   state: () => ({ mode: state.mode, explore: state.explore, birthday: state.birthday, x: +sim.x.toFixed(2), z: +sim.z.toFixed(2), yaw: +THREE.MathUtils.radToDeg(sim.yaw).toFixed(1), kmh: +(sim.speed * 3.6).toFixed(1), gear: sim.gear, surface: sim.surface }),
   info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, wheel: !!car.steering, pack: !!pack, interact: studio.interact.length }),
