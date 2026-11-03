@@ -14,6 +14,10 @@ import { loadBaleno } from './carmodel.js';
 import { CarAudio } from './audio.js';
 import { Music } from './music.js';
 import { playBirthday } from './birthday.js';
+import { buildNightSky } from './night.js';
+import { buildSea } from './water.js';
+import { createPost } from './post.js';
+import { loadScans } from './textures.js';
 import './play.css';
 
 // /play/ after "Get in the car" (entry.js runs the home tour first): GH-18 on a quiet coast. She starts
@@ -35,7 +39,7 @@ const CAR_ITEM = house.floors[0].furniture.find((f) => f.type === 'car_model');
 const HOME = { x: CAR_ITEM.pos[0] / 1000, z: CAR_ITEM.pos[1] / 1000, yaw: 0 };
 
 // ------------------------------------------------------------------ renderer, scene, sky
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: HEADLESS });
+const renderer = new THREE.WebGLRenderer({ antialias: LOW, powerPreference: 'high-performance', preserveDrawingBuffer: HEADLESS });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, LOW ? 1.25 : 1.6));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -71,17 +75,20 @@ function sunDir(az, el) {
   return new THREE.Vector3(-Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e));
 }
 // an imagined coast: the sun goes down a little north of west, over the open sea beyond the headland
+// stars: how much of the night sky shows (0 = none, 1 = full night)
+const MOON = { az: 318, el: 20 };            // over the open sea to the north-west, so its light lies on the water
 const TIMES = {
-  evening: { label: 'Evening', az: 258, el: 8, sun: 2.7, sunColor: 0xffc489, hemi: 0.4, hemiSky: 0xffe2c4, exposure: 0.74, turb: 4.2, ray: 2.7, env: 0.55, fog: 0xe9c9a3, lamps: 0, glow: 0, beams: false },
-  sunset: { label: 'Sunset', az: 268, el: 1.2, sun: 1.6, sunColor: 0xff9a52, hemi: 0.32, hemiSky: 0xffbf9a, exposure: 0.95, turb: 8, ray: 3.0, env: 0.42, fog: 0xe6a982, lamps: 0.6, glow: 0.4, beams: false },
-  dusk: { label: 'Dusk', az: 270, el: -3, sun: 0.0, sunColor: 0xff8a50, hemi: 0.42, hemiSky: 0x9a98c0, exposure: 1.05, turb: 9, ray: 3.2, env: 0.3, fog: 0x7d7287, lamps: 2.4, glow: 1, beams: true },
-  night: { label: 'Night', az: 252, el: -16, sun: 0.0, sunColor: 0x8899cc, hemi: 0.16, hemiSky: 0x34405e, exposure: 1.2, turb: 2, ray: 0.6, env: 0.1, fog: 0x0d121d, lamps: 3.2, glow: 1, beams: true, moon: { az: 115, el: 42, i: 0.34 } },
-  day: { label: 'Day', az: 165, el: 55, sun: 3.0, sunColor: 0xfff5e8, hemi: 0.42, hemiSky: 0xdfe9ff, exposure: 0.62, turb: 3, ray: 1.1, env: 0.65, fog: 0xcfdde4, lamps: 0, glow: 0, beams: false },
+  evening: { label: 'Evening', az: 258, el: 8, sun: 2.7, sunColor: 0xffc489, hemi: 0.4, hemiSky: 0xffe2c4, exposure: 0.74, turb: 4.2, ray: 2.7, env: 0.55, fog: 0xe9c9a3, lamps: 0, glow: 0, beams: false, stars: 0 },
+  sunset: { label: 'Sunset', az: 268, el: 1.2, sun: 1.6, sunColor: 0xff9a52, hemi: 0.32, hemiSky: 0xffbf9a, exposure: 0.95, turb: 8, ray: 3.0, env: 0.42, fog: 0xe6a982, lamps: 0.6, glow: 0.4, beams: false, stars: 0 },
+  dusk: { label: 'Dusk', az: 270, el: -3, sun: 0.0, sunColor: 0xff8a50, hemi: 0.42, hemiSky: 0x9a98c0, exposure: 1.05, turb: 9, ray: 3.2, env: 0.3, fog: 0x7d7287, lamps: 2.4, glow: 1, beams: true, stars: 0.42 },
+  night: { label: 'Night', az: 252, el: -16, sun: 0.0, sunColor: 0x8899cc, hemi: 0.16, hemiSky: 0x34405e, exposure: 1.2, turb: 2, ray: 0.6, env: 0.1, fog: 0x0d121d, lamps: 3.2, glow: 1, beams: true, stars: 1, moon: { ...MOON, i: 0.34 } },
+  day: { label: 'Day', az: 165, el: 55, sun: 3.0, sunColor: 0xfff5e8, hemi: 0.42, hemiSky: 0xdfe9ff, exposure: 0.62, turb: 2.2, ray: 2.2, env: 0.65, fog: 0xcfdde4, lamps: 0, glow: 0, beams: false, stars: 0, hdri: 'sky_day' },
 };
 const TIME_ORDER = ['evening', 'sunset', 'dusk', 'night', 'day'];
 
 // ------------------------------------------------------------------ state
-let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData;
+let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans;
+const skyHDR = {};                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
 const lampLights = [];
 const state = {
   time: 'evening', cam: 'chase', beamsOverride: null, started: false, sound: true, driven: false, lying: null, overlay: false, engineOff: 0,
@@ -107,6 +114,15 @@ async function init() {
   for (const o of beach.objects) scene.add(o);
   studio = buildStudio(M, pack);
   scene.add(studio.group);
+  const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
+  sea = buildSea(renderer, { low: LOW, normals: waterNormals });
+  scene.add(sea.mesh);
+  night = buildNightSky();
+  night.setMoon(MOON.az, MOON.el);
+  scene.add(night.group);
+  if (!LOW) post = createPost(renderer, scene, camera, { low: LOW });
+  scans = await loadScans();
+  if (scans) applyScans();
 
   // car collisions: the coast's palms and lamps, the studio, the house's ground floor, the sea fence
   const carPoly = JSON.stringify(furnitureCorners(CAR_ITEM));
@@ -186,6 +202,7 @@ class FootWalker extends Walker {
 
 // ------------------------------------------------------------------ time of day
 let timeBlend = null;            // {from, to, k, rate} while the sunset plays out on the lounger
+const waterAmb = new THREE.Color();
 function applyTime(t) {
   const dir = sunDir(t.az, t.el);
   for (const s of [sky, skyForEnv]) {
@@ -196,10 +213,25 @@ function applyTime(t) {
     u.mieCoefficient.value = 0.0042;
     u.mieDirectionalG.value = 0.82;
   }
-  if (envRT) envRT.dispose();
-  envRT = pmrem.fromScene(skyScene);
-  scene.environment = envRT.texture;
-  scene.environmentIntensity = t.env;
+  const photo = t.hdri && skyHDR[t.hdri];
+  if (photo) {
+    if (photo.norm == null) photo.norm = hdrNorm(photo);       // against the generated sky at this hour
+    // a photographed sky: turned so its sun stands where ours is
+    const a = THREE.MathUtils.degToRad(t.az), rotY = photo.phi - Math.atan2(Math.cos(a), -Math.sin(a));
+    scene.environment = photo.texture;
+    scene.environmentRotation.set(0, rotY, 0);
+    scene.backgroundRotation.set(0, rotY, 0);
+    scene.environmentIntensity = t.env * photo.norm;
+    scene.background = photo.background;
+    scene.backgroundIntensity = photo.norm;
+  } else {
+    if (envRT) envRT.dispose();
+    envRT = pmrem.fromScene(skyScene);
+    scene.environment = envRT.texture;
+    scene.environmentRotation.set(0, 0, 0);
+    scene.environmentIntensity = t.env;
+    scene.background = null;
+  }
   sun.userData.dir = t.moon ? sunDir(t.moon.az, t.moon.el) : dir;
   sun.intensity = t.moon ? t.moon.i : t.sun;
   sun.color.set(t.moon ? 0x9fb3ff : t.sunColor);
@@ -208,15 +240,64 @@ function applyTime(t) {
   hemi.color.set(t.hemiSky);
   renderer.toneMappingExposure = t.exposure;
   scene.fog.color.set(t.fog);
-  const night = t.el < -10;
-  sky.visible = !night;
-  scene.background = night ? new THREE.Color(0x070b14) : null;
+  state.stars = t.stars ?? 0;
+  scene.fog.near = 400 - 220 * state.stars;            // more haze at night: far hills fade into the sky
+  scene.fog.far = 4200 - 1900 * state.stars;
+  sky.visible = !photo && state.stars < 0.98;           // at full night the star dome covers it
   for (const k of ['cove', 'downlight', 'lamp', 'window_lit']) if (M[k]) M[k].emissiveIntensity = t.glow * 1.2;
   beach.materials.lamp.emissiveIntensity = t.lamps;
   studio.setNight(t.glow > 0.3);
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
+  // the sea's own light: the sky's colour on the water body
+  waterAmb.copy(new THREE.Color(t.hemiSky)).multiplyScalar(t.hemi * 0.9).add(new THREE.Color(t.fog).multiplyScalar(t.env * 0.35));
+  beach.caustics.value.copy(sun.color).multiplyScalar(sun.intensity * Math.max(0, sun.userData.dir.y) * 0.3);
+  post?.setBloom(0.2 + state.stars * 0.25, 2.2 - state.stars * 1.2);
   lampTimer = 0;
 }
+// photo-scanned textures (play/textures/, if fetched): the coast and the studio's surfaces
+function applyScans() {
+  const b = beach.materials, m = studio.mats;
+  scans.apply(b.sand, 'sand', { normalScale: 0.8 });
+  scans.apply(b.land, 'ground');
+  scans.apply(b.pad, 'asphalt');
+  scans.apply(m.deck, 'deck');
+  scans.apply(m.floor, 'floor_oak', { normalScale: 0.6 });
+  scans.apply(m.wood, 'oak', { normalScale: 0.5 });
+  scans.apply(m.ply, 'plywood', { normalScale: 0.4 });
+  scans.apply(m.plaster, 'plaster', { normalScale: 0.6 });
+  scans.apply(m.plinth, 'plaster');
+  scans.apply(m.fabric, 'linen', { repeat: 4, normalScale: 0.7 });
+  for (const f of studio.frameMats()) scans.apply(f, 'dark_wood', { repeat: 2 });
+  scans.sky('sky_day', renderer).then((h) => {
+    if (!h) return;
+    skyHDR.sky_day = { ...h, norm: null };
+    if (state.time === 'day') setTime('day');
+  });
+}
+// how bright a photographed sky is next to the generated one: compare the average light from the
+// upper half of each, so switching to the photo doesn't change the exposure
+function hdrNorm(h) {
+  const proc = skyRadiance(skyScene), photo = h.meanUp;
+  return photo > 0 ? Math.max(0.3, Math.min(3, proc / photo)) : 1;
+}
+const cubeRT = new THREE.WebGLCubeRenderTarget(16, { type: THREE.HalfFloatType });
+const cubeCam = new THREE.CubeCamera(0.1, 5000, cubeRT);
+function skyRadiance(sc) {
+  cubeCam.update(renderer, sc);
+  const buf = new Uint16Array(16 * 16 * 4);
+  let sum = 0, n = 0;
+  for (const face of [0, 1, 2, 4, 5]) {                  // all but straight down
+    renderer.readRenderTargetPixels(cubeRT, 0, 0, 16, 16, buf, face);
+    for (let i = 0; i < 256; i++) {
+      const y = i >> 4;
+      if (face !== 2 && y < 8) continue;                  // the sides' upper halves (rows run bottom-up)
+      const L = THREE.DataUtils.fromHalfFloat(buf[i * 4]) * 0.2 + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 1]) * 0.7 + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 2]) * 0.1;
+      sum += Math.min(L, 8); n++;
+    }
+  }
+  return sum / Math.max(1, n);
+}
+
 function setTime(name) {
   const t = TIMES[name] || TIMES.evening;
   state.time = TIMES[name] ? name : 'evening';
@@ -334,6 +415,7 @@ function bindUI() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    post?.setSize(window.innerWidth, window.innerHeight);
   });
   document.body.classList.toggle('touch', TOUCH);
 }
@@ -761,10 +843,27 @@ function loop() {
   stepSim(dt, lastInput);
   if (state.mode === 'foot') updateFoot(dt);
   frame(dt);
+  post?.watch(dt, (pr) => { renderer.setPixelRatio(pr); post.setSize(window.innerWidth, window.innerHeight); }, () => sea.setScale(0.3));
 }
 
-function frame(dt = 1 / 60, draw = true) {
+// a shooting star: "Make a wish" for a few seconds
+let wishTimer = null;
+function wish() {
+  const w = document.getElementById('wish');
+  if (state.overlay || !w) return;
+  clearTimeout(wishTimer);
+  w.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('show')));
+  wishTimer = setTimeout(() => { w.classList.remove('show'); wishTimer = setTimeout(() => (w.hidden = true), 1500); }, 4200);
+}
+function draw() {
+  sea.update(clock, scene, camera, sun, waterAmb);
+  if (post) post.render(); else renderer.render(scene, camera);
+}
+
+function frame(dt = 1 / 60, show = true) {
   clock += dt;
+  if (night.update(dt, clock, state.stars, camera)) wish();
   beach.update(clock);
   updateCar(dt);
   placeCamera(false, dt);
@@ -817,7 +916,7 @@ function frame(dt = 1 / 60, draw = true) {
     if (focus) pr.innerHTML = `<kbd>E</kbd> ${esc(focus.label)}`;
     drawMap();
   }
-  if (draw) renderer.render(scene, camera);
+  if (show) draw();
 }
 
 // ------------------------------------------------------------------ headless / test API
@@ -854,6 +953,7 @@ window.play = {
   enter: () => { toggleFoot(); frame(1 / 60); return window.play.state(); },
   // on foot: put her at (x, z) metres facing yaw degrees (0 = north / +Z); the camera behind her
   foot: (x, z, yawDeg = 0, pitch = 0.22, footY = 0) => {
+    getUp();
     if (state.mode !== 'foot') state.mode = 'foot';
     placeHer(x, z, THREE.MathUtils.degToRad(yawDeg), footY);
     orb.pitch = pitch;
@@ -867,6 +967,10 @@ window.play = {
   close: () => { closeOverlay(); album = null; frame(1 / 60); },
   sunset: (seconds) => { for (let t = 0; t < seconds; t += 0.25) frame(0.25, false); hudTimer = 0; frame(1 / 60); return state.time; },
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
+  // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
+  wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
+  quality: () => ({ ao: !!post?.gtao?.enabled, pr: renderer.getPixelRatio(), scans: !!scans, hdri: Object.keys(skyHDR) }),
   state: () => ({ mode: state.mode, explore: state.explore, birthday: state.birthday, x: +sim.x.toFixed(2), z: +sim.z.toFixed(2), yaw: +THREE.MathUtils.radToDeg(sim.yaw).toFixed(1), kmh: +(sim.speed * 3.6).toFixed(1), gear: sim.gear, surface: sim.surface }),
   info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, wheel: !!car.steering, pack: !!pack, interact: studio.interact.length }),
 };

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { STUDIO } from './site.js';
+import { normalFromImage, plasterNormal, weaveNormal, canvasNormal, spineAtlas, spineUV, SPINE_CELLS } from './surfaces.js';
 
 // Her studio on the beach: a glass pavilion facing the sea (north) and the sunset (west).
 //   - east wall: a round bookshelf nook with a cushioned seat (E to curl up with a book), a floor lamp
@@ -120,14 +121,22 @@ export function buildStudio(M, pack) {
   const solid = (x0, z0, x1, z1, y0 = F, y1 = F + 2) => walkColliders.push({ poly: rectMM(Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1)), y0, y1 });
 
   const oak = plankTexture([196, 150, 104], 3), teak = plankTexture([150, 104, 70], 4);
+  const relief = (t, k) => { const n = normalFromImage(t.image, 512, k, 0.6); n.repeat.copy(t.repeat); return n; };
+  const oakN = relief(oak, 2.2), teakN = relief(teak, 2.6);
+  const plasterN = plasterNormal(); plasterN.repeat.set(1 / 2, 1 / 2);
+  const cloth = weaveNormal(48, 31); cloth.repeat.set(6, 6);
+  const v2 = (k) => new THREE.Vector2(k, k);
   const mats = {
-    plinth: new THREE.MeshStandardMaterial({ color: 0xd9d4ca, roughness: 0.9, vertexColors: true }),
-    deck: new THREE.MeshStandardMaterial({ map: teak, roughness: 0.75, vertexColors: true }),
-    floor: new THREE.MeshStandardMaterial({ map: oak, roughness: 0.45, vertexColors: true }),
-    plaster: new THREE.MeshStandardMaterial({ map: M.plaster?.map || null, color: 0xffffff, roughness: 0.92, vertexColors: true }),
-    wood: new THREE.MeshStandardMaterial({ map: oak, roughness: 0.6, vertexColors: true }),
+    plinth: new THREE.MeshStandardMaterial({ color: 0xd9d4ca, roughness: 0.9, vertexColors: true, normalMap: plasterN, normalScale: v2(0.8) }),
+    deck: new THREE.MeshStandardMaterial({ map: teak, roughness: 0.7, vertexColors: true, normalMap: teakN, normalScale: v2(0.7) }),
+    // oiled oak floor: a soft sheen, the grain and the plank joints catch the light
+    floor: new THREE.MeshPhysicalMaterial({ map: oak, roughness: 0.42, vertexColors: true, normalMap: oakN, normalScale: v2(0.45), clearcoat: 0.35, clearcoatRoughness: 0.3 }),
+    plaster: new THREE.MeshStandardMaterial({ map: M.plaster?.map || null, color: 0xffffff, roughness: 0.92, vertexColors: true, normalMap: plasterN, normalScale: v2(0.5) }),
+    wood: new THREE.MeshStandardMaterial({ map: oak, roughness: 0.55, vertexColors: true, normalMap: oakN, normalScale: v2(0.35) }),
     paint: new THREE.MeshStandardMaterial({ roughness: 0.75, vertexColors: true }),
-    fabric: new THREE.MeshStandardMaterial({ roughness: 0.95, vertexColors: true }),
+    books: new THREE.MeshStandardMaterial({ map: spineAtlas(), roughness: 0.72 }),
+    // cloth: a woven relief and the soft sheen fabric has at grazing angles
+    fabric: new THREE.MeshPhysicalMaterial({ roughness: 0.92, vertexColors: true, normalMap: cloth, normalScale: v2(0.5), sheen: 0.8, sheenRoughness: 0.55, sheenColor: 0xffffff }),
     metal: new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.75, vertexColors: true }),
     brass: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 1, vertexColors: true }),
     glass: M.glass,
@@ -135,8 +144,9 @@ export function buildStudio(M, pack) {
     fairy: new THREE.MeshStandardMaterial({ color: 0xfff4dd, emissive: 0xffcf8a, emissiveIntensity: 0, roughness: 0.4 }),
     leaf: new THREE.MeshStandardMaterial({ roughness: 0.7, vertexColors: true, side: THREE.DoubleSide }),
     paper: new THREE.MeshStandardMaterial({ roughness: 0.9, vertexColors: true }),
-    ply: new THREE.MeshStandardMaterial({ roughness: 0.55, vertexColors: true }),          // pale birch plywood
+    ply: new THREE.MeshStandardMaterial({ map: birchTexture(), roughness: 0.5, vertexColors: true }),   // pale birch plywood
   };
+  mats.ply.normalMap = relief(mats.ply.map, 1.2); mats.ply.normalScale = v2(0.3);
 
   // ---- plinth, deck, steps, boardwalk
   parts.box('plinth', DECK.x0, -0.5, DECK.z0, DECK.x1, F - 0.15, DECK.z1, 0xd2ccc0);
@@ -241,7 +251,22 @@ export function buildStudio(M, pack) {
   }
   for (const sz of [-1, 1]) parts.box('ply', RN.x, F, RN.z + sz * 0.55 - 0.18, RN.x + RN.D, F + 0.14, RN.z + sz * 0.55 + 0.18, plyEdge);   // feet
   // books in the cubbies: upright, a few stacked flat, a gap or two
-  const SPINES = [0x7a2e2e, 0x1f3a5f, 0xc9a24a, 0x2f5d50, 0xe8e0cf, 0x2c4a2a, 0xa4532e, 0x1c1c1c, 0x8a8a8a, 0x5b3a6b, 0xd7c3a1, 0x3f6f8f, 0x9c2f45, 0xe0b46c];
+  // a book: the face towards the room (+X) is its spine, the sides its cloth cover, the rest page edges
+  const book = (x0, y0, z0, x1, y1, z1, k) => {
+    const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
+    g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    const uv = g.attributes.uv, R = spineUV(k);
+    // BoxGeometry faces: +X, -X, +Y, -Y, +Z, -Z (4 vertices each)
+    const rects = [R.spine, R.pages, R.pages, R.pages, R.cover, R.cover];
+    const flat = y1 - y0 < z1 - z0;                     // lying flat: turn the spine design along Z
+    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) {
+      const i = f * 4 + v, [a, b, c, d] = rects[f];
+      let u = uv.getX(i), w = uv.getY(i);
+      if (f === 0 && flat) [u, w] = [w, u];           // the spine design runs along the book's length
+      uv.setXY(i, a + (c - a) * u, b + (d - b) * w);
+    }
+    parts.add('books', g, 0xffffff);
+  };
   const br = rng(808);
   for (let k = 0; k < NC; k++) {
     const a = ((k + 0.5) / NC) * Math.PI * 2 + Math.PI / NC;
@@ -254,7 +279,7 @@ export function buildStudio(M, pack) {
       let y = cy - 0.1;
       for (let i = 0; i < 4; i++) {
         const t = 0.025 + br() * 0.02;
-        parts.box('paint', RN.x + 0.22, y, cz - 0.1 + br() * 0.02, RN.x + 0.44, y + t, cz + 0.1 + br() * 0.02, SPINES[Math.floor(br() * SPINES.length)], false);
+        book(RN.x + 0.22, y, cz - 0.1 + br() * 0.02, RN.x + 0.44, y + t, cz + 0.1 + br() * 0.02, Math.floor(br() * SPINE_CELLS));
         y += t;
       }
       continue;
@@ -263,7 +288,7 @@ export function buildStudio(M, pack) {
     let z = cz - rowW / 2;
     while (z < cz + rowW / 2 - 0.02) {
       const t = 0.022 + br() * 0.03, h = maxH * (0.72 + br() * 0.28), dpt = 0.15 + br() * 0.06;
-      parts.box('paint', RN.x + RN.D - 0.04 - dpt, cy - maxH / 2, z, RN.x + RN.D - 0.04, cy - maxH / 2 + h, z + t, SPINES[Math.floor(br() * SPINES.length)], false);
+      book(RN.x + RN.D - 0.04 - dpt, cy - maxH / 2, z, RN.x + RN.D - 0.04, cy - maxH / 2 + h, z + t, Math.floor(br() * SPINE_CELLS));
       z += t + 0.002;
     }
   }
@@ -312,7 +337,7 @@ export function buildStudio(M, pack) {
   shade.translate(98.95, F + 1.55, 44.85);
   parts.add('glow', shade, 0xf3e6cf);
   parts.cyl('wood', 99.0, F, 48.15, 0.22, 0.22, 0.5, 0x8a6240, 18);
-  parts.box('paint', 98.88, F + 0.5, 48.05, 99.1, F + 0.54, 48.21, 0x1f3a5f);                 // a book on the side table
+  book(98.88, F + 0.5, 48.05, 99.1, F + 0.54, 48.21, 1);                                         // a book on the side table
   parts.cyl('paper', 99.12, F + 0.5, 48.25, 0.04, 0.035, 0.08, 0xf5f1e8, 12);                  // chai
   solid(98.6, 44.45, 99.1, 45.05, F, F + 1.6);
   solid(98.78, 47.93, 99.22, 48.37, F, F + 0.6);
@@ -473,7 +498,10 @@ export function buildStudio(M, pack) {
     group.add(mesh);
     const canvasMat = mesh.userData.canvas;
     if (a) {
-      loader.load(base + a.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; canvasMat.map = tex; canvasMat.color.set(0xffffff); canvasMat.needsUpdate = true; });
+      loader.load(base + a.file, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; canvasMat.map = tex; canvasMat.color.set(0xffffff); canvasMat.needsUpdate = true;
+        if (!p.f.endsWith('.png')) setTimeout(() => addImpasto(canvasMat, tex.image), 50 + Math.random() * 1500);
+      });
       if (p.f.endsWith('.png')) { canvasMat.transparent = false; canvasMat.alphaTest = 0.4; }
       const normal = p.face[0] === 0 ? [0, 1] : [p.face[0], 0];
       interact.push({ kind: 'art', label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal, r: 1.9 });
@@ -489,7 +517,7 @@ export function buildStudio(M, pack) {
   poems.forEach((poem, i) => {
     const w = i === 0 ? 0.62 : 0.72, h = i === 0 ? 0.78 : 1.06;
     const tex = poemTexture(poem, w / h);
-    const mesh = paintingMesh(w, h, 0xf4f0e8, tex);
+    const mesh = paintingMesh(w, h, 0xf4f0e8, tex, { glazed: true });
     const cx = 110.45 + i * 0.95;
     mesh.position.set(cx, F + 1.55, SW_Z);
     group.add(mesh);
@@ -503,7 +531,7 @@ export function buildStudio(M, pack) {
     mesh.position.set(easel.x + Math.sin(easel.rot) * 0.1, F + 1.12, easel.z + Math.cos(easel.rot) * 0.1);
     mesh.rotation.set(-0.12, easel.rot, 0, 'YXZ');
     group.add(mesh);
-    loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; });
+    loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
     interact.push({ kind: 'art', label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, F + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
   }
 
@@ -517,7 +545,7 @@ export function buildStudio(M, pack) {
   group.add(room, deckLight);
 
   return {
-    group, carColliders, interact, mats,
+    group, carColliders, interact, mats, frameMats: () => FRAME_MATS,
     walk: { colliders: walkColliders, surfaces: walkSurfaces },
     setNight(on) {
       mats.glow.emissiveIntensity = on ? 1.6 : 0;
@@ -529,18 +557,37 @@ export function buildStudio(M, pack) {
   };
 }
 
-// a framed canvas: a thin frame (or none) and a canvas plane facing +Z
-function paintingMesh(w, h, frameColor, tex) {
+// a framed canvas: a thin frame (or none) and a canvas plane facing +Z. Paintings are on woven canvas
+// under a satin varnish; when the picture loads, its brush strokes give the varnish its relief
+// (addImpasto). Poems are paper behind glass.
+const frameTex = { oak: null };
+const FRAME_MATS = [];                  // the wooden frames (for the scanned wood, textures.js)
+function paintingMesh(w, h, frameColor, tex, { glazed = false } = {}) {
   const g = new THREE.Group();
-  const canvas = new THREE.MeshStandardMaterial({ color: tex ? 0xffffff : 0xece6da, map: tex || null, roughness: 0.85 });
+  const weave = canvasNormal().clone();
+  weave.repeat.set(w / 0.06, h / 0.06);
+  weave.needsUpdate = true;
+  const canvas = glazed
+    ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: tex || null, roughness: 0.9, clearcoat: 1, clearcoatRoughness: 0.04 })
+    : new THREE.MeshPhysicalMaterial({ color: tex ? 0xffffff : 0xece6da, map: tex || null, roughness: 0.62, normalMap: weave, normalScale: new THREE.Vector2(0.35, 0.35), clearcoat: 0.45, clearcoatRoughness: 0.32 });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), canvas);
   plane.position.z = 0.025;
+  plane.receiveShadow = true;
   g.add(plane);
   if (frameColor != null) {
     const fw = 0.035, fd = 0.04;
-    const mat = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.5, metalness: frameColor === 0xb08d57 ? 0.8 : 0.05 });
+    const wooden = frameColor === 0x2a1f16 || frameColor === 0x8a6240;
+    const brass = frameColor === 0xb08d57;
+    if (wooden && !frameTex.oak) { frameTex.oak = plankTexture([200, 170, 140], 12); frameTex.oak.repeat.set(1 / 0.6, 1 / 0.6); frameTex.n = normalFromImage(frameTex.oak.image, 256, 2, 0.4); frameTex.n.repeat.copy(frameTex.oak.repeat); }
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: frameColor, roughness: brass ? 0.32 : wooden ? 0.5 : 0.38, metalness: brass ? 0.85 : 0,
+      map: wooden ? frameTex.oak : null, normalMap: wooden ? frameTex.n : null, clearcoat: wooden ? 0.4 : brass ? 0 : 0.2, clearcoatRoughness: 0.35,
+    });
+    if (wooden) FRAME_MATS.push(mat);
     for (const [x, y, ww, hh] of [[0, h / 2 + fw / 2, w + fw * 2, fw], [0, -h / 2 - fw / 2, w + fw * 2, fw], [-w / 2 - fw / 2, 0, fw, h], [w / 2 + fw / 2, 0, fw, h]]) {
-      const b = new THREE.Mesh(new THREE.BoxGeometry(ww, hh, fd), mat);
+      const geo = new THREE.BoxGeometry(ww, hh, fd);
+      if (ww < hh) { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getY(i) * hh, uv.getX(i) * ww); } else { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ww, uv.getY(i) * hh); }
+      const b = new THREE.Mesh(geo, mat);
       b.position.set(x, y, fd / 2);
       b.castShadow = true;
       g.add(b);
@@ -551,6 +598,35 @@ function paintingMesh(w, h, frameColor, tex) {
   }
   g.userData.canvas = canvas;
   return g;
+}
+// once a painting's picture has loaded: the brush strokes, raised under the varnish
+function addImpasto(mat, img) {
+  if (!img || !mat.isMeshPhysicalMaterial) return;
+  const n = normalFromImage(img, 512, 1.3, 0.7);
+  n.wrapS = n.wrapT = THREE.ClampToEdgeWrapping;
+  mat.clearcoatNormalMap = n;
+  mat.clearcoatNormalScale = new THREE.Vector2(0.6, 0.6);
+  mat.needsUpdate = true;
+}
+
+// pale birch plywood face: fine straight grain, near white so the vertex colour carries the tone
+function birchTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const g = c.getContext('2d'), r = rng(17);
+  g.fillStyle = '#fbf6ee'; g.fillRect(0, 0, 512, 512);
+  for (let k = 0; k < 160; k++) {
+    g.strokeStyle = `rgba(150,110,60,${0.03 + r() * 0.07})`;
+    g.lineWidth = 0.6 + r() * 1.4;
+    const y = r() * 512;
+    g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(170, y + r() * 10 - 5, 340, y + r() * 10 - 5, 512, y + r() * 4 - 2); g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.repeat.set(1 / 0.8, 1 / 0.8);
+  return t;
 }
 
 // a poem on cream paper: title, lines in stanzas, date, signature

@@ -1,15 +1,17 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { COAST, BEACH, ROAD_PTS, ROAD_HALF, LANE, SHOULDER, STUDIO, STUDIO_PARK } from './site.js';
+import { sandNormal, causticsTexture, fbm, normalTexture } from './surfaces.js';
 
-// The world around GH-18 for /play/: land, a sandy beach that slopes into the sea, the sea itself
-// (animated normals, foam at the waterline), the coastal highway loop, a few coconut palms, street
-// lights, and low hills on the horizon. No other houses and nobody about.
+// The world around GH-18 for /play/: land, a white-sand beach that slopes on under the sea (wet and
+// glossy where the waves reach, with caustics under the water), the coastal highway loop, a few coconut
+// palms, street lights, and low hills on the horizon. No other houses and nobody about. The sea itself
+// is water.js.
 //
 // Also the ground model the car and the walker use: groundHeight(), surfaceAt() and a "sea fence"
 // that keeps the car out of deep water.
 
-const WATER_Y = -0.35;
+export const WATER_Y = -0.35;          // still-water level
 
 function rng(seed) {
   let s = seed % 2147483647;
@@ -134,11 +136,13 @@ function speckle(g, n, size, r, cols, a0 = 0.15, a1 = 0.45, s0 = 1, s1 = 3) {
   }
   g.globalAlpha = 1;
 }
+// white coral sand: pale grains, a few darker ones, bits of shell
 const sandTex = () => canvasTex(512, (g, S) => {
-  g.fillStyle = '#e6d3b0'; g.fillRect(0, 0, S, S);
+  g.fillStyle = '#f1ebdf'; g.fillRect(0, 0, S, S);
   const r = rng(11);
-  speckle(g, 26000, S, r, ['#f3e4c6', '#cdb48c', '#d9c29b', '#bfa47a', '#fff4dc'], 0.15, 0.5, 1, 2.2);
-  speckle(g, 300, S, r, ['#a68b62', '#8c7a63', '#efe7da'], 0.4, 0.8, 1.5, 3.5);   // shell bits
+  speckle(g, 30000, S, r, ['#fbf8f2', '#e6dccb', '#ece3d3', '#d8ccb6', '#ffffff'], 0.15, 0.55, 1, 2.2);
+  speckle(g, 900, S, r, ['#b9a98f', '#a29680', '#c7b79c'], 0.3, 0.7, 1, 2);
+  speckle(g, 260, S, r, ['#f7e3d6', '#efe7da', '#e9d2c0'], 0.5, 0.9, 1.5, 3.5);   // shell bits
 });
 const soilTex = () => canvasTex(512, (g, S) => {
   g.fillStyle = '#b9a47f'; g.fillRect(0, 0, S, S);
@@ -170,30 +174,6 @@ const roadTex = () => {
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
   return t;
 };
-// tileable wave normals from a sum of integer-frequency sines
-function waterNormals() {
-  const S = 256, h = new Float32Array(S * S), r = rng(21);
-  const waves = Array.from({ length: 14 }, () => ({ fx: Math.floor(r() * 9) - 4, fy: Math.floor(r() * 9) - 4 || 1, ph: r() * 6.28, a: 0.4 + r() }));
-  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
-    let v = 0;
-    for (const w of waves) v += w.a * Math.sin((w.fx * x + w.fy * y) / S * Math.PI * 2 + w.ph) / Math.hypot(w.fx, w.fy);
-    h[y * S + x] = v;
-  }
-  const c = document.createElement('canvas'); c.width = c.height = S;
-  const g = c.getContext('2d'), img = g.createImageData(S, S);
-  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
-    const dx = h[y * S + (x + 1) % S] - h[y * S + (x - 1 + S) % S];
-    const dy = h[((y + 1) % S) * S + x] - h[((y - 1 + S) % S) * S + x];
-    const n = new THREE.Vector3(-dx * 2.2, -dy * 2.2, 1).normalize();
-    const i = (y * S + x) * 4;
-    img.data[i] = (n.x * 0.5 + 0.5) * 255; img.data[i + 1] = (n.y * 0.5 + 0.5) * 255; img.data[i + 2] = (n.z * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
-  }
-  g.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
-}
-
 // ------------------------------------------------------------------ build
 export function buildBeach(M, opts = {}) {
   const low = !!opts.low;
@@ -209,25 +189,24 @@ export function buildBeach(M, opts = {}) {
   landGeo.rotateX(-Math.PI / 2);
   worldUV(landGeo);
   const soil = soilTex(); soil.repeat.set(1 / 16, 1 / 16);
-  const land = new THREE.Mesh(landGeo, new THREE.MeshStandardMaterial({ map: soil, roughness: 1 }));
+  const soilN = normalTexture(fbm(256, 8, 4, 61), 256, 3); soilN.repeat.set(1 / 4, 1 / 4);
+  const landMat = new THREE.MeshStandardMaterial({ map: soil, roughness: 1, normalMap: soilN, normalScale: new THREE.Vector2(0.6, 0.6) });
+  const land = new THREE.Mesh(landGeo, landMat);
   land.position.y = -0.005;                // a hair below the sand's inland edge, so the seam doesn't flicker
   land.receiveShadow = true; land.name = 'land';
   meshes.push(land);
 
   // sand: a ribbon along the coast from the inland edge out under the water
-  const S_STEPS = [-BEACH, -30, -24, -18, -12, -8, -6, -4, -2, 0, 3, 7, 12, 20, 32];
-  const coastPts = resampleCoast(4);
-  const sp = [], sc = [], suv = [], sidx = [];
-  const wet = new THREE.Color(0xb59a76), dry = new THREE.Color(0xffffff), tmp = new THREE.Color();
+  const S_STEPS = [-BEACH, -30, -24, -18, -12, -8, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3.5, 5, 7, 9.5, 12, 16, 20, 26, 32, 40, 50, 62, 76, 92];
+  const coastPts = resampleCoast(3);
+  const sp = [], sh = [], suv = [], sidx = [];
   coastPts.forEach(([x, z, nx, nz]) => {
     for (const s of S_STEPS) {
       const px = x + nx * s, pz = z + nz * s;
       // under the road and the parking pad the sand stays just below them (no dunes poking through)
       const onRoad = s > -BEACH - 2 && (roadDist(px, pz) < ROAD_HALF + 1 || (px > PARK.x0 - 1 && px < PARK.x1 + 1 && pz > PARK.z0 - 1 && pz < PARK.z1 + 1));
       sp.push(px, s <= -BEACH ? -0.005 : onRoad ? -0.03 : groundHeightAtS(px, pz, s), pz);
-      const w = Math.min(1, Math.max(0, (s + 5) / 4));
-      tmp.copy(dry).lerp(wet, w);
-      sc.push(tmp.r, tmp.g, tmp.b);
+      sh.push(s);
       suv.push(px, pz);
     }
   });
@@ -238,76 +217,44 @@ export function buildBeach(M, opts = {}) {
   }
   const sandGeo = new THREE.BufferGeometry();
   sandGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
-  sandGeo.setAttribute('color', new THREE.Float32BufferAttribute(sc, 3));
+  sandGeo.setAttribute('shore', new THREE.Float32BufferAttribute(sh, 1));
   sandGeo.setAttribute('uv', new THREE.Float32BufferAttribute(suv, 2));
   sandGeo.setIndex(sidx);
   sandGeo.computeVertexNormals();
   const st = sandTex(); st.repeat.set(1 / 5, 1 / 5);
-  const sand = new THREE.Mesh(sandGeo, new THREE.MeshStandardMaterial({ map: st, vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }));
+  const sn = sandNormal();                               // ripples and grains, 1 m tiles
+  const caus = { value: new THREE.Color(0, 0, 0) };      // sunlight reaching the sea floor (set by the game)
+  const sandMat = new THREE.MeshStandardMaterial({ map: st, roughness: 0.93, normalMap: sn, normalScale: new THREE.Vector2(0.55, 0.55), side: THREE.DoubleSide });
+  // wet sand where the waves reach (darker, glossy), and caustics dancing on the floor under the water
+  sandMat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = time;
+    sh.uniforms.uCaus = caus;
+    sh.uniforms.uCausTex = { value: causticsTexture() };
+    sh.vertexShader = 'attribute float shore;\nvarying float vShore;\nvarying vec3 vWP;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+      vShore = shore; vWP = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;`);
+    sh.fragmentShader = 'uniform float uTime;\nuniform vec3 uCaus;\nuniform sampler2D uCausTex;\nvarying float vShore;\nvarying vec3 vWP;\n' + sh.fragmentShader
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        float under = smoothstep( ${(WATER_Y + 0.08).toFixed(2)}, ${(WATER_Y - 0.04).toFixed(2)}, vWP.y );
+        float wet = max( smoothstep( -6.0, -2.4, vShore ), under );
+        diffuseColor.rgb *= mix( 1.0, 0.55, wet );`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = mix( roughnessFactor, 0.32, wet * ( 1.0 - under ) );`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        normal = normalize( mix( normal, nonPerturbedNormal, wet * 0.6 ) );`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        float wd = max( 0.0, ${WATER_Y.toFixed(2)} - vWP.y );
+        // light down to the sand and back up through clear water: red goes first, then green -> turquoise
+        diffuseColor.rgb *= exp( -wd * vec3( 0.95, 0.2, 0.13 ) );
+        vec2 cu = vWP.xz * 0.42;
+        float c1 = texture2D( uCausTex, cu + vec2( uTime * 0.031, uTime * 0.019 ) ).r;
+        float c2 = texture2D( uCausTex, cu * 1.37 + vec2( -uTime * 0.024, uTime * 0.033 ) ).r;
+        float caustic = min( c1, c2 ) * 2.2 + ( c1 + c2 ) * 0.08;
+        totalEmissiveRadiance += diffuseColor.rgb * uCaus * caustic * smoothstep( 0.03, 0.3, wd ) * exp( -wd * 0.45 );`);
+  };
+  sandMat.customProgramCacheKey = () => 'gh18-sand';
+  const sand = new THREE.Mesh(sandGeo, sandMat);
   sand.receiveShadow = true; sand.name = 'sand';
   meshes.push(sand);
-
-  // sea: one big plane under the land, with two layers of scrolling wave normals; a shallow tint near the shore
-  const nm = waterNormals();
-  nm.repeat.set(1 / 9, 1 / 9);
-  const seaMat = new THREE.MeshStandardMaterial({ color: 0x1f5f6e, roughness: 0.06, metalness: 0.05, normalMap: nm, normalScale: new THREE.Vector2(0.55, 0.55), transparent: true, opacity: 0.93 });
-  seaMat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTime = time;
-    sh.fragmentShader = 'uniform float uTime;\n' + sh.fragmentShader.replace('#include <normal_fragment_maps>', `
-      vec3 n1 = texture2D( normalMap, vNormalMapUv + vec2( uTime * 0.011, uTime * 0.007 ) ).xyz * 2.0 - 1.0;
-      vec3 n2 = texture2D( normalMap, vNormalMapUv * 0.37 + vec2( -uTime * 0.006, uTime * 0.009 ) ).xyz * 2.0 - 1.0;
-      vec3 mapN = normalize( vec3( ( n1.xy + n2.xy ) * normalScale, n1.z * n2.z ) );
-      normal = normalize( tbn * mapN );`);
-  };
-  seaMat.customProgramCacheKey = () => 'gh18-sea';
-  const seaGeo = new THREE.PlaneGeometry(14000, 14000, 1, 1);
-  seaGeo.rotateX(-Math.PI / 2);
-  worldUV(seaGeo);
-  const sea = new THREE.Mesh(seaGeo, seaMat);
-  sea.position.y = WATER_Y;
-  sea.receiveShadow = true; sea.name = 'sea';
-  sea.renderOrder = 1;
-  meshes.push(sea);
-
-  // foam: a strip at the waterline whose white streaks wash in and out
-  const foamTex = canvasTex(256, (g, S) => {
-    g.clearRect(0, 0, S, S);
-    const r = rng(31);
-    for (let i = 0; i < 220; i++) {
-      const y = r() * S, x = r() * S, w = 20 + r() * 90, a = 0.25 + r() * 0.6;
-      g.fillStyle = `rgba(255,255,255,${a})`;
-      g.beginPath(); g.ellipse(x, y, w, 1.5 + r() * 3, 0, 0, Math.PI * 2); g.fill();
-    }
-  }, null, true);
-  const fp = [], fuv = [], fidx = [];
-  const FS = [-4.5, -2.5, -0.5, 1.5];
-  let along = 0;
-  coastPts.forEach(([x, z, nx, nz], i) => {
-    if (i) along += Math.hypot(x - coastPts[i - 1][0], z - coastPts[i - 1][1]);
-    FS.forEach((s, j) => { fp.push(x + nx * s, WATER_Y + 0.02, z + nz * s); fuv.push(along / 18, j / (FS.length - 1)); });
-  });
-  for (let i = 0; i < coastPts.length - 1; i++) for (let j = 0; j < FS.length - 1; j++) {
-    const a = i * FS.length + j, b = a + 1, c = a + FS.length, d = c + 1;
-    fidx.push(a, b, c, b, d, c);
-  }
-  const foamGeo = new THREE.BufferGeometry();
-  foamGeo.setAttribute('position', new THREE.Float32BufferAttribute(fp, 3));
-  foamGeo.setAttribute('uv', new THREE.Float32BufferAttribute(fuv, 2));
-  foamGeo.setIndex(fidx);
-  foamGeo.computeVertexNormals();
-  const foamMat = new THREE.MeshStandardMaterial({ map: foamTex, transparent: true, depthWrite: false, roughness: 0.6, color: 0xffffff });
-  foamMat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTime = time;
-    sh.fragmentShader = 'uniform float uTime;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
-      float wave = 0.5 + 0.5 * sin( uTime * 0.55 + vMapUv.x * 0.9 );
-      float band = smoothstep( 0.0, 0.25, vMapUv.y ) * ( 1.0 - smoothstep( 0.45 + wave * 0.4, 1.0, vMapUv.y ) );
-      vec4 fc = texture2D( map, vec2( vMapUv.x, vMapUv.y * 1.6 - wave * 0.5 + uTime * 0.02 ) );
-      diffuseColor *= vec4( 1.0, 1.0, 1.0, fc.a * band * 0.85 );`);
-  };
-  foamMat.customProgramCacheKey = () => 'gh18-foam';
-  const foam = new THREE.Mesh(foamGeo, foamMat);
-  foam.renderOrder = 2; foam.name = 'foam';
-  meshes.push(foam);
 
   // highway ribbon
   const rp = [], ruv = [], ridx = [];
@@ -337,7 +284,8 @@ export function buildBeach(M, opts = {}) {
   const padGeo = new THREE.BoxGeometry(PARK.x1 - PARK.x0, 0.02, PARK.z1 - PARK.z0);
   padGeo.translate((PARK.x0 + PARK.x1) / 2, 0.0, (PARK.z0 + PARK.z1) / 2);
   worldUV(padGeo);
-  const pad = new THREE.Mesh(padGeo, new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.9 }));
+  const padMat = new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.9 });
+  const pad = new THREE.Mesh(padGeo, padMat);
   pad.receiveShadow = true;
   meshes.push(pad);
 
@@ -383,16 +331,23 @@ export function buildBeach(M, opts = {}) {
     g.translate(x, -8, z);
     hills.push(g);
   }
-  const head = new THREE.IcosahedronGeometry(1, 2);
-  head.scale(900, 90, 260); head.rotateY(0.5); head.translate(1500, -20, 900);
+  // the far headland: a long ridge with an uneven crest (not a smooth dome)
+  const head = new THREE.IcosahedronGeometry(1, 4);
+  const hp = head.attributes.position;
+  for (let i = 0; i < hp.count; i++) {
+    const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);
+    const crest = 1 + 0.35 * Math.sin(x * 7.1 + 1.3) * Math.cos(z * 3.3) + 0.22 * Math.sin(x * 15.7 + z * 4.1) + 0.5 * Math.max(0, x) ** 2 - 0.25 * Math.max(0, -x);
+    hp.setY(i, y > 0 ? y * crest : y);
+  }
+  head.scale(900, 95, 260); head.rotateY(0.5); head.translate(1500, -20, 900);
   hills.push(head);
-  const hillMesh = new THREE.Mesh(mergeGeometries(hills.map((g) => g.toNonIndexed())), new THREE.MeshStandardMaterial({ color: 0x8a8f72, roughness: 1, flatShading: true }));
+  const hillMesh = new THREE.Mesh(mergeGeometries(hills.map((g) => (g.index ? g.toNonIndexed() : g))), new THREE.MeshStandardMaterial({ color: 0x8a8f72, roughness: 1, flatShading: true }));
   hillMesh.name = 'hills';
   meshes.push(hillMesh);
 
   return {
-    meshes, objects, colliders, lamps, time, palms,
-    materials: { sea: seaMat, lamp: LAMP_MAT },
+    meshes, objects, colliders, lamps, time, palms, caustics: caus,
+    materials: { lamp: LAMP_MAT, sand: sandMat, land: landMat, pad: padMat, road: roadMat },
     update(t) { time.value = t; },
     map: { coast: COAST, road: ROAD.filter((_, i) => i % 3 === 0), park: PARK },
   };

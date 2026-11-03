@@ -36,6 +36,9 @@ const playPage = {
     let html = fs.readFileSync(f, 'utf8');
     html = html.replace(/(src|href)="\.\.\/assets\//g, '$1="assets/');
     fs.writeFileSync(f, html);
+    // the play's own textures (water normals; the Poly Haven scans once fetched): CC0, always copied
+    const tex = path.resolve(__dirname, 'play/textures');
+    if (fs.existsSync(tex)) fs.cpSync(tex, path.resolve(__dirname, 'dist/play/textures'), { recursive: true });
     const out = path.resolve(__dirname, 'dist/play/deepti');
     fs.rmSync(out, { recursive: true, force: true });
     if (PERSONAL) fs.cpSync(path.resolve(__dirname, 'play/deepti'), out, { recursive: true });

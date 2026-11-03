@@ -114,6 +114,11 @@ body.touring #prompt { display: none; }
 #bday { position: fixed; left: 50%; top: 16%; transform: translate(-50%, -10px); z-index: 30; text-align: center; opacity: 0; transition: opacity 1.2s ease, transform 1.2s ease; pointer-events: none;
   font-family: Georgia, 'Times New Roman', serif; color: #fff7ea; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55); }
 #bday.show { opacity: 1; transform: translate(-50%, 0); }
+/* a shooting star went by */
+#wish { position: fixed; left: 50%; top: 20%; transform: translate(-50%, 8px); z-index: 29; opacity: 0; transition: opacity 1.4s ease, transform 1.4s ease; pointer-events: none;
+  font: italic 500 clamp(22px, 3.4vw, 34px) Georgia, 'Times New Roman', serif; color: #f4f1ff; letter-spacing: 0.02em; text-shadow: 0 0 18px rgba(170, 190, 255, 0.55), 0 2px 10px rgba(0, 0, 0, 0.6); }
+#wish.show { opacity: 1; transform: translate(-50%, 0); }
+#wish[hidden] { display: none; }
 #bday b { display: block; font-style: italic; font-weight: 600; font-size: clamp(30px, 6vw, 56px); }
 #bday span { font-size: 28px; color: #ffb0b9; }
 #msg { position: fixed; left: 50%; top: 12%; transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 12px; background: var(--panel);

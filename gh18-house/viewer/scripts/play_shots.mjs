@@ -49,6 +49,15 @@ try {
     ['10_nook', () => { play.foot(100.25, 46.4, -90, 0.2, 0.6); play.interact(); return play.state(); }],
     ['11_album', () => { play.interact(); play.foot(103.9, 47.9, 0, 0.3, 0.6); play.interact(); play.page(1); return play.state(); }],
     ['12_lounger', () => { play.close(); play.foot(109.4, 52.4, 90, 0.2, 0.6); play.interact(); play.sunset(40); return play.state(); }],
+    // realism: the sea, the sand, the night sky
+    ['13_shore_evening', () => { play.close(); play.setTime('evening'); play.foot(104, 56.5, 0, 0.12); play.wait(1); return play.quality(); }],
+    ['14_shore_day', () => { play.setTime('day'); play.foot(104, 56.5, 20, 0.12); return play.wait(1); }],
+    ['15_waterline', () => { play.setTime('evening'); play.foot(96, 57.5, 30, 0.55); return play.wait(1); }],
+    ['16_night_sea', () => { play.setTime('night'); play.foot(104, 56.5, 42, 0.02); return play.wait(1); }],
+    ['17_shooting_star', () => { play.foot(104, 56.5, 42, -0.3); play.wait(0.05, true); return play.wait(0.4); }],
+    ['18_dusk', () => { play.setTime('dusk'); play.foot(104, 56.5, 60, -0.05); return play.wait(1); }],
+    ['19_gallery', () => { play.setTime('day'); play.foot(104.2, 44.6, 180, 0.05, 0.6); return play.wait(0.2); }],
+    ['20_books', () => { play.foot(101.2, 46.4, -90, 0.12, 0.6); return play.wait(0.2); }],
   ];
   for (const [n, f] of plan) if (!only || only.includes(n)) await shot(n, f);
 } finally {
