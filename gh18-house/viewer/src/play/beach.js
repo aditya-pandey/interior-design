@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { COAST, BEACH, ROAD_PTS, ROAD_HALF, LANE, SHOULDER, STUDIO, STUDIO_PARK } from './site.js';
 import { sandNormal, causticsTexture, fbm, normalTexture } from './surfaces.js';
+import { SHORE_GLSL } from './shorewave.js';
 
 // The world around GH-18 for /play/: land, a white-sand beach that slopes on under the sea (wet and
 // glossy where the waves reach, with caustics under the water), the coastal highway loop, a few coconut
@@ -232,13 +233,18 @@ export function buildBeach(M, opts = {}) {
     sh.uniforms.uCausTex = { value: causticsTexture() };
     sh.vertexShader = 'attribute float shore;\nvarying float vShore;\nvarying vec3 vWP;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
       vShore = shore; vWP = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;`);
-    sh.fragmentShader = 'uniform float uTime;\nuniform vec3 uCaus;\nuniform sampler2D uCausTex;\nvarying float vShore;\nvarying vec3 vWP;\n' + sh.fragmentShader
+    sh.fragmentShader = 'uniform float uTime;\nuniform vec3 uCaus;\nuniform sampler2D uCausTex;\nvarying float vShore;\nvarying vec3 vWP;\n' + SHORE_GLSL + sh.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         float under = smoothstep( ${(WATER_Y + 0.08).toFixed(2)}, ${(WATER_Y - 0.04).toFixed(2)}, vWP.y );
         float wet = max( smoothstep( -6.0, -2.4, vShore ), under );
-        diffuseColor.rgb *= mix( 1.0, 0.55, wet );`)
+        // the swash zone: a film of water left by each wave as it drains back (glossy, darker), then soaking in
+        float swash = smoothstep( -4.5, -1.2, vShore ) * ( 1.0 - under );
+        float film = swash * pow( 0.5 + 0.5 * sin( swPhase( vShore, uTime, vWP.xz ) - 1.3 ), 2.0 );
+        wet = max( wet, swash * 0.85 );
+        diffuseColor.rgb *= mix( 1.0, 0.55, wet ) * ( 1.0 - film * 0.12 );`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix( roughnessFactor, 0.32, wet * ( 1.0 - under ) );`)
+        roughnessFactor = mix( roughnessFactor, 0.58, wet * ( 1.0 - under ) );
+        roughnessFactor = mix( roughnessFactor, 0.36, film );`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         normal = normalize( mix( normal, nonPerturbedNormal, wet * 0.6 ) );`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
@@ -372,6 +378,8 @@ function resampleCoast(step) {
   }
   return out;
 }
+// coastline samples for other modules (the spray): [x, z, nx, nz] every `step` m, normal towards the sea
+export function coastSamples(step) { return resampleCoast(step); }
 function offsetCoast(s) { return resampleCoast(8).map(([x, z, nx, nz]) => [x + nx * s, z + nz * s]); }
 
 function worldUV(g) {

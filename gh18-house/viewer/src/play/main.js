@@ -16,6 +16,7 @@ import { Music } from './music.js';
 import { playBirthday } from './birthday.js';
 import { buildNightSky } from './night.js';
 import { buildClouds } from './clouds.js';
+import { buildSpray } from './spray.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -104,7 +105,7 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
-let clouds;
+let clouds, spray;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -145,6 +146,8 @@ async function init() {
   scene.add(night.group);
   clouds = buildClouds();
   scene.add(clouds.mesh);
+  spray = buildSpray({ low: LOW });
+  scene.add(spray.points);
   if (!LOW) post = createPost(renderer, scene, camera, { low: LOW });
   scans = await loadScans();
   if (scans) applyScans();
@@ -995,6 +998,7 @@ function frame(dt = 1 / 60, show = true) {
   clock += dt;
   if (night.update(dt, clock, state.stars, camera)) wish();
   clouds.update(clock, camera, skyLight);
+  spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
   placeCamera(false, dt);

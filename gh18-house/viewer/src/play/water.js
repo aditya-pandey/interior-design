@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { coastDist, WATER_Y } from './beach.js';
+import { SHORE_GLSL } from './shorewave.js';
 
 // The sea for /play/: a calm, clear tropical sea over white sand.
 //   - a dense grid that follows the camera, lifted by a few long, low Gerstner swells, so the waterline
@@ -61,7 +62,7 @@ function seaGrid(low) {
 // swells: [direction (deg, the way they travel), wavelength m, amplitude m, steepness]
 // (they come in from the open sea to the north and north-west, towards the beach)
 const WAVES = [
-  [175, 21, 0.085, 0.3], [158, 13.5, 0.05, 0.35], [192, 8.2, 0.028, 0.4], [140, 5.1, 0.014, 0.4], [168, 33, 0.06, 0.2],
+  [175, 21, 0.055, 0.3], [158, 13.5, 0.032, 0.35], [192, 8.2, 0.02, 0.4], [140, 5.1, 0.01, 0.4], [168, 33, 0.04, 0.2],
 ];
 
 const VERT = /* glsl */`
@@ -69,10 +70,13 @@ uniform float uTime;
 uniform mat4 uTexMatrix;
 uniform vec4 uWaves[${WAVES.length}];     // dir.xy, k, amp
 uniform float uSteep[${WAVES.length}];
+uniform sampler2D uCoast;
+uniform vec4 uBox;
 varying vec3 vWorld;
 varying vec4 vMirror;
 varying vec3 vGN;
 #include <fog_pars_vertex>
+${SHORE_GLSL}
 void main() {
   vec3 p = (modelMatrix * vec4(position, 1.0)).xyz;               // the grid sits under the camera
   float dist = length(position.xz);
@@ -86,6 +90,20 @@ void main() {
     float cf = cos(f), sf = sin(f);
     o.x += Q * A * d.x * cf; o.z += Q * A * d.y * cf; o.y += A * sf;
     n.x -= d.x * k * A * cf; n.z -= d.y * k * A * cf; n.y -= Q * k * A * sf;
+  }
+  // the waves coming in to the beach: they follow the coast (its distance map), steepen and run up the sand
+  vec2 cuv = (p.xz - uBox.xy) * uBox.zw;
+  if (fade > 0.0 && cuv.x > 0.0 && cuv.x < 1.0 && cuv.y > 0.0 && cuv.y < 1.0) {
+    float s = texture2D(uCoast, cuv).r;
+    if (s < 50.0) {
+      vec2 ex = vec2(1.5 * uBox.z, 0.0), ez = vec2(0.0, 1.5 * uBox.w);
+      vec2 g = vec2(texture2D(uCoast, cuv + ex).r - texture2D(uCoast, cuv - ex).r, texture2D(uCoast, cuv + ez).r - texture2D(uCoast, cuv - ez).r);
+      g = g / max(length(g), 1e-4);                               // towards the sea
+      float h = swHeight(s, uTime, p.xz);
+      float dh = (swHeight(s + 0.3, uTime, p.xz) - swHeight(s - 0.3, uTime, p.xz)) / 0.6;
+      o.y += h * fade;
+      n.xz -= g * dh * fade;
+    }
   }
   vWorld = o;
   vGN = normalize(n);
@@ -116,6 +134,7 @@ varying vec3 vWorld;
 varying vec4 vMirror;
 varying vec3 vGN;
 #include <fog_pars_fragment>
+${SHORE_GLSL}
 
 float seabed(float s) {                       // the beach profile (beach.js sandHeight)
   if (s < -6.0) return -0.15;
@@ -148,7 +167,7 @@ void main() {
   // Fresnel from a smoothed normal: the fine ripples shouldn't let the deep colour show at grazing angles
   float NdV = max(dot(normalize(mix(N, vGN, 0.65)), V), 0.0);
   float F = 0.02 + 0.98 * pow(1.0 - NdV, 5.0);
-  F = min(F, 0.92);
+  F = min(F, 0.92) * (0.3 + 0.7 * smoothstep(0.0, 0.1, depth));     // a few cm of swash: you see the sand, not the sky
 
   // reflection: the mirror image, bent by the surface
   vec2 mUV = vMirror.xy / vMirror.w + N.xz * (0.5 / (dist + 3.0)) * 6.0 * (1.0 - smoothstep(60.0, 900.0, dist) * 0.7);
@@ -173,14 +192,17 @@ void main() {
   float alpha = a + (1.0 - a) * F;
 
   // foam where the water thins out on the sand: lacy, drifting, coming and going with the swell
-  float thin = 1.0 - smoothstep(0.0, 0.07, depth);
+  float thin = 1.0 - smoothstep(0.0, 0.035, depth);
   float lace = texture2D(uNormals, uv * 0.45 + vec2(uTime * 0.013, -uTime * 0.01)).b;
   float lace2 = texture2D(uNormals, uv * 0.21 - vec2(uTime * 0.008, uTime * 0.012)).g;
-  float foam = thin * smoothstep(0.55, 0.95, lace * 0.6 + lace2 * 0.55 + thin * 0.2) * 0.8;
+  float foam = thin * smoothstep(0.62, 0.98, lace * 0.6 + lace2 * 0.55 + thin * 0.15) * 0.7;      // lacy, mostly clear
   // the thin white line where each swell runs out on the sand, broken up by the lace
   float edge = smoothstep(0.035, 0.01, depth) * smoothstep(0.0, 0.008, depth);
   foam += edge * (0.25 + 0.45 * smoothstep(0.35, 0.75, lace));
-  foam = clamp(foam, 0.0, 0.9) * inside;
+  // whitewater from the breaking shore waves, broken up by the lace
+  float ww = swFoam(s, uTime, vWorld.xz) * smoothstep(0.2, 0.6, lace * 0.6 + lace2 * 0.5 + 0.25);
+  foam += ww * 1.2;
+  foam = clamp(foam, 0.0, 0.92) * inside;
   vec3 foamCol = vec3(0.92, 0.95, 0.96) * (uAmb * 0.6 + uLight * (0.06 + 0.3 * sunUp));   // about as bright as white sand
   col = mix(col, foamCol, foam);
   alpha = mix(alpha, 1.0, foam);
