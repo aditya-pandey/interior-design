@@ -3,7 +3,7 @@ import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import house from '../../../house_r1.json';
 import { createMaterials } from '../materials.js';
 import { buildHouse } from '../build.js';
-import { furnitureCorners, circleHitsPoly } from '../geom.js';
+import { furnitureCorners, circleHitsPoly, pointInPoly } from '../geom.js';
 import { Walker } from '../walk.js';
 import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence } from './beach.js';
 import { buildStudio } from './studio.js';
@@ -183,6 +183,7 @@ async function init() {
   };
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
   walker = new FootWalker(head, renderer.domElement, walkData);
+  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces];
   for (const c of walkData.colliders) c.bb = c.bb || bbOf(c.poly);
   // sitting and lying down in the house
   seatSpots = houseSeats(house).map((s) => {
@@ -243,7 +244,15 @@ class FootWalker extends Walker {
   heights(x, y) {
     const out = super.heights(x, y);
     out[0] = groundHeight(x / 1000, y / 1000);
+    // the studio's and the garden's built floors (plinth, deck, steps, boardwalk) stand on the sand: where one
+    // is, the sand under it is not a floor, or she would stay on the sand and walk through them
+    for (const s of this.raised || []) if (x >= s.bb[0] && x <= s.bb[2] && y >= s.bb[1] && y <= s.bb[3] && pointInPoly(x, y, s.poly)) { out.shift(); break; }
     return out;
+  }
+  place(x, y, foot, yaw = 0, pitch = 0) {
+    super.place(x, y, foot, yaw, pitch);
+    const hs = this.heights(x, y);                     // (the shared walker always counts the sand as a choice)
+    if (!hs.includes(this.foot)) { this.foot = hs.reduce((a, b) => (Math.abs(b - foot) < Math.abs(a - foot) ? b : a)); this.camera.position.y = this.foot + 1.6; }
   }
   blocked(x, y, foot) {
     if (super.blocked(x, y, foot)) return true;
