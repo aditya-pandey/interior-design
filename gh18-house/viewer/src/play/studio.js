@@ -595,7 +595,7 @@ export function buildStudio(M, pack) {
   const sc = new THREE.TorusKnotGeometry(0.16, 0.05, 90, 12, 2, 3); sc.translate(114.475, F + 1.2, 49.675); parts.add('paint', sc, 0x2e2a26);
   solid(114.15, 49.35, 114.8, 50.0, F, F + 1.4);
   pottedTree(parts, 115.3, 41.0, F, rng(5), solid);
-  pottedTree(parts, 106.2, 42.15, U, rng(6), solid);
+  pottedTree(parts, 107.75, 43.1, U, rng(6), solid);                // (on the terrace, by the door)
   for (const [cx, cz, rot] of [[113.4, 50.15, 0.5], [115.1, 48.3, -0.9]]) chair(cx, cz, rot, 0xd8c3a0);
 
   // ================================================================== upstairs: the atelier
@@ -778,16 +778,37 @@ export function buildStudio(M, pack) {
     loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
     interact.push({ kind: 'art', label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
   }
-  // poems: framed on the atelier's west wall, beside the desk
+  // her poems: a wall of them in the atelier (its west wall, either side of the terrace door), each framed
+  // behind glass under a little brass light. Hindi ones are set in Devanagari (Noto Serif Devanagari, loaded
+  // below; the frames are redrawn once it has arrived).
   const poems = (pack && pack.poems) || [];
-  poems.forEach((poem, i) => {
-    const w = i === 0 ? 0.56 : 0.62, h = i === 0 ? 0.7 : 0.92;
-    const mesh = paintingMesh(w, h, 0xf4f0e8, poemTexture(poem, w / h), { glazed: true });
-    const cz = 48.6 + i * 0.95, cx = UX1 - T - 0.03;
-    mesh.position.set(cx, U + 1.6, cz); mesh.rotation.y = -Math.PI / 2;
-    group.add(mesh);
-    interact.push({ kind: 'poem', index: i, label: `Read “${poem.title}”`, pos: [cx, U + 1.6, cz], normal: [-1, 0], r: 1.9 });
+  const poemTexs = [];
+  const wallX = UX1 - T - 0.03;
+  const runs = [[41.75, 45.6], [47.85, 50.6]];                       // wall either side of the door (the desk sits under the second)
+  const perRun = [Math.ceil(poems.length / 2), Math.floor(poems.length / 2)];
+  let pi = 0;
+  runs.forEach(([z0, z1], ri) => {
+    const n = perRun[ri];
+    if (!n) return;
+    const w = Math.min(0.62, (z1 - z0 - 0.2 * (n - 1)) / n), gap = (z1 - z0 - n * w) / Math.max(1, n - 1);
+    for (let k = 0; k < n; k++, pi++) {
+      const poem = poems[pi], lines = poem.stanzas.reduce((m, st) => m + st.length, 0) + poem.stanzas.length;
+      const h = Math.max(0.62, Math.min(1.25, 0.32 + lines * 0.042));
+      const tex = poemTexture(poem, w / h); poemTexs.push(tex);
+      const mesh = paintingMesh(w, h, 0xf4f0e8, tex, { glazed: true });
+      const cz = n === 1 ? (z0 + z1) / 2 : z0 + w / 2 + k * (w + gap), cy = U + 1.62;
+      mesh.position.set(wallX, cy, cz); mesh.rotation.y = -Math.PI / 2;
+      group.add(mesh);
+      parts.box('brass', wallX - 0.12, cy + h / 2 + 0.1, cz - w * 0.3, wallX, cy + h / 2 + 0.14, cz + w * 0.3, 0xb08d57);
+      parts.box('glow', wallX - 0.1, cy + h / 2 + 0.095, cz - w * 0.28, wallX - 0.07, cy + h / 2 + 0.1, cz + w * 0.28, 0xffffff);
+      interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [-1, 0], r: 2.0 });
+    }
   });
+  if (poems.some((p) => DEVANAGARI.test(JSON.stringify(p))) && typeof FontFace !== 'undefined') {
+    new FontFace(DEVA_FONT, 'url(play/fonts/NotoSerifDevanagari-Regular.ttf)').load()
+      .then((f) => { document.fonts.add(f); for (const t of poemTexs) t.userData.redraw(); })
+      .catch(() => { /* the system's own Devanagari font will do */ });
+  }
   // a mood board on the atelier's south wall: her photographs pinned to cork
   const photos = pack?.album?.photos || [];
   if (photos.length) {
@@ -1004,35 +1025,44 @@ function birchTexture() {
 }
 
 // a poem on cream paper: title, lines in stanzas, date, signature
+export const DEVANAGARI = /[\u0900-\u097F]/;
+export const DEVA_FONT = 'Noto Serif Devanagari';
 export function poemTexture(poem, ratio) {
   const W = 1024, Hh = Math.round(W / ratio);
   const c = document.createElement('canvas');
   c.width = W; c.height = Hh;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.userData.redraw = () => { drawPoem(c, poem, W, Hh); t.needsUpdate = true; };
+  t.userData.redraw();
+  return t;
+}
+function drawPoem(c, poem, W, Hh) {
   const g = c.getContext('2d');
+  // Hindi in Devanagari: upright (no false italic), a little more room between lines for the matras
+  const hi = DEVANAGARI.test(poem.title + poem.stanzas.flat().join(''));
+  const it = hi ? '' : 'italic ', face = hi ? `'${DEVA_FONT}', Georgia, serif` : "Georgia, 'Times New Roman', serif", lh = hi ? 1.6 : 1.45;
   g.fillStyle = '#f7f1e3'; g.fillRect(0, 0, W, Hh);
   const r = rng(5);
   for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(150,120,80,${r() * 0.05})`; g.fillRect(r() * W, r() * Hh, 2, 2); }
   g.strokeStyle = 'rgba(140,110,70,0.35)'; g.lineWidth = 2; g.strokeRect(40, 40, W - 80, Hh - 80);
   const lines = poem.stanzas.reduce((n, s) => n + s.length, 0) + poem.stanzas.length;
-  const size = Math.min(34, Math.floor((Hh - 330) / (lines * 1.45)));
+  const size = Math.min(34, Math.floor((Hh - 330) / (lines * lh)));
   g.fillStyle = '#3a2a1c'; g.textAlign = 'center';
-  g.font = `italic 600 ${Math.round(size * 1.7)}px Georgia, 'Times New Roman', serif`;
-  g.fillText(poem.title, W / 2, 150);
+  g.font = `${it}600 ${Math.round(size * (hi ? 1.45 : 1.7))}px ${face}`;
+  fitText(g, poem.title, W / 2, 150, W - 150);
   if (poem.date) { g.font = `${Math.round(size * 0.8)}px Georgia, serif`; g.fillStyle = '#7a6448'; g.fillText(poem.date, W / 2, 150 + size * 1.5); }
   g.fillStyle = '#3a2a1c';
-  g.font = `italic ${size}px Georgia, 'Times New Roman', serif`;
+  g.font = `${it}${size}px ${face}`;
   let y = 150 + size * 3.4;
   for (const st of poem.stanzas) {
-    for (const ln of st) { fitText(g, ln, W / 2, y, W - 150); y += size * 1.45; }
+    for (const ln of st) { fitText(g, ln, W / 2, y, W - 150); y += size * lh; }
     y += size * 0.8;
   }
   g.font = `italic ${Math.round(size * 1.05)}px Georgia, serif`;
   g.fillStyle = '#7a6448';
   g.fillText('— Deepti', W / 2, Math.min(Hh - 80, y + size));
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
 }
 function fitText(g, s, x, y, maxW) {
   const w = g.measureText(s).width;

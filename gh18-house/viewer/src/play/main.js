@@ -6,7 +6,7 @@ import { buildHouse } from '../build.js';
 import { furnitureCorners, circleHitsPoly, pointInPoly } from '../geom.js';
 import { Walker } from '../walk.js';
 import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence } from './beach.js';
-import { buildStudio } from './studio.js';
+import { buildStudio, DEVANAGARI } from './studio.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
 import { CollisionWorld } from './collide.js';
 import { VehicleSim } from './vehicle.js';
@@ -701,7 +701,8 @@ function closeOverlay() { document.getElementById('overlay').hidden = true; stat
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 function showPoem(p) {
   const body = p.stanzas.map((st) => `<p>${st.map(esc).join('<br>')}</p>`).join('');
-  showOverlay(`<button class="close" aria-label="Close">×</button><article class="poem"><h2>${esc(p.title)}</h2>${p.date ? `<time>${esc(p.date)}</time>` : ''}${body}<footer>— Deepti</footer></article>`, 'paper');
+  const hi = DEVANAGARI.test(p.title + p.stanzas.flat().join(''));
+  showOverlay(`<button class="close" aria-label="Close">×</button><article class="poem${hi ? ' hi' : ''}" lang="${hi ? 'hi' : 'en'}"><h2>${esc(p.title)}</h2>${p.date ? `<time>${esc(p.date)}</time>` : ''}${body}<footer>— Deepti</footer></article>`, 'paper');
 }
 function showArt(url) {
   showOverlay(`<button class="close" aria-label="Close">×</button><figure class="art"><img src="${url}" alt="A painting by Deepti"><figcaption>Painted by Deepti</figcaption></figure>`, 'dark');

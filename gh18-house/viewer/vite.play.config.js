@@ -41,6 +41,8 @@ const playPage = {
     if (fs.existsSync(tex)) fs.cpSync(tex, path.resolve(__dirname, 'dist/play/textures'), { recursive: true });
     const mdl = path.resolve(__dirname, 'play/models');           // the protagonist (CC0, built by tools/character)
     if (fs.existsSync(mdl)) fs.cpSync(mdl, path.resolve(__dirname, 'dist/play/models'), { recursive: true });
+    const fnt = path.resolve(__dirname, 'play/fonts');            // Noto Serif Devanagari for her Hindi poems (SIL OFL 1.1, OFL.txt alongside)
+    if (fs.existsSync(fnt)) fs.cpSync(fnt, path.resolve(__dirname, 'dist/play/fonts'), { recursive: true });
     const out = path.resolve(__dirname, 'dist/play/deepti');
     fs.rmSync(out, { recursive: true, force: true });
     if (PERSONAL) fs.cpSync(path.resolve(__dirname, 'play/deepti'), out, { recursive: true });
