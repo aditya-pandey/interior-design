@@ -1063,7 +1063,7 @@ function frame(dt = 1 / 60, show = true) {
   clouds.update(clock, camera, skyLight);
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
-  studio.update(clock);
+  studio.update(clock, !!music?.playing || state.recordDemo);
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
@@ -1173,7 +1173,7 @@ window.play = {
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   sound: () => ({ audio, ambience, measureSfx }),

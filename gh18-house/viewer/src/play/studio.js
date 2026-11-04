@@ -553,8 +553,7 @@ export function buildStudio(M, pack) {
   }
   chair(103.75, 47.6, Math.PI / 2, 0x3f6f8f);
   // a window bed: a deep floor mattress on a low oak platform by the glass, piled with pillows, a knitted
-  // throw, a sheepskin beside it, a lantern and a tray of chai; E to curl up and watch the sea. A cat asleep
-  // at its foot.
+  // throw, a sheepskin beside it, a lantern and a tray of chai; E to curl up and watch the sea.
   const WB = { x: 104.2, z: 49.62, w: 2.6, d: 1.85 };
   parts.rbox('wood', WB.x, F, WB.z, WB.w, 0.12, WB.d, 0.02, 0x8a6240);
   parts.rbox('fabric', WB.x, F + 0.12, WB.z, WB.w - 0.1, 0.2, WB.d - 0.1, 0.07, 0xefe7da);
@@ -588,9 +587,6 @@ export function buildStudio(M, pack) {
   solid(WB.x - WB.w / 2, WB.z - WB.d / 2, WB.x + WB.w / 2, WB.z + WB.d / 2, F, F + 0.5);
   interact.push({ kind: 'lounger', label: 'Curl up on the window bed', pos: [WB.x, F + 0.5, WB.z], r: 2.1,
     seat: { x: WB.x - 0.2, z: WB.z, y: F, eye: [WB.x - 0.2, F + 0.86, WB.z - 0.35], look: [0.1, 1], pitch: 0.03, flash: 'Curl up and watch the sea · E to get up', stand: [WB.x - 0.2, WB.z - WB.d / 2 - 0.42, Math.PI, F] } });
-  const cat = sleepingCat();
-  cat.position.set(WB.x + 0.55, F + 0.32, WB.z + 0.5); cat.rotation.y = -0.6;
-  group.add(cat);
   // an oak-slatted ceiling over the lounge
   for (let x = 103.05; x < 110.0; x += 0.1) parts.box('wood', x, CH - 0.075, ST.z1 + 0.6, x + 0.05, CH - 0.03, Z1 - 0.35, 0xd9b48a);
   parts.box('paint', 103.0, CH - 0.032, ST.z1 + 0.6, 110.0, CH - 0.03, Z1 - 0.35, 0x2a2018);
@@ -602,18 +598,73 @@ export function buildStudio(M, pack) {
     const dome = new THREE.SphereGeometry(0.17, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2); dome.translate(x, F + dy, z); parts.add('brass', dome, 0xb08d57);
     const bulb = new THREE.SphereGeometry(0.05, 12, 8); bulb.translate(x, F + dy - 0.02, z); parts.add('glow', bulb, 0xffffff);
   }
-  // the credenza with the radio, under her elephant
-  const CR = { x0: 107.6, x1: 110.2 };
-  parts.rbox('wood', (CR.x0 + CR.x1) / 2, F, Z0 + T + 0.24, CR.x1 - CR.x0, 0.62, 0.45, 0.02, 0xa87b52);
-  for (let x = CR.x0 + 0.1; x < CR.x1 - 0.05; x += 0.06) parts.box('wood', x, F + 0.08, Z0 + T + 0.465, x + 0.03, F + 0.58, Z0 + T + 0.475, 0x8a6240);
-  solid(CR.x0, Z0 + T, CR.x1, Z0 + T + 0.5, F, F + 0.7);
-  const radio = { x: 108.1, z: Z0 + T + 0.24 };
-  parts.rbox('wood', radio.x, F + 0.62, radio.z, 0.42, 0.26, 0.2, 0.03, 0x6b4a2f);
-  parts.box('fabric', radio.x - 0.18, F + 0.67, radio.z + 0.101, radio.x + 0.02, F + 0.84, radio.z + 0.105, 0xd9cbb0, false);
-  parts.cyl('brass', radio.x + 0.11, F + 0.72, radio.z + 0.1, 0.045, 0.045, 0.02, 0xb08d57, 16);
-  interact.push({ kind: 'radio', label: 'Play music', pos: [radio.x, F + 0.8, radio.z], r: 1.8 });
-  parts.cyl('paper', 109.7, F + 0.62, Z0 + T + 0.24, 0.08, 0.06, 0.3, 0x2f5d50, 16);
-  for (let k = 0; k < 3; k++) { const g = new THREE.CylinderGeometry(0.004, 0.004, 0.45, 4); g.rotateZ((k - 1) * 0.25); g.translate(109.7 + (k - 1) * 0.05, F + 1.12, Z0 + T + 0.24); parts.add('leaf', g, 0x6b7a3a); }
+  // the listening corner, under her elephant: a walnut record console, open-fronted, its shelves full of
+  // records; a turntable on top with its lid up (E to play her music: the platter spins and the arm swings
+  // onto the record while it plays), a pair of walnut speakers either side
+  const CR = { x0: 107.6, x1: 110.2, z0: Z0 + T, z1: Z0 + T + 0.46, h: 0.62 }, WAL = 0x5e3c26, crX = (CR.x0 + CR.x1) / 2;
+  parts.box('wood', CR.x0, F + CR.h - 0.03, CR.z0, CR.x1, F + CR.h, CR.z1, WAL);                          // top
+  parts.box('wood', CR.x0 + 0.02, F + 0.1, CR.z0, CR.x1 - 0.02, F + 0.125, CR.z1, WAL);                  // bottom shelf
+  for (const x of [CR.x0, CR.x1 - 0.025, crX - 0.4, crX + 0.4]) parts.box('wood', x, F + 0.1, CR.z0, x + 0.025, F + CR.h - 0.03, CR.z1, WAL);
+  parts.box('wood', CR.x0, F + 0.1, CR.z0, CR.x1, F + CR.h, CR.z0 + 0.015, 0x4a2f1d);                    // back
+  parts.box('wood', CR.x0 + 0.04, F + 0.06, CR.z1 - 0.06, CR.x1 - 0.04, F + 0.1, CR.z1 - 0.03, 0x3a2416);   // plinth, set back
+  for (const x of [CR.x0 + 0.05, CR.x1 - 0.09]) for (const z of [CR.z0 + 0.05, CR.z1 - 0.1]) parts.box('brass', x, F, z, x + 0.04, F + 0.06, z + 0.04, 0xb08d57);
+  const rr2 = rng(333), SLEEVES = [0xc0392b, 0x1f3a5f, 0xe8e0cf, 0x2f5d50, 0xc9a24a, 0x1d1d1d, 0xa4532e, 0x5f7387, 0xf2ece0, 0x7a2e2e, 0x8a6aa8, 0xd8b48a];
+  for (const [a0, a1] of [[CR.x0 + 0.03, crX - 0.4], [crX - 0.375, crX + 0.4], [crX + 0.425, CR.x1 - 0.03]]) {     // records in each bay, a few leaning
+    let x = a0 + 0.01;
+    while (x < a1 - 0.03) {
+      const t = 0.004 + rr2() * 0.004, lean = x > a1 - 0.12 && rr2() < 0.5 ? 0.25 : 0;
+      const g = new THREE.BoxGeometry(t, 0.31, 0.31); g.translate(0, 0.155, 0); g.rotateZ(-lean); g.translate(x, F + 0.125, CR.z0 + 0.2);
+      parts.add('paper', g, SLEEVES[Math.floor(rr2() * SLEEVES.length)]);
+      x += t + 0.001 + (rr2() < 0.05 ? 0.04 : 0);
+    }
+  }
+  solid(CR.x0, CR.z0, CR.x1, CR.z1, F, F + 0.7);
+  // the speakers: walnut cabinets, dark woven grilles, angled a touch towards the sofa
+  for (const [sx, ry] of [[CR.x0 + 0.19, 0.12], [CR.x1 - 0.19, -0.12]]) {
+    const spk = new THREE.Group(); spk.position.set(sx, F + CR.h, CR.z0 + 0.22); spk.rotation.y = ry; group.add(spk);
+    const cab = new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.34, 0.24, 3, 0.015), new THREE.MeshPhysicalMaterial({ map: oak, color: 0x8a5a3a, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.3 }));
+    cab.position.y = 0.17; cab.castShadow = true; spk.add(cab);
+    const grille = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.3), new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 0.95, normalMap: cloth, normalScale: v2(0.8) }));
+    grille.position.set(0, 0.17, 0.121); spk.add(grille);
+    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: 0.3 }));
+    badge.position.set(0, 0.04, 0.123); spk.add(badge);
+  }
+  // the turntable
+  const TT = new THREE.Group(); TT.position.set(crX, F + CR.h, CR.z0 + 0.23); group.add(TT);
+  const walnut = new THREE.MeshPhysicalMaterial({ map: oak, color: 0x7a4a2c, roughness: 0.4, clearcoat: 0.8, clearcoatRoughness: 0.2 });
+  const alu = new THREE.MeshStandardMaterial({ color: 0xd9dadc, metalness: 1, roughness: 0.28 });
+  const blackM = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.5 });
+  const ttAdd = (geo, mat, parent = TT) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
+  ttAdd(new RoundedBoxGeometry(0.46, 0.075, 0.36, 3, 0.012).translate(0, 0.0375 + 0.012, 0), walnut);
+  for (const [fx, fz] of [[-0.2, -0.15], [0.2, -0.15], [-0.2, 0.15], [0.2, 0.15]]) ttAdd(new THREE.CylinderGeometry(0.02, 0.022, 0.012, 16).translate(fx, 0.006, fz), alu);
+  const deckY = 0.087;
+  ttAdd(new THREE.BoxGeometry(0.44, 0.002, 0.34).translate(0, deckY, 0), new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.6 }));   // a black top plate
+  const spin = new THREE.Group(); spin.position.set(-0.045, deckY, 0); TT.add(spin);
+  ttAdd(new THREE.CylinderGeometry(0.152, 0.152, 0.022, 64).translate(0, 0.011, 0), alu, spin);                                    // platter
+  const vinylTop = new THREE.MeshPhysicalMaterial({ map: vinylTexture(), roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.15, envMapIntensity: 0.25 });
+  ttAdd(new THREE.CylinderGeometry(0.15, 0.15, 0.003, 64).translate(0, 0.0235, 0), [blackM, vinylTop, blackM], spin);            // the record
+  ttAdd(new THREE.CylinderGeometry(0.0035, 0.0035, 0.02, 8).translate(0, 0.03, 0), alu, spin);                                      // spindle
+  // the tonearm: a pivot post, a slim S-shaped chrome arm, the headshell and cartridge, a counterweight
+  const pivot = new THREE.Group(); pivot.position.set(0.15, deckY, -0.1); TT.add(pivot);
+  ttAdd(new THREE.CylinderGeometry(0.03, 0.034, 0.03, 20).translate(0, 0.015, 0), alu, pivot);
+  ttAdd(new THREE.CylinderGeometry(0.01, 0.01, 0.045, 12).translate(0, 0.05, 0), alu, pivot);
+  const arm = new THREE.Group(); arm.position.y = 0.065; pivot.add(arm);
+  ttAdd(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0, 0], [-0.02, 0, 0.08], [0.0, 0, 0.16], [-0.03, -0.01, 0.235]].map((p) => new THREE.Vector3(...p))), 20, 0.0045, 8), alu, arm);
+  ttAdd(new THREE.BoxGeometry(0.018, 0.008, 0.045).rotateY(0.3).translate(-0.035, -0.014, 0.25), blackM, arm);                   // headshell
+  ttAdd(new THREE.BoxGeometry(0.01, 0.012, 0.016).translate(-0.035, -0.024, 0.255), new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: 0.35 }), arm);
+  ttAdd(new THREE.CylinderGeometry(0.016, 0.016, 0.03, 16).rotateX(Math.PI / 2).translate(0, 0, -0.04), alu, arm);                 // counterweight
+  ttAdd(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 8).translate(0.14, deckY + 0.03, 0.06), alu);                                  // arm rest
+  ttAdd(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 20).translate(0.18, deckY + 0.006, 0.13), alu);                           // speed knob
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 6).translate(0.18, deckY + 0.005, 0.1), new THREE.MeshStandardMaterial({ color: 0x331a10, emissive: 0xff7a3a, emissiveIntensity: 0 })); TT.add(led);
+  // the lid: clear acrylic, hinged at the back and propped open
+  const lidHinge = new THREE.Group(); lidHinge.position.set(0, deckY + 0.002, -0.18); lidHinge.rotation.x = -1.15; TT.add(lidHinge);
+  const acrylic = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.18, clearcoat: 1, depthWrite: false, side: THREE.DoubleSide });
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.06, 0.36).translate(0, 0.03, 0.18), acrylic); lid.renderOrder = 3; lidHinge.add(lid);
+  // a sleeve propped against the wall beside it, the one that's playing
+  const now = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.31, 0.006), new THREE.MeshStandardMaterial({ map: sleeveTexture(), roughness: 0.7 }));
+  now.position.set(crX + 0.4, F + CR.h + 0.16, CR.z0 + 0.05); now.rotation.set(-0.12, 0, 0.0); now.castShadow = true; group.add(now);
+  interact.push({ kind: 'radio', label: 'Play a record', pos: [crX, F + 0.85, CR.z0 + 0.23], r: 1.9 });
+  const turntable = { spin, arm, led, angle: 0.0 };
 
   // ================================================================== the gallery (west)
   const GP = { x: 112.7, z0: 42.3, z1: 48.5 };
@@ -887,7 +938,15 @@ export function buildStudio(M, pack) {
       for (const l of lights) l.intensity = on ? l.userData.on : 0;
       haloMat.opacity = on ? 0.55 : 0;
     },
-    update(t) { const k = Math.sin(t * 1.5); cat.userData.body.scale.set(1, 1 + k * 0.035, 1 + k * 0.02); cat.userData.ear.rotation.z = Math.sin(t * 0.37) > 0.97 ? 0.35 : 0; },
+    // the record turns at 33⅓ while her music plays; the arm swings over onto it, and back to its rest
+    update(t, playing) {
+      const dt = Math.min(0.1, Math.max(0, t - (this.lastT ?? t))); this.lastT = t;
+      turntable.speed = THREE.MathUtils.damp(turntable.speed || 0, playing ? 3.49 : 0, 2.5, dt);
+      turntable.spin.rotation.y -= turntable.speed * dt;
+      turntable.angle = THREE.MathUtils.damp(turntable.angle, playing ? 0.62 : 0, 3, dt);
+      turntable.arm.rotation.y = -turntable.angle;
+      turntable.led.material.emissiveIntensity = playing ? 2 : 0;
+    },
     entry: { x: 99.0, z: 37.2 },          // on the boardwalk, facing the steps
     upper: U, terraceX: UX1,
   };
@@ -978,40 +1037,34 @@ function pottedTree(parts, x, z, y0, r, solid) {
   }
   solid(x - 0.32, z - 0.32, x + 0.32, z + 0.32, y0, y0 + 2);
 }
-// a ginger cat, curled up asleep: body, head tucked on its paws, ears, a tail wrapped round; it breathes
-function sleepingCat() {
-  const g = new THREE.Group();
-  const plain = new THREE.MeshPhysicalMaterial({ color: 0xd68d48, roughness: 0.85, sheen: 1, sheenColor: 0xffd7a8, sheenRoughness: 0.5 });
-  const pale = new THREE.MeshPhysicalMaterial({ color: 0xf3e6d2, roughness: 0.85, sheen: 1, sheenColor: 0xffffff });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x2e1d12, roughness: 0.6 });
-  const pink = new THREE.MeshStandardMaterial({ color: 0xd98c8c, roughness: 0.6 });
-  const add = (geo, mat, parent = g) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
-  const bodyGeo = new THREE.SphereGeometry(0.2, 28, 18).scale(1.2, 0.5, 0.78).translate(0, 0.1, 0);
-  { const p = bodyGeo.attributes.position, col = new Float32Array(p.count * 3), top = new THREE.Color(0xa85f28), side = new THREE.Color(0xdc9655), under = new THREE.Color(0xf0dcc0), c2 = new THREE.Color();
-    for (let i = 0; i < p.count; i++) { const h = (p.getY(i) - 0.1) / 0.1; if (h > 0) c2.copy(side).lerp(top, h * h); else c2.copy(side).lerp(under, Math.min(1, -h * 1.4)); col.set([c2.r, c2.g, c2.b], i * 3); }
-    bodyGeo.setAttribute('color', new THREE.BufferAttribute(col, 3)); }
-  const body = add(bodyGeo, new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.85, sheen: 1, sheenColor: 0xffd7a8, sheenRoughness: 0.5 }));   // darker along the spine, cream underneath
-  // the head, resting on the front paws at one end, turned a little towards us
-  for (const s of [-1, 1]) add(new THREE.CapsuleGeometry(0.026, 0.1, 4, 10).rotateZ(Math.PI / 2).translate(0.27, 0.026, 0.06 + s * 0.035), pale);
-  const head = new THREE.Group(); head.position.set(0.27, 0.095, 0.07); head.rotation.set(0.15, 0.45, -0.12); g.add(head);
-  add(new THREE.SphereGeometry(0.095, 22, 16).scale(1.0, 0.82, 1.1), plain, head);
-  add(new THREE.SphereGeometry(0.045, 14, 10).scale(0.9, 0.7, 1.15).translate(0.072, -0.025, 0), pale, head);   // muzzle
-  add(new THREE.SphereGeometry(0.009, 8, 6).translate(0.112, -0.012, 0), pink, head);                            // nose
-  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.004, 0.004, 0.032).rotateX(s * 0.15).translate(0.082, 0.018, s * 0.038), dark, head);   // eyes shut
-  const ear = new THREE.Group(); head.add(ear);
-  for (const s of [-1, 1]) {
-    const e = new THREE.ConeGeometry(0.036, 0.075, 4); e.rotateY(Math.PI / 4); e.translate(0, 0.037, 0); e.rotateX(s * 0.3); e.translate(-0.015, 0.06, s * 0.05);
-    add(e, plain, s > 0 ? ear : head);
-    const inner = new THREE.ConeGeometry(0.02, 0.05, 4); inner.rotateY(Math.PI / 4); inner.translate(0.008, 0.03, 0); inner.rotateX(s * 0.3); inner.translate(-0.01, 0.062, s * 0.05);
-    add(inner, pink, s > 0 ? ear : head);
-  }
-  add(new THREE.SphereGeometry(0.075, 14, 10).scale(1, 0.75, 1).translate(0.16, 0.07, 0.11), pale);           // white chest by the paws
-  // the tail, wrapped round the front, its tip by the nose
-  const tail = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.24, 0.05, -0.02], [-0.22, 0.04, 0.14], [-0.05, 0.03, 0.2], [0.14, 0.03, 0.19], [0.27, 0.035, 0.15]].map((p) => new THREE.Vector3(...p))), 24, 0.03, 8);
-  add(tail, plain);
-  add(new THREE.SphereGeometry(0.031, 10, 8).translate(0.27, 0.035, 0.15), dark);
-  g.userData = { body, ear };
-  return g;
+// a record seen from above: black vinyl with fine grooves catching the light, a cream label
+function vinylTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const g = c.getContext('2d'), r = rng(45);
+  g.fillStyle = '#0d0d0d'; g.fillRect(0, 0, 512, 512);
+  for (let rad = 250; rad > 90; rad -= 1.6) { g.strokeStyle = `rgba(255,255,255,${0.02 + r() * 0.05})`; g.lineWidth = 0.8; g.beginPath(); g.arc(256, 256, rad, 0, Math.PI * 2); g.stroke(); }
+  for (const rad of [200, 160, 125]) { g.strokeStyle = 'rgba(0,0,0,0.9)'; g.lineWidth = 3; g.beginPath(); g.arc(256, 256, rad, 0, Math.PI * 2); g.stroke(); }   // gaps between tracks
+  const sheen = g.createConicGradient ? g.createConicGradient(0.6, 256, 256) : null;
+  if (sheen) { sheen.addColorStop(0, 'rgba(255,255,255,0)'); sheen.addColorStop(0.08, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.16, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, 'rgba(255,255,255,0)'); sheen.addColorStop(0.58, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.66, 'rgba(255,255,255,0)'); g.fillStyle = sheen; g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.arc(256, 256, 88, 0, Math.PI * 2, true); g.fill(); }
+  g.fillStyle = '#efe3c8'; g.beginPath(); g.arc(256, 256, 84, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#a4532e'; g.lineWidth = 3; g.beginPath(); g.arc(256, 256, 76, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.font = 'italic 26px Georgia, serif'; g.fillText("Deepti's Studio", 256, 236);
+  g.font = '15px Georgia, serif'; g.fillText('SIDE A · 33⅓', 256, 296);
+  g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(256, 256, 7, 0, Math.PI * 2); g.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+// the sleeve of the record that's playing: a warm abstract sunset over the sea
+function sleeveTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const g = c.getContext('2d');
+  const sky = g.createLinearGradient(0, 0, 0, 512); sky.addColorStop(0, '#f2c27a'); sky.addColorStop(0.55, '#e0794a'); sky.addColorStop(0.56, '#2f5d6e'); sky.addColorStop(1, '#1d3a4a');
+  g.fillStyle = sky; g.fillRect(0, 0, 512, 512);
+  g.fillStyle = '#fbe3b0'; g.beginPath(); g.arc(256, 282, 70, Math.PI, 0); g.fill();
+  for (let y = 300; y < 500; y += 14) { g.fillStyle = `rgba(251,227,176,${0.5 - (y - 300) / 500})`; g.fillRect(256 - 60 + (y % 28), y, 120 - (y - 300) / 3, 3); }
+  g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = 'italic 34px Georgia, serif'; g.textAlign = 'left'; g.fillText('Her songs', 28, 58);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
 }
 
 // her bicycle: a sage-green Dutch step-through with a swept-back bar, chrome mudguards, a sprung leather
