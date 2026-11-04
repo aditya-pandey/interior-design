@@ -363,8 +363,10 @@ export function buildStudio(M, pack) {
   // a frangipani by the steps, her bicycle against the wall
   frangipani(parts, 97.0, 35.5, groundHeight(97.0, 35.5), rng(77));                 // at the start of the boardwalk
   carColliders.push({ circle: [97.0, 35.5, 0.4] }); solid(96.8, 35.3, 97.2, 35.7, -0.5, 3);
-  bicycle(parts, 102.75, Z0 - 0.42, F);
-  solid(101.95, Z0 - 0.62, 103.55, Z0 - 0.2, F, F + 1);
+  const bike = bicycleGroup();
+  bike.position.set(102.75, F, Z0 - 0.45); bike.rotation.set(0.09, Math.PI + 0.06, 0);   // front wheel to the east, leaning on its stand
+  group.add(bike);
+  solid(101.85, Z0 - 0.75, 103.65, Z0 - 0.15, F, F + 1);
   // a pair of loungers on the north deck, under the eaves
   for (const lx of [112.6, 114.2]) {
     parts.rbox('wood', lx, F, Z1 + 1.35, 0.7, 0.3, 1.9, 0.03, 0x9c7450);
@@ -550,6 +552,49 @@ export function buildStudio(M, pack) {
     interact.push({ kind: 'album', label: `Open “${pack.album.title || "Deepti's Corner"}”`, pos: [CT.x + 0.1, F + 0.4, CT.z + 0.15], r: 1.7 });
   }
   chair(103.75, 47.6, Math.PI / 2, 0x3f6f8f);
+  // a window bed: a deep floor mattress on a low oak platform by the glass, piled with pillows, a knitted
+  // throw, a sheepskin beside it, a lantern and a tray of chai; E to curl up and watch the sea. A cat asleep
+  // at its foot.
+  const WB = { x: 104.2, z: 49.62, w: 2.6, d: 1.85 };
+  parts.rbox('wood', WB.x, F, WB.z, WB.w, 0.12, WB.d, 0.02, 0x8a6240);
+  parts.rbox('fabric', WB.x, F + 0.12, WB.z, WB.w - 0.1, 0.2, WB.d - 0.1, 0.07, 0xefe7da);
+  for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) parts.cyl('fabric', WB.x + i * 0.32, F + 0.315, WB.z + j * 0.3, 0.012, 0.012, 0.01, 0xd9cfbf, 8);   // tufts
+  const pillow = (x, z, w, h, d, tilt, col) => { const c = new RoundedBoxGeometry(w, h, d, 4, Math.min(h, d) * 0.45); c.rotateX(tilt); c.translate(x, F + 0.32 + h / 2, z); parts.add('fabric', c, col); };
+  pillow(WB.x - 0.75, WB.z - 0.72, 0.75, 0.5, 0.2, -0.3, 0xe8e0d0);
+  pillow(WB.x, WB.z - 0.74, 0.75, 0.52, 0.2, -0.3, 0xe5dccb);
+  pillow(WB.x + 0.75, WB.z - 0.72, 0.75, 0.5, 0.2, -0.3, 0xe8e0d0);
+  pillow(WB.x - 0.45, WB.z - 0.52, 0.48, 0.38, 0.15, -0.2, 0x9dbcad);
+  pillow(WB.x + 0.15, WB.z - 0.54, 0.48, 0.38, 0.15, -0.22, 0xc9a24a);
+  pillow(WB.x + 0.7, WB.z - 0.52, 0.44, 0.36, 0.15, -0.18, 0xa4532e);
+  const bolW = new THREE.CylinderGeometry(0.1, 0.1, 0.7, 20); bolW.rotateX(Math.PI / 2); bolW.translate(WB.x - 1.12, F + 0.42, WB.z + 0.05); parts.add('fabric', bolW, 0x8e2f2a);
+  // the knitted throw, falling over the platform's edge on the west side
+  const thr = new THREE.PlaneGeometry(1.0, 1.5, 14, 20), tp = thr.attributes.position;
+  for (let i = 0; i < tp.count; i++) { const x = tp.getX(i), y = tp.getY(i), over = Math.max(0, x - 0.25); tp.setXYZ(i, Math.min(x, 0.25) + 0.02 * Math.sin(y * 9), y, over > 0 ? -over : 0.015 * Math.sin(x * 11 + y * 4)); }
+  thr.computeVertexNormals(); thr.rotateX(-Math.PI / 2); thr.translate(WB.x + 1.0, F + 0.33, WB.z + 0.15);
+  parts.add('fabric', thr, 0xc99a2e);
+  const fold = new RoundedBoxGeometry(1.1, 0.08, 0.45, 3, 0.035); fold.translate(WB.x - 0.25, F + 0.36, WB.z + 0.55); parts.add('fabric', fold, 0xf4efe6);      // a folded quilt
+  // a sheepskin on the floor, a brass lantern and a tray of chai on the platform's corner
+  const sk = []; const sr2 = rng(71);
+  for (let i = 0; i < 40; i++) { const t = (i / 40) * Math.PI * 2, j = 1 + (sr2() - 0.5) * 0.2; sk.push(new THREE.Vector2(Math.cos(t) * 0.55 * j, Math.sin(t) * 0.4 * j)); }
+  const skin = new THREE.ExtrudeGeometry(new THREE.Shape(sk), { depth: 0.03, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.02, bevelSegments: 2 });
+  skin.rotateX(-Math.PI / 2); skin.translate(WB.x - 1.75, F + 0.005, WB.z - 0.1); parts.add('fabric', skin, 0xf6f2ea);
+  parts.box('metal', WB.x - 1.24, F + 0.12, WB.z + 0.66, WB.x - 1.06, F + 0.14, WB.z + 0.84, 0x1d1d1d);
+  parts.box('glow', WB.x - 1.22, F + 0.14, WB.z + 0.68, WB.x - 1.08, F + 0.36, WB.z + 0.82, 0xffffff);
+  parts.box('brass', WB.x - 1.24, F + 0.36, WB.z + 0.66, WB.x - 1.06, F + 0.38, WB.z + 0.84, 0xb08d57);
+  parts.rbox('wood', WB.x + 1.0, F + 0.32, WB.z - 0.15, 0.4, 0.025, 0.3, 0.01, 0x6b4a2f);
+  parts.cyl('paper', WB.x + 0.92, F + 0.345, WB.z - 0.18, 0.035, 0.03, 0.07, 0xf5f1e8, 12);
+  parts.cyl('paper', WB.x + 1.08, F + 0.345, WB.z - 0.1, 0.035, 0.03, 0.07, 0xf5f1e8, 12);
+  book(WB.x + 0.3, F + 0.32, WB.z + 0.25, WB.x + 0.55, F + 0.35, WB.z + 0.42, 7);
+  solid(WB.x - WB.w / 2, WB.z - WB.d / 2, WB.x + WB.w / 2, WB.z + WB.d / 2, F, F + 0.5);
+  interact.push({ kind: 'lounger', label: 'Curl up on the window bed', pos: [WB.x, F + 0.5, WB.z], r: 2.1,
+    seat: { x: WB.x - 0.2, z: WB.z, y: F, eye: [WB.x - 0.2, F + 0.86, WB.z - 0.35], look: [0.1, 1], pitch: 0.03, flash: 'Curl up and watch the sea · E to get up', stand: [WB.x - 0.2, WB.z - WB.d / 2 - 0.42, Math.PI, F] } });
+  const cat = sleepingCat();
+  cat.position.set(WB.x + 0.55, F + 0.32, WB.z + 0.5); cat.rotation.y = -0.6;
+  group.add(cat);
+  // an oak-slatted ceiling over the lounge
+  for (let x = 103.05; x < 110.0; x += 0.1) parts.box('wood', x, CH - 0.075, ST.z1 + 0.6, x + 0.05, CH - 0.03, Z1 - 0.35, 0xd9b48a);
+  parts.box('paint', 103.0, CH - 0.032, ST.z1 + 0.6, 110.0, CH - 0.03, Z1 - 0.35, 0x2a2018);
+
   // three brass pendants over the table
   for (const [dx, dz, dy] of [[-0.45, 0, 1.95], [0.1, 0.15, 1.75], [0.55, -0.1, 2.05]]) {
     const x = CT.x + dx, z = CT.z + dz;
@@ -842,6 +887,7 @@ export function buildStudio(M, pack) {
       for (const l of lights) l.intensity = on ? l.userData.on : 0;
       haloMat.opacity = on ? 0.55 : 0;
     },
+    update(t) { const k = Math.sin(t * 1.5); cat.userData.body.scale.set(1, 1 + k * 0.035, 1 + k * 0.02); cat.userData.ear.rotation.z = Math.sin(t * 0.37) > 0.97 ? 0.35 : 0; },
     entry: { x: 99.0, z: 37.2 },          // on the boardwalk, facing the steps
     upper: U, terraceX: UX1,
   };
@@ -932,24 +978,133 @@ function pottedTree(parts, x, z, y0, r, solid) {
   }
   solid(x - 0.32, z - 0.32, x + 0.32, z + 0.32, y0, y0 + 2);
 }
-// her bicycle: an upright town bike leaning on its stand, with a wicker basket
-function bicycle(parts, x, z, y) {
-  const wheel = (cx) => {
-    const t = new THREE.TorusGeometry(0.33, 0.018, 8, 36); t.rotateY(Math.PI / 2); t.translate(cx, y + 0.35, z); parts.add('metal', t, 0x1d1d1d);
-    const h = new THREE.TorusGeometry(0.3, 0.008, 6, 36); h.rotateY(Math.PI / 2); h.translate(cx, y + 0.35, z); parts.add('brass', h, 0xc8c8c8);
-  };
-  wheel(x - 0.52); wheel(x + 0.52);
-  const tube = (ax, ay, bx, by, rad = 0.016, col = 0x2f5d50) => {
-    const L = Math.hypot(bx - ax, by - ay), g = new THREE.CylinderGeometry(rad, rad, L, 8);
-    g.rotateZ(Math.atan2(-(bx - ax), by - ay)); g.translate((ax + bx) / 2, y + (ay + by) / 2, z); parts.add('paint', g, col);
-  };
-  tube(x - 0.52, 0.35, x - 0.05, 0.35); tube(x - 0.05, 0.35, x - 0.15, 0.85); tube(x - 0.52, 0.35, x - 0.15, 0.82);
-  tube(x - 0.05, 0.35, x + 0.38, 0.8); tube(x + 0.38, 0.8, x + 0.52, 0.35); tube(x - 0.15, 0.82, x + 0.38, 0.8);
-  tube(x + 0.38, 0.8, x + 0.33, 1.05, 0.014, 0x1d1d1d);
-  parts.box('metal', x + 0.33 - 0.015, y + 1.03, z - 0.28, x + 0.33 + 0.015, y + 1.06, z + 0.28, 0x1d1d1d);
-  parts.rbox('fabric', x - 0.17, y + 0.88, z, 0.24, 0.06, 0.13, 0.03, 0x5b3e28);
-  parts.rbox('paint', x + 0.55, y + 0.86, z, 0.3, 0.2, 0.36, 0.04, 0xc8a46a);                // the basket
-  for (let k = 0; k < 5; k++) parts.cyl('bloom', x + 0.5 + (k % 3) * 0.04, y + 1.05, z - 0.08 + k * 0.04, 0.03, 0.03, 0.03, [0xc2185b, 0xfdfbf3, 0xe1a92a][k % 3], 8);
+// a ginger cat, curled up asleep: body, head tucked on its paws, ears, a tail wrapped round; it breathes
+function sleepingCat() {
+  const g = new THREE.Group();
+  const plain = new THREE.MeshPhysicalMaterial({ color: 0xd68d48, roughness: 0.85, sheen: 1, sheenColor: 0xffd7a8, sheenRoughness: 0.5 });
+  const pale = new THREE.MeshPhysicalMaterial({ color: 0xf3e6d2, roughness: 0.85, sheen: 1, sheenColor: 0xffffff });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2e1d12, roughness: 0.6 });
+  const pink = new THREE.MeshStandardMaterial({ color: 0xd98c8c, roughness: 0.6 });
+  const add = (geo, mat, parent = g) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
+  const bodyGeo = new THREE.SphereGeometry(0.2, 28, 18).scale(1.2, 0.5, 0.78).translate(0, 0.1, 0);
+  { const p = bodyGeo.attributes.position, col = new Float32Array(p.count * 3), top = new THREE.Color(0xa85f28), side = new THREE.Color(0xdc9655), under = new THREE.Color(0xf0dcc0), c2 = new THREE.Color();
+    for (let i = 0; i < p.count; i++) { const h = (p.getY(i) - 0.1) / 0.1; if (h > 0) c2.copy(side).lerp(top, h * h); else c2.copy(side).lerp(under, Math.min(1, -h * 1.4)); col.set([c2.r, c2.g, c2.b], i * 3); }
+    bodyGeo.setAttribute('color', new THREE.BufferAttribute(col, 3)); }
+  const body = add(bodyGeo, new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.85, sheen: 1, sheenColor: 0xffd7a8, sheenRoughness: 0.5 }));   // darker along the spine, cream underneath
+  // the head, resting on the front paws at one end, turned a little towards us
+  for (const s of [-1, 1]) add(new THREE.CapsuleGeometry(0.026, 0.1, 4, 10).rotateZ(Math.PI / 2).translate(0.27, 0.026, 0.06 + s * 0.035), pale);
+  const head = new THREE.Group(); head.position.set(0.27, 0.095, 0.07); head.rotation.set(0.15, 0.45, -0.12); g.add(head);
+  add(new THREE.SphereGeometry(0.095, 22, 16).scale(1.0, 0.82, 1.1), plain, head);
+  add(new THREE.SphereGeometry(0.045, 14, 10).scale(0.9, 0.7, 1.15).translate(0.072, -0.025, 0), pale, head);   // muzzle
+  add(new THREE.SphereGeometry(0.009, 8, 6).translate(0.112, -0.012, 0), pink, head);                            // nose
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.004, 0.004, 0.032).rotateX(s * 0.15).translate(0.082, 0.018, s * 0.038), dark, head);   // eyes shut
+  const ear = new THREE.Group(); head.add(ear);
+  for (const s of [-1, 1]) {
+    const e = new THREE.ConeGeometry(0.036, 0.075, 4); e.rotateY(Math.PI / 4); e.translate(0, 0.037, 0); e.rotateX(s * 0.3); e.translate(-0.015, 0.06, s * 0.05);
+    add(e, plain, s > 0 ? ear : head);
+    const inner = new THREE.ConeGeometry(0.02, 0.05, 4); inner.rotateY(Math.PI / 4); inner.translate(0.008, 0.03, 0); inner.rotateX(s * 0.3); inner.translate(-0.01, 0.062, s * 0.05);
+    add(inner, pink, s > 0 ? ear : head);
+  }
+  add(new THREE.SphereGeometry(0.075, 14, 10).scale(1, 0.75, 1).translate(0.16, 0.07, 0.11), pale);           // white chest by the paws
+  // the tail, wrapped round the front, its tip by the nose
+  const tail = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[-0.24, 0.05, -0.02], [-0.22, 0.04, 0.14], [-0.05, 0.03, 0.2], [0.14, 0.03, 0.19], [0.27, 0.035, 0.15]].map((p) => new THREE.Vector3(...p))), 24, 0.03, 8);
+  add(tail, plain);
+  add(new THREE.SphereGeometry(0.031, 10, 8).translate(0.27, 0.035, 0.15), dark);
+  g.userData = { body, ear };
+  return g;
+}
+
+// her bicycle: a sage-green Dutch step-through with a swept-back bar, chrome mudguards, a sprung leather
+// saddle and a wicker basket of flowers, leaning on its stand. Built in its own frame (x along the bike,
+// y up, wheels on the ground) and returned as a group to place and tilt.
+function bicycleGroup() {
+  const g = new THREE.Group();
+  const paint = new THREE.MeshPhysicalMaterial({ color: 0x6f9a86, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.12 });
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xe6e6e6, metalness: 1, roughness: 0.16 });
+  const rubber = new THREE.MeshStandardMaterial({ color: 0x1b1a19, roughness: 0.9 });
+  const leather = new THREE.MeshStandardMaterial({ color: 0x6b3f22, roughness: 0.55 });
+  const wicker = new THREE.MeshStandardMaterial({ map: wickerTexture(), roughness: 0.85, side: THREE.DoubleSide });
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+  const tube = (pts, r, mat, seg = 24) => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), seg, r, 8), mat);
+  const R = 0.34, rear = [-0.53, R], front = [0.56, R];
+  for (const [cx, cy] of [rear, front]) {
+    add(new THREE.TorusGeometry(R - 0.012, 0.024, 10, 48).translate(cx, cy, 0), rubber);           // tyre
+    add(new THREE.TorusGeometry(R - 0.042, 0.009, 6, 48).translate(cx, cy, 0), chrome);            // rim
+    add(new THREE.CylinderGeometry(0.022, 0.022, 0.1, 12).rotateX(Math.PI / 2).translate(cx, cy, 0), chrome);
+    const spokes = [];
+    for (let k = 0; k < 20; k++) {
+      const a = (k / 20) * Math.PI * 2, s = new THREE.CylinderGeometry(0.0016, 0.0016, R - 0.06, 3);
+      s.translate(0, (R - 0.06) / 2 + 0.02, 0); s.rotateZ(a); s.translate(cx, cy, (k % 2 ? 1 : -1) * 0.012);
+      spokes.push(s);
+    }
+    add(mergeGeometries(spokes), chrome);
+  }
+  // mudguards: chrome arcs over the tops of the wheels
+  add(new THREE.TorusGeometry(R + 0.035, 0.03, 4, 32, Math.PI * 0.62).scale(1, 1, 0.5).rotateZ(Math.PI * 0.12).translate(rear[0], rear[1], 0), chrome);
+  add(new THREE.TorusGeometry(R + 0.035, 0.03, 4, 32, Math.PI * 0.5).scale(1, 1, 0.5).rotateZ(Math.PI * 0.32).translate(front[0], front[1], 0), chrome);
+  // the frame: a swooping step-through tube, the seat tube, stays, the fork
+  const BB = [0.0, 0.3, 0], head = [0.4, 0.86, 0], seat = [-0.12, 0.86, 0];
+  tube([head, [0.33, 0.62, 0], [0.18, 0.36, 0], BB], 0.022, paint);
+  tube([[0.39, 0.78, 0], [0.3, 0.55, 0], [0.12, 0.33, 0], [0.02, 0.3, 0]], 0.016, paint);
+  tube([BB, [-0.06, 0.6, 0], seat], 0.021, paint, 8);
+  for (const s of [-1, 1]) {
+    tube([BB, [-0.25, 0.32, s * 0.05], [rear[0], rear[1], s * 0.055]], 0.011, paint, 8);
+    tube([[-0.1, 0.8, 0], [-0.3, 0.6, s * 0.045], [rear[0], rear[1], s * 0.055]], 0.01, paint, 8);
+    tube([[0.42, 0.84, 0], [0.47, 0.62, s * 0.05], [front[0] - 0.01, front[1], s * 0.055]], 0.012, paint, 10);
+  }
+  add(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 12).rotateZ(-0.35).translate(0.41, 0.88, 0), paint);   // head tube
+  // swept-back bar on a chrome stem, leather grips, a bell, a lamp
+  tube([[0.43, 0.94, 0], [0.42, 1.02, 0], [0.36, 1.05, 0]], 0.012, chrome, 8);
+  tube([[0.22, 1.02, -0.3], [0.32, 1.05, -0.22], [0.36, 1.05, 0], [0.32, 1.05, 0.22], [0.22, 1.02, 0.3]], 0.011, chrome, 24);
+  for (const s of [-1, 1]) add(new THREE.CylinderGeometry(0.017, 0.017, 0.11, 10).rotateZ(Math.PI / 2).rotateY(s * 0.5).translate(0.2, 1.02, s * 0.3), leather);
+  add(new THREE.SphereGeometry(0.022, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).translate(0.3, 1.06, -0.2), chrome);
+  add(new THREE.CylinderGeometry(0.04, 0.03, 0.06, 14).rotateZ(Math.PI / 2).translate(0.5, 0.8, 0), chrome);
+  // sprung leather saddle on its post
+  add(new THREE.CylinderGeometry(0.013, 0.013, 0.16, 8).rotateZ(0.22).translate(-0.135, 0.92, 0), chrome);
+  const sd = new THREE.Shape(); sd.moveTo(-0.13, -0.09); sd.quadraticCurveTo(0.02, -0.11, 0.13, -0.025); sd.lineTo(0.13, 0.025); sd.quadraticCurveTo(0.02, 0.11, -0.13, 0.09); sd.quadraticCurveTo(-0.16, 0, -0.13, -0.09);
+  add(new THREE.ExtrudeGeometry(sd, { depth: 0.04, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 3 }).rotateX(Math.PI / 2).translate(-0.17, 1.03, 0), leather);
+  for (const s of [-1, 1]) add(new THREE.TorusGeometry(0.018, 0.005, 6, 12).rotateY(Math.PI / 2).translate(-0.27, 1.0, s * 0.05), chrome);
+  // chainring, chain guard, cranks and pedals, the kickstand
+  add(new THREE.CylinderGeometry(0.1, 0.1, 0.006, 32).rotateX(Math.PI / 2).translate(BB[0], BB[1], 0.06), chrome);
+  add(new THREE.BoxGeometry(0.56, 0.05, 0.012).rotateZ(0.04).translate(-0.27, 0.33, 0.085), paint);
+  for (const s of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.018, 0.17, 0.012).translate(0, -s * 0.085, 0).rotateZ(0.6).translate(BB[0], BB[1], s * 0.08), chrome);
+    add(new THREE.BoxGeometry(0.1, 0.02, 0.07).translate(Math.sin(0.6) * 0.17 * s, BB[1] - Math.cos(0.6) * 0.17 * s, s * 0.12), rubber);
+  }
+  tube([[-0.06, 0.29, -0.05], [-0.16, 0.12, -0.14], [-0.22, 0.0, -0.2]], 0.008, chrome, 6);
+  // a rear rack, and the wicker basket on the front with flowers
+  for (const s of [-1, 1]) tube([[-0.18, 0.72, s * 0.08], [-0.45, 0.72, s * 0.09], [-0.6, 0.68, s * 0.07], [rear[0], rear[1], s * 0.06]], 0.006, chrome, 10);
+  for (let x = -0.2; x > -0.62; x -= 0.07) add(new THREE.CylinderGeometry(0.005, 0.005, 0.18, 6).rotateX(Math.PI / 2).translate(x, 0.725, 0), chrome);
+  const B = { x: 0.66, y: 0.93, w: 0.3, h: 0.22, d: 0.36 };
+  const basket = new THREE.Group(); basket.position.set(B.x, B.y, 0); g.add(basket);
+  const side = (w, h, x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wicker); m.position.set(x, 0, z); m.rotation.y = ry; m.castShadow = true; basket.add(m); };
+  side(B.w, B.h, 0, B.d / 2, 0); side(B.w, B.h, 0, -B.d / 2, 0); side(B.d, B.h, B.w / 2, 0, Math.PI / 2); side(B.d, B.h, -B.w / 2, 0, Math.PI / 2);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(B.w, B.d).rotateX(-Math.PI / 2).translate(0, -B.h / 2, 0), wicker); basket.add(floor);
+  for (const s of [-1, 1]) { const rim = new THREE.Mesh(new THREE.BoxGeometry(B.w + 0.02, 0.025, 0.02), leather); rim.position.set(0, B.h / 2, s * B.d / 2); basket.add(rim); }
+  for (const s of [-1, 1]) { const rim = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.025, B.d + 0.02), leather); rim.position.set(s * B.w / 2, B.h / 2, 0); basket.add(rim); }
+  tube([[0.46, 0.84, 0], [B.x - 0.1, B.y - B.h / 2, 0]], 0.008, chrome, 4);
+  const r = rng(515), cols = [0xc2185b, 0xfdfbf3, 0xe1a92a, 0xd81b60, 0xf4a6c0];
+  for (let k = 0; k < 14; k++) {
+    const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.035 + r() * 0.02, 10, 8), new THREE.MeshStandardMaterial({ color: cols[k % 5], roughness: 0.8 }));
+    bloom.position.set((r() - 0.5) * (B.w - 0.06), B.h / 2 + 0.04 + r() * 0.1, (r() - 0.5) * (B.d - 0.06)); bloom.castShadow = true; basket.add(bloom);
+  }
+  for (let k = 0; k < 10; k++) {
+    const lf = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.035), new THREE.MeshStandardMaterial({ color: 0x4f7f3f, roughness: 0.7, side: THREE.DoubleSide }));
+    lf.position.set((r() - 0.5) * B.w, B.h / 2 + 0.05 + r() * 0.06, (r() - 0.5) * B.d); lf.rotation.set(r() - 0.5, r() * 3, 0.5); basket.add(lf);
+  }
+  return g;
+}
+function wickerTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#7a5530'; g.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 8) for (let x = 0; x < 128; x += 16) {
+    const o = (y / 8) % 2 ? 8 : 0;
+    const grad = g.createLinearGradient(0, y, 0, y + 8); grad.addColorStop(0, '#e2bf86'); grad.addColorStop(0.5, '#c99a5c'); grad.addColorStop(1, '#8a6238');
+    g.fillStyle = grad; g.beginPath(); g.ellipse(x + o + 8, y + 4, 7.5, 3.6, 0, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2); t.anisotropy = 8;
+  return t;
 }
 
 // a framed canvas: a thin frame (or none) and a canvas plane facing +Z. Paintings are on woven canvas

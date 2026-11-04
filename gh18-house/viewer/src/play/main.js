@@ -1063,6 +1063,7 @@ function frame(dt = 1 / 60, show = true) {
   clouds.update(clock, camera, skyLight);
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
+  studio.update(clock);
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
