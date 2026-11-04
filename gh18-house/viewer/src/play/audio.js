@@ -1,7 +1,10 @@
 // Sounds for /play/, synthesised with Web Audio (no recordings, nothing to license):
 // - engine: a 1.2 L four-cylinder. Firing note (rpm / 30 Hz) with its half order and harmonics, through
 //   soft saturation and a load-dependent filter; intake noise with throttle; a dip at each gear change
-// - road: low rumble growing with speed; wind above ~40 km/h; tyre squeal from slip; crunch on sand
+// - road: low rumble growing with speed; wind above ~40 km/h; crunch on sand, gravel on dry ground, splash in water
+// - tyres (phase 5): a low scrub as they near their grip, a squeal past it (pitch rising with slip), a broad
+//   skid when wheels lock (handbrake, braking without ABS)
+// - exhaust pops on lifting off at high revs, a faint gearbox whine
 // - horn: the two-tone note of a small Indian hatchback
 // - bumps: a low thud for knocks
 // - the sea: surf that swells and falls, louder near the shore
@@ -64,6 +67,16 @@ export class CarAudio {
     for (const f of [415, 498]) { const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(hf); o.start(); }
     this.horn = hg;
 
+    // ---- phase 5: scrub, skid, gravel, splash, gearbox whine
+    const loop = (brown, type, f, q) => { const n = this.noise(brown); const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; const g = ctx.createGain(); g.gain.value = 0; n.connect(b).connect(g).connect(this.outside); return { g, b }; };
+    this.scrub = loop(false, 'bandpass', 560, 2.2);
+    this.skid = loop(false, 'bandpass', 820, 0.6);
+    this.gravel = loop(false, 'bandpass', 2600, 0.9);
+    this.splash = loop(true, 'lowpass', 900, 0.7);
+    const wo = ctx.createOscillator(); wo.type = 'sine'; this.whine = ctx.createGain(); this.whine.gain.value = 0;
+    wo.connect(this.whine).connect(this.outside); wo.start(); this.whineOsc = wo;
+    this.prevThrottle = 0;
+
     // ---- the sea: pink-ish noise, low-passed, with a slow swell
     const surf = this.noise(true); const sl = ctx.createBiquadFilter(); sl.type = 'lowpass'; sl.frequency.value = 700;
     this.surf = ctx.createGain(); this.surf.gain.value = 0;
@@ -91,7 +104,7 @@ export class CarAudio {
   }
 
   // engineOn: false when she has got out (the car idles quietly, then the engine is switched off)
-  update({ rpm, throttle, slip, speed, gear, surface, shoreDist, inside, engineOn = true }) {
+  update({ rpm, throttle, slip, speed, gear, surface, shoreDist, inside, engineOn = true, tel = {} }) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime, e = this.engine;
     const f = rpm / 30;
@@ -114,12 +127,36 @@ export class CarAudio {
     const v = Math.abs(speed);
     this.road.gain.setTargetAtTime(Math.min(0.16, v * 0.007) * (surface === 'road' ? 1 : 0.6) * (inside ? 1.2 : 1), t, 0.1);
     this.wind.gain.setTargetAtTime(Math.max(0, v - 11) ** 2 * 0.00022 * (inside ? 0.45 : 1), t, 0.15);
-    this.squeal.gain.setTargetAtTime(slip > 0.55 && v > 4 && surface === 'road' ? (slip - 0.55) * 0.42 : 0, t, 0.05);
+    // tyres: how hard they're working (grip used) and how far past their peak (slip)
+    const use = Math.max(tel.useF || 0, tel.useR || 0), onRoad = surface === 'road';
+    const locked = tel.locked || tel.lockF;
+    this.scrub.g.gain.setTargetAtTime(onRoad && v > 4 && !locked ? Math.max(0, (use - 0.78) / 0.22) * 0.05 : 0, t, 0.06);
+    this.squeal.gain.setTargetAtTime(onRoad && slip > 0.5 && v > 4 && !locked ? (slip - 0.5) * 0.45 : 0, t, 0.05);
+    this.skid.g.gain.setTargetAtTime(locked && v > 2 ? (onRoad ? 0.13 : 0.06) * Math.min(1, v / 10) : 0, t, 0.04);
+    this.gravel.g.gain.setTargetAtTime(surface === 'ground' ? Math.min(0.07, v * 0.006) : 0, t, 0.08);
+    this.splash.g.gain.setTargetAtTime(surface === 'water' ? Math.min(0.2, v * 0.03) : 0, t, 0.1);
+    // gearbox whine: a faint tone tracking the driveline, louder on the overrun
+    this.whineOsc.frequency.setTargetAtTime(Math.max(40, rpm * 0.21), t, 0.05);
+    this.whine.gain.setTargetAtTime(engineOn && v > 3 ? 0.004 + (throttle < 0.05 ? 0.004 : 0) : 0, t, 0.1);
+    // exhaust pops: lifting off sharply at high revs
+    if (engineOn && this.prevThrottle > 0.5 && throttle < 0.05 && rpm > 3600) this.pops(2 + Math.floor(Math.random() * 3));
+    this.prevThrottle = throttle;
     this.sand.gain.setTargetAtTime(surface === 'sand' || surface === 'water' ? Math.min(0.12, v * 0.012) : 0, t, 0.08);
     this.surf.gain.setTargetAtTime(Math.max(0, 1 - Math.max(0, shoreDist) / 120) * 0.22, t, 0.3);
     if (inside !== this.inside) {
       this.inside = inside;
       this.outside.frequency.setTargetAtTime(inside ? 1500 : 18000, t, 0.08);
+    }
+  }
+
+  pops(n) {
+    const ctx = this.ctx, t0 = ctx.currentTime;
+    for (let i = 0; i < n; i++) {
+      const t = t0 + 0.08 + i * (0.07 + Math.random() * 0.12);
+      const src = ctx.createBufferSource(); src.buffer = this.popBuf ||= (() => { const b = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate), d = b.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.exp(-k / (ctx.sampleRate * 0.006)); return b; })();
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900 + Math.random() * 600;
+      const g = ctx.createGain(); g.gain.value = 0.18 + Math.random() * 0.12;
+      src.connect(f).connect(g).connect(this.outside); src.start(t);
     }
   }
 

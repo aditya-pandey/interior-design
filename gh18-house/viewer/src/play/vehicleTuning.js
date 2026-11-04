@@ -54,7 +54,7 @@ export const TUNING = {
   rollBlend: [0.6, 1.6],   // m/s: below the first the car just rolls (no slip); fully tyre-model above the sum
 
   // ---- surfaces: [grip ×, extra rolling drag N]
-  surfaces: { road: [1, 0], ground: [0.9, 260], sand: [0.72, 900], water: [0.6, 2600] },
+  surfaces: { road: [1, 0], ground: [0.9, 260], sand: [0.72, 900], water: [0.6, 1600] },
 
   // ---- driver aids
   counterSteer: 0.55,      // automatic counter-steer per rad of slide (0 = off)

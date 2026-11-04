@@ -84,6 +84,7 @@ const TESTS = [
   ['body_roll', 'body roll in the skidpad corner', '°', [2, 4.5], () => { const s = mk(60); run(s, 6, hold(60, { steer: 1 })); return s.roll != null ? deg(Math.abs(s.roll)) : deg(Math.abs(s.ay) * 0.011); }],
   ['brake_dive', 'nose dive braking from 100 km/h', '°', [1, 3], () => { const s = mk(100); let mx = 0; run(s, 1.5, { brake: 1 }, (t, q) => { mx = Math.max(mx, q.pitch != null ? Math.abs(q.pitch) : Math.abs(q.ax) * 0.01); }); return deg(mx); }],
   ['sand_0_50', '0–50 km/h on sand', 's', [5, 12], () => { const s = mk(0, 'sand'); let t = 0; while (kmh(s) < 50 && t < 30) { step(s, { throttle: 1 }); t += DT; } return t; }],
+  ['water_pullaway', 'stopped in the shallows: speed after 3 s full throttle (it must wade out, not stick)', 'km/h', [6, 20], () => { const s = mk(0, 'water'); run(s, 3, { throttle: 1 }); return kmh(s); }],
   ['sand_grip', 'cornering grip on sand at 40 km/h, full lock', 'g', [0.5, 0.75], () => { const s = mk(40, 'sand'); run(s, 6, hold(40, { steer: 1 })); return Math.abs(s.ay) / 9.81; }],
   // keyboard driving (input.js): holding a steering key carves the corner at the limit instead of scrubbing
   ['key_corner_100_slide', 'keyboard: hold left at 100 km/h for 4 s (Assisted): biggest slide angle', '°', [0, 5], () => keyCorner(100).slide],

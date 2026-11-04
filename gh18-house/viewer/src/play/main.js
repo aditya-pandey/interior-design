@@ -10,7 +10,8 @@ import { buildStudio } from './studio.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
 import { CollisionWorld } from './collide.js';
 import { VehicleSim } from './vehicle.js';
-import { loadBaleno } from './carmodel.js';
+import { loadBaleno, DASH } from './carmodel.js';
+import { createParticles } from './particles.js';
 import { CarAudio } from './audio.js';
 import { Music } from './music.js';
 import { playBirthday } from './birthday.js';
@@ -109,7 +110,7 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
-let cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
+let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
@@ -204,6 +205,7 @@ async function init() {
   car = await loadBaleno('models/baleno.glb', CAR_ITEM.size[1] / 1000);
   scene.add(car.root);
   skids = createSkids(scene);
+  wheelFx = createParticles(scene, { max: LOW ? 700 : 1600 });
   sim = new VehicleSim();
   sim.reset(HOME.x, HOME.z, HOME.yaw);
   driver = new DriverInput(sim.s);
@@ -310,6 +312,7 @@ function applyTime(t, regen = true) {
   for (const k of ['cove', 'downlight', 'lamp', 'window_lit']) if (M[k]) M[k].emissiveIntensity = t.glow * 1.2;
   beach.materials.lamp.emissiveIntensity = t.lamps;
   studio.setNight(t.glow > 0.3);
+  if (DASH.mat) DASH.mat.emissiveIntensity = t.glow > 0.3 ? 0.9 : 0.12;     // the gauges and screen glow after dark
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
   // the sea's own light: the sky's colour on the water body
   waterAmb.copy(new THREE.Color(t.hemiSky)).multiplyScalar(t.hemi * 0.9).add(new THREE.Color(t.fog).multiplyScalar(t.env * 0.35));
@@ -854,12 +857,27 @@ function updateCar(dt) {
     else skids.add(w.q, wx, H[w.q], wz, k * 1.6, onSand);
   }
   skids.update();
+  // smoke from sliding tyres on tarmac; sand, dust and water thrown up off the road
+  const spd = Math.abs(sim.speed), t0 = clock;
+  if (t0 !== fxClock && (fxClock = t0) >= 0) for (const w of car.wheels) {          // (once per tick of the clock: not while a test settles the view)
+    const sl = w.front ? sim.slipF : sim.slipR, key = 'w' + w.q;
+    const wx = pose.x - rx * w.rest.x + fx * w.rest.z, wz = pose.z - rz * w.rest.x + fz * w.rest.z, wy = H[w.q] + 0.12;
+    const back = -Math.sign(sim.speed || 1);
+    if (sim.surface === 'road' && sl > 0.5 && spd > 2) wheelFx.emit(key, 'smoke', (sl - 0.45) * 140, dt, t0, wx, wy, wz, sim.vx * 0.25, 0.5, sim.vz * 0.25, 0.9, 0.55);
+    else if ((sim.surface === 'sand' || sim.surface === 'ground') && spd > 2.5) {
+      const kick = Math.min(1, spd / 12) * ((w.front ? 1 : 0.5) + sl);
+      wheelFx.emit(key, 'sand', 110 * kick, dt, t0, wx, wy - 0.05, wz, fx * back * spd * 0.22, 1.6 + spd * 0.06, fz * back * spd * 0.22, 1.2, 0.2);
+      wheelFx.emit(key + 'd', 'dust', 14 * kick * (sim.surface === 'ground' ? 1.4 : 1), dt, t0, wx, wy, wz, sim.vx * 0.1, 0.3, sim.vz * 0.1, 0.8, 0.55);
+    } else if (sim.surface === 'water' && spd > 1.5) {
+      wheelFx.emit(key, 'water', Math.min(80, spd * 6), dt, t0, wx, wy - 0.05, wz, (w.left ? 1 : -1) * rx * -1.2 + sim.vx * 0.3, 1.6 + spd * 0.05, (w.left ? 1 : -1) * rz * -1.2 + sim.vz * 0.3, 1.0, 0.07);
+    }
+  }
   const inp = state.mode === 'drive' ? lastInput : NO_INPUT;
   const braking = (sim.speed > 0.3 && inp.brake > 0) || (sim.speed < -0.3 && inp.throttle > 0) || inp.handbrake;
   car.mats.tail.emissiveIntensity = (state.beams ? 0.7 : 0) + (braking ? 2.6 : 0);
   car.mats.reverse.emissiveIntensity = sim.reversing && sim.speed < -0.1 ? 1.6 : 0;
 }
-let lastInput = NO_INPUT;
+let lastInput = NO_INPUT, fxClock = -1;
 
 // ------------------------------------------------------------------ camera
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), tmpV = new THREE.Vector3(), tmpL = new THREE.Vector3();
@@ -1018,6 +1036,7 @@ function frame(dt = 1 / 60, show = true) {
   clock += dt;
   if (night.update(dt, clock, state.stars, camera)) wish();
   clouds.update(clock, camera, skyLight);
+  wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
@@ -1038,7 +1057,7 @@ function frame(dt = 1 / 60, show = true) {
     if (state.engineOff > 0) state.engineOff -= dt;
     audio.update({
       rpm: sim.rpm, throttle: state.mode === 'drive' ? (lastInput.throttle || (lastInput.brake && sim.reversing ? 1 : 0)) : 0,
-      slip: sim.slip, speed: sim.speed, gear: sim.gear, surface: sim.surface,
+      slip: sim.slip, speed: sim.speed, gear: sim.gear, surface: sim.surface, tel: sim.tel,
       shoreDist: 999,                                  // (the sea is ambience.js now) inside: state.mode === 'drive' && state.cam === 'driver',
       engineOn: state.mode === 'drive' || state.engineOff > 0,
     });
@@ -1099,7 +1118,7 @@ window.play = {
     const n = Math.round(seconds / STEP), per = Math.round(1 / 60 / STEP);
     for (let i = 0; i < n; i++) {
       sim.step(STEP, dev.stepInput(inp), collide, surfaceAt);
-      if (i % per === per - 1) { pose.copyFrom(sim); updateCar(1 / 60); }       // (skid marks, suspension)
+      if (i % per === per - 1) { pose.copyFrom(sim); clock += 1 / 60; updateCar(1 / 60); }       // (skid marks, suspension, wheel effects)
     }
     pose.copyFrom(sim);
     if (!draw) return window.play.state();

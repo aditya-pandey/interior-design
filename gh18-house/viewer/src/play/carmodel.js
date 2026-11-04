@@ -128,9 +128,33 @@ function finish(model) {
       out = new THREE.MeshPhysicalMaterial({ name: n, color: m.color, transparent: true, opacity: Math.max(0.28, m.opacity), roughness: 0.02, metalness: 0, envMapIntensity: 1.8, depthWrite: false, side: m.side });
     } else if (n === 'grill2.2') out = new THREE.MeshPhysicalMaterial({ name: n, color: 0xd9dbde, metalness: 1, roughness: 0.16 });          // chrome garnish
     else if (n === 'mirhanl.7' || n === 'hd.7') { out = m.clone(); out.roughness = 0.35; out.envMapIntensity = 1.2; }
+    else if (n === 'reflector.1' && m.map?.image) { out = m.clone(); dashGlow(out); }
     finished.set(m, out);
     o.material = out;
   });
+}
+// the instrument cluster and the screens glow (they're in the dashboard atlas with other parts: only the
+// gauge / screen areas, and not the atlas's white background, are made luminous)
+export const DASH = { mat: null };
+function dashGlow(mat) {
+  const img = mat.map.image, W = Math.min(1024, img.width || 1024), H = Math.min(1024, img.height || 1024);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, W, H);
+  const d = g.getImageData(0, 0, W, H), p = d.data;
+  const inGauges = (x, y) => (y < H * 0.43 && x < W * 0.97) || (x > W * 0.68 && x < W * 0.96 && y > H * 0.68 && y < H * 0.93);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4, r = p[i], gg = p[i + 1], b = p[i + 2];
+    const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+    const white = mx > 225 && mx - mn < 25;
+    const k = inGauges(x, y) && !white ? 1 : 0;
+    p[i] = r * k; p[i + 1] = gg * k; p[i + 2] = b * k;
+  }
+  g.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.flipY = mat.map.flipY; t.colorSpace = THREE.SRGBColorSpace; t.channel = mat.map.channel;
+  if (mat.map.matrixAutoUpdate === false || mat.map.repeat) { t.offset.copy(mat.map.offset); t.repeat.copy(mat.map.repeat); t.rotation = mat.map.rotation; }
+  mat.emissiveMap = t; mat.emissive = new THREE.Color(1, 1, 1); mat.emissiveIntensity = 0.12;
+  DASH.mat = mat;
 }
 // metallic paint under a clear coat: the base layer has metal flakes (a fine sparkle that fades with
 // distance; the file's body has no UVs, so the flakes come from the surface position), the clear coat on
