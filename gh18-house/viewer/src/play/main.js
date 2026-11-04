@@ -397,8 +397,7 @@ function applyClock(force = false) {
   state.time = nearestMoment(state.clock.h, state.clock.date);
   if (lastBeams !== t.beams) { lastBeams = t.beams; setBeams(state.beamsOverride ?? t.beams); }
   if (force) setBeams(state.beamsOverride ?? t.beams);
-  const b = document.querySelector('[data-act="time"]');
-  if (b) b.textContent = `${MOMENT_LABEL[state.time]} ${fmtClock(state.clock.h)}`;
+  setVal('time', `${MOMENT_LABEL[state.time]} ${fmtClock(state.clock.h)}`);
 }
 // once a frame: the clock runs, and the light follows it (cheaply; the sky's reflections are
 // recomputed when the sun has moved enough)
@@ -433,6 +432,7 @@ function setBeams(on) {
   for (const b of car.beams) b.intensity = on ? 220 : 0;
   car.mats.head.emissiveIntensity = on ? 2.2 : 0;
   document.querySelector('[data-act="lights"]')?.classList.toggle('on', on);
+  setVal('lights', on ? 'On' : 'Off');
 }
 
 // ------------------------------------------------------------------ input
@@ -464,8 +464,7 @@ function padExtras(dt) {
 function cycleAids() {
   const a = driver.cycleLevel();
   sim.aids = a; sim.aidsLabel = a.label;
-  const b = document.querySelector('[data-act="aids"]');
-  if (b) b.textContent = a.label;
+  setVal('aids', a.label);
   flash({ assisted: 'Driving aids: Assisted (stability, counter-steer, traction, ABS)', sport: 'Driving aids: Sport (light stability and counter-steer)', off: 'Driving aids: off (wheelspin, locking brakes, no catching)' }[driver.level]);
 }
 
@@ -491,7 +490,16 @@ function bindUI() {
   });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'KeyH') horn(false); });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; horn(false); });
-  for (const b of document.querySelectorAll('#bar button')) {
+  // the menu: ☰ (or Tab) opens it; a click outside or Escape closes it
+  const menu = document.getElementById('hud-menu'), menuBtn = document.getElementById('hud-menu-btn');
+  const openMenu = (on) => { menu.hidden = !on; menuBtn.setAttribute('aria-expanded', String(on)); menuBtn.classList.toggle('on', on); };
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); openMenu(menu.hidden); });
+  window.addEventListener('pointerdown', (e) => { if (!menu.hidden && !e.target.closest('#hud-menu, #hud-menu-btn')) openMenu(false); });
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Tab' && state.started) { e.preventDefault(); openMenu(menu.hidden); }
+    if (e.code === 'Escape' && !menu.hidden) openMenu(false);
+  });
+  for (const b of document.querySelectorAll('#hud [data-act]')) {
     const act = b.dataset.act;
     if (act === 'horn') {
       b.addEventListener('pointerdown', () => horn(true));
@@ -548,7 +556,8 @@ function bindUI() {
 const CAMS = ['chase', 'driver', 'hood', 'high'];
 const chase = new ChaseCam(), head2 = {};
 const lookingBack = () => !!keys.KeyB || !!driver?.lookBack;
-function cycleCam() { if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
+const CAM_LABEL = { chase: 'Chase', driver: "Driver's seat", hood: 'Bonnet', high: 'High' };
+function cycleCam() { if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; setVal('cam', CAM_LABEL[state.cam]); look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
 function toggleBeams() { state.beamsOverride = !state.beams; setBeams(state.beamsOverride); }
 function cycleTime() { state.beamsOverride = null; setTime(TIME_ORDER[(TIME_ORDER.indexOf(state.time) + 1) % TIME_ORDER.length]); }
 function goHome() {
@@ -563,7 +572,7 @@ function toggleSound() {
   state.sound = !state.sound;
   audio.start();
   audio.setOn(state.sound);
-  document.querySelector('[data-act="sound"]').textContent = state.sound ? 'Sound on' : 'Sound off';
+  setVal('sound', state.sound ? 'On' : 'Off');
 }
 function horn(on) { audio?.hornOn(on && state.sound && state.mode === 'drive'); document.querySelector('[data-act="horn"]')?.classList.toggle('on', on); }
 
@@ -636,10 +645,11 @@ function placeHer(x, z, yaw, foot = null) {
 function updateModeUI() {
   const foot = state.mode === 'foot';
   document.body.classList.toggle('on-foot', foot);
-  const b = document.querySelector('[data-act="foot"]');
-  if (b) b.textContent = foot ? 'Get in (F)' : 'Get out (F)';
+  setVal('foot', foot ? 'Get in the car' : 'Get out');
   document.querySelector('[data-act="cam"]').disabled = foot;
 }
+// a control's current value, in the menu (and the time chip): Camera · Chase, Sound · On
+function setVal(act, text) { for (const el of document.querySelectorAll(`[data-act="${act}"] .val`)) el.textContent = text; }
 let flashT = null;
 function flash(msg) {
   const p = document.getElementById('toast');
@@ -816,6 +826,7 @@ function updateMusicUI() {
   document.getElementById('m-title').textContent = music.error || music.title || 'Her songs';
   document.getElementById('m-play').textContent = music.playing ? '❚❚' : '▶';
   document.getElementById('music-btn').classList.toggle('on', music.playing);
+  setVal('music', music.playing ? 'Playing' : '');
 }
 
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
