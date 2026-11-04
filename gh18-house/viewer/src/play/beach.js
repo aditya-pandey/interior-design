@@ -345,7 +345,7 @@ export function buildBeach(M, opts = {}) {
   const palms = [];
   const r = rng(77);
   for (const [x, z] of [[-3.5, 19.5], [12.6, 18.8], [-6, 36.5], [16, 38], [4.5, 41.5]]) palms.push({ x, z });
-  for (const [x, z] of [[96.5, 40], [114.5, 41.5], [115.5, 49], [99, 54.5], [108, 55.5], [86.5, 41], [118, 36]]) palms.push({ x, z });
+  for (const [x, z] of [[95.4, 39.2], [119.6, 41.2], [120.2, 49.0], [99, 55.2], [110.5, 55.8], [86.5, 41], [118, 35.2]]) palms.push({ x, z });     // (clear of her studio: x 97-117, z 38.8-53.6)
   for (const p of resampleCoast(70)) {
     const s = -10 - r() * 18, x = p[0] + p[2] * s, z = p[1] + p[3] * s;
     if (Math.hypot(x - 105, z - 46) < 40 || Math.hypot(x - 5, z - 20) < 30) continue;

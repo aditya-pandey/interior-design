@@ -1,17 +1,14 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { STUDIO } from './site.js';
 import { BEACH_DOOR } from './studio.js';
 import { groundHeight } from './beach.js';
-import { rng, weaveNormal } from './surfaces.js';
+import { rng } from './surfaces.js';
 
 // Making the studio cosy, and the way down to the beach (added on top of studio.js):
 //   - sheer linen curtains gathered at the glass, stirring in the sea breeze
-//   - a floor-seating corner (baithak): a jute rug, a gaddi mattress with bolsters and cushions, a low
-//     chowki with a brass diya and a tea set; E to sit
-//   - a mustard throw and more cushions on the daybed, books on the coffee table and by the nook
-//   - candles (coffee table, windowsill) and the diya: flickering light after dark
+//   - candles (coffee table, window sills) and the diya on the terrace's chowki: flickering light after dark
+//     (studio.js builds the furniture and says where, in `anchors`)
 //   - a hanging pothos in the north-west corner, a monstera by the door
 //   - wind chimes under the eaves by the beach door
 //   - steps from the deck down to the sand, in front of the new beach door
@@ -33,57 +30,14 @@ function canvas(w, h, draw, srgb = true) {
   const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
 }
 
-export function buildCosy({ time }) {
+export function buildCosy({ time, anchors = {} }) {
   const group = new THREE.Group(); group.name = 'cosy';
   const walkColliders = [], walkSurfaces = [], carColliders = [], interact = [];
   const solid = (x0, z0, x1, z1, y0 = F, y1 = F + 1) => walkColliders.push({ poly: rect(Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1)), y0, y1 });
   const r = rng(909);
   const add = (geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; group.add(m); return m; };
-  const box = (w, h, d, x, y, z, mat) => add(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), mat);
-  const cloth = weaveNormal(48, 31).clone(); cloth.repeat.set(5, 5);
-  const fabric = (hex, sheen = 0.7) => new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.9, normalMap: cloth, normalScale: new THREE.Vector2(0.5, 0.5), sheen, sheenRoughness: 0.6, sheenColor: 0xffffff });
-  const wood = new THREE.MeshStandardMaterial({ color: 0x7a5132, roughness: 0.6 });
   const teak = new THREE.MeshStandardMaterial({ color: 0x9c6a3e, roughness: 0.55 });
   const brass = new THREE.MeshStandardMaterial({ color: 0xc19a55, metalness: 1, roughness: 0.3 });
-
-  // ---- the floor-seating corner (west side, between the desk and the easel)
-  const B = { x0: 108.1, x1: 111.4, z0: 46.0, z1: 48.4 };
-  const jute = canvas(256, 256, (g, W) => {
-    g.fillStyle = '#b89a6a'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < W; i += 4) { g.fillStyle = `rgba(90,66,34,${0.2 + (i % 8 ? 0.1 : 0.25)})`; g.fillRect(0, i, W, 1.5); g.fillRect(i, 0, 1.5, W); }
-    g.strokeStyle = 'rgba(120,40,30,0.55)'; g.lineWidth = 10; g.strokeRect(14, 14, W - 28, W - 28);
-  }); jute.repeat.set(1, 1);
-  add(new THREE.BoxGeometry(B.x1 - B.x0, 0.012, B.z1 - B.z0).translate((B.x0 + B.x1) / 2, F + 0.006, (B.z0 + B.z1) / 2), new THREE.MeshStandardMaterial({ map: jute, roughness: 0.95 }), false);
-  const gaddi = fabric(0xe9dcc4);
-  add(new RoundedBoxGeometry(0.85, 0.14, 2.1, 3, 0.05).translate(B.x1 - 0.5, F + 0.07, (B.z0 + B.z1) / 2), gaddi);       // mattress against the glass
-  const bolster = (x, z, rot, hex) => { const c = new THREE.CylinderGeometry(0.11, 0.11, 0.7, 20); c.rotateZ(Math.PI / 2); c.rotateY(rot); c.translate(x, F + 0.25, z); add(c, fabric(hex)); };
-  bolster(B.x1 - 0.2, 47.2, Math.PI / 2, 0x8e2f2a);
-  for (const [z, hex] of [[46.55, 0xc9a24a], [47.2, 0x2f5d50], [47.85, 0xa4532e]]) add(new RoundedBoxGeometry(0.42, 0.4, 0.13, 3, 0.05).rotateY(Math.PI / 2).translate(B.x1 - 0.82, F + 0.34, z), fabric(hex));
-  for (const [x, z, hex] of [[108.7, 46.5, 0x5f7387], [108.6, 47.9, 0xc9a24a]]) add(new RoundedBoxGeometry(0.55, 0.12, 0.55, 3, 0.05).translate(x, F + 0.06, z), fabric(hex));   // floor cushions
-  // the chowki: a low teak table with a brass diya and a tea set
-  const CX = 109.5, CZ = 47.2;
-  box(0.75, 0.04, 0.55, CX, F + 0.26, CZ, teak);
-  for (const [dx, dz] of [[-0.33, -0.23], [0.33, -0.23], [-0.33, 0.23], [0.33, 0.23]]) box(0.05, 0.26, 0.05, CX + dx, F, CZ + dz, teak);
-  add(new THREE.CylinderGeometry(0.05, 0.035, 0.03, 18).translate(CX - 0.2, F + 0.315, CZ - 0.1), brass);               // diya
-  const kettle = new THREE.Mesh(new THREE.SphereGeometry(0.075, 18, 12).scale(1, 0.85, 1).translate(CX + 0.12, F + 0.37, CZ + 0.05), brass); kettle.castShadow = true; group.add(kettle);
-  for (const [dx, dz] of [[0.25, -0.12], [0.02, -0.17]]) add(new THREE.CylinderGeometry(0.03, 0.025, 0.07, 14).translate(CX + dx, F + 0.335, CZ + dz), new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, roughness: 0.05 }));
-  solid(B.x1 - 0.95, B.z0 + 0.1, B.x1, B.z1 - 0.1, F, F + 0.5);
-  solid(CX - 0.4, CZ - 0.3, CX + 0.4, CZ + 0.3, F, F + 0.35);
-  interact.push({ kind: 'lounger', label: 'Sit on the floor cushions', pos: [B.x1 - 0.5, F + 0.6, 47.2], r: 2.6, normal: [-1, 0],
-    seat: { x: B.x1 - 0.55, z: 47.2, y: F, eye: [B.x1 - 0.6, F + 0.95, 47.2], look: [-1, 0], pitch: 0.18, flash: 'Sit back · E to get up', stand: [108.0, 47.2, -Math.PI / 2, F] } });
-
-  // ---- the daybed: a mustard throw over its end, more cushions; books
-  const knit = canvas(128, 128, (g, W) => { g.fillStyle = '#c99a2e'; g.fillRect(0, 0, W, W); for (let y = 0; y < W; y += 8) for (let x = 0; x < W; x += 8) { g.fillStyle = 'rgba(80,50,10,0.18)'; g.beginPath(); g.ellipse(x + 4, y + 4, 2.5, 4, 0.3, 0, Math.PI * 2); g.fill(); } }); knit.repeat.set(3, 3);
-  const throwG = new THREE.PlaneGeometry(0.9, 1.4, 12, 18), tp = throwG.attributes.position;
-  for (let i = 0; i < tp.count; i++) { const x = tp.getX(i), y = tp.getY(i); const over = Math.max(0, y - 0.2); tp.setXYZ(i, x, Math.min(y, 0.2) + 0.03 * Math.sin(x * 9), over > 0 ? -over : 0.02 * Math.sin(y * 7 + x * 3)); }
-  throwG.computeVertexNormals(); throwG.rotateX(-Math.PI / 2); throwG.rotateY(0.15);
-  const th = add(throwG.translate(104.35, F + 0.47, 46.95), new THREE.MeshPhysicalMaterial({ map: knit, roughness: 0.95, sheen: 0.8, sheenColor: 0xffe0a0, side: THREE.DoubleSide }));
-  void th;
-  for (const [x, hex] of [[102.45, 0xe8e1d4], [104.55, 0x2f5d50]]) add(new RoundedBoxGeometry(0.4, 0.36, 0.13, 3, 0.06).rotateX(-0.25).translate(x, F + 0.62, 46.75), fabric(hex));
-  const bookCols = [0x7a2e2e, 0x1f3a5f, 0xc9a24a, 0x2f5d50, 0xe8e0cf, 0x5b3a6b];
-  const stack = (x, y, z, n, rot) => { let yy = y; for (let i = 0; i < n; i++) { const t = 0.025 + r() * 0.025; add(new THREE.BoxGeometry(0.2 + r() * 0.06, t, 0.15 + r() * 0.04).rotateY(rot + (r() - 0.5) * 0.3).translate(x, yy + t / 2, z), new THREE.MeshStandardMaterial({ color: bookCols[i % 6], roughness: 0.75 })); yy += t; } };
-  stack(103.9, F + 0.35, 48.15, 3, 0.4);
-  stack(98.95, F, 47.6, 6, 0.1);                         // a pile on the floor by the nook
 
   // ---- candles: on the coffee table, the north windowsill, and the diya
   const flameMat = new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: 0.95 });
@@ -94,39 +48,48 @@ export function buildCosy({ time }) {
     const f = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8).scale(1, 2.2, 1), flameMat);
     f.position.set(x, y0 + h + 0.025, z); group.add(f); flames.push(f);
   };
-  candle(103.1, 48.55, 0.12, F + 0.35); candle(103.2, 48.42, 0.08, F + 0.35); candle(103.0, 48.4, 0.16, F + 0.35);
-  for (const x of [99.4, 99.6, 105.4]) candle(x, Z1 - 0.2, 0.1 + r() * 0.08, F);
+  // (where: studio.js says, in `anchors`)
+  const [cx, cy, cz] = anchors.coffee || [105.2, F + 0.36, 47.7], [dx, dy, dz] = anchors.diya || [113.4, F + 3.75, 45.85];
+  candle(cx, cz, 0.12, cy); candle(cx + 0.1, cz - 0.13, 0.08, cy); candle(cx - 0.1, cz - 0.15, 0.16, cy);
+  for (const [x, y, z] of anchors.sills || []) candle(x, z, 0.1 + r() * 0.08, y);
   const diyaFlame = new THREE.Mesh(new THREE.SphereGeometry(0.01, 10, 8).scale(1, 2.4, 1), flameMat);
-  diyaFlame.position.set(CX - 0.2, F + 0.35, CZ - 0.1); group.add(diyaFlame); flames.push(diyaFlame);
-  const candleLight = new THREE.PointLight(0xffb36b, 0, 4, 2); candleLight.position.set(103.1, F + 0.65, 48.5);
-  const diyaLight = new THREE.PointLight(0xffb36b, 0, 3.5, 2); diyaLight.position.set(CX - 0.2, F + 0.55, CZ - 0.1);
+  diyaFlame.position.set(dx, dy, dz); group.add(diyaFlame); flames.push(diyaFlame);
+  const candleLight = new THREE.PointLight(0xffb36b, 0, 4, 2); candleLight.position.set(cx, cy + 0.3, cz - 0.05);
+  const diyaLight = new THREE.PointLight(0xffb36b, 0, 3.5, 2); diyaLight.position.set(dx, dy + 0.2, dz);
   group.add(candleLight, diyaLight);
 
   // ---- curtains: sheer linen, gathered either side of each glass bay, hanging from a rod
-  const sheer = new THREE.MeshPhysicalMaterial({ color: 0xf6f1e7, roughness: 0.9, transparent: true, opacity: 0.62, side: THREE.DoubleSide, sheen: 0.6, sheenColor: 0xffffff, depthWrite: false });
-  sheer.onBeforeCompile = (sh) => {
-    sh.uniforms.uTime = time;
-    sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-      float hang = clamp((${(F + 2.9).toFixed(2)} - position.y) / 2.8, 0.0, 1.0);
-      transformed += normal * sin(uTime * 1.3 + position.x * 1.7 + position.z * 1.9 + position.y * 0.8) * 0.035 * hang * hang;`);
-  };
-  sheer.customProgramCacheKey = () => 'gh18-sheer';
-  const curtain = (ax, az, bx, bz, folds) => {
+  const U = F + 3.4, UX1 = 107;
+  const sheers = {};
+  const sheerAt = (y0) => sheers[y0] ||= (() => {
+    const m = new THREE.MeshPhysicalMaterial({ color: 0xf6f1e7, roughness: 0.9, transparent: true, opacity: 0.62, side: THREE.DoubleSide, sheen: 0.6, sheenColor: 0xffffff, depthWrite: false });
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uTime = time;
+      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+        float hang = clamp((${(y0 + 2.9).toFixed(2)} - position.y) / 2.8, 0.0, 1.0);
+        transformed += normal * sin(uTime * 1.3 + position.x * 1.7 + position.z * 1.9 + position.y * 0.8) * 0.035 * hang * hang;`);
+    };
+    m.customProgramCacheKey = () => 'gh18-sheer-' + y0;
+    return m;
+  })();
+  const curtain = (ax, az, bx, bz, folds, y0 = F) => {
     const L = Math.hypot(bx - ax, bz - az), g = new THREE.PlaneGeometry(L, 2.85, folds * 6, 8), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin((p.getX(i) / L) * folds * Math.PI * 2) * 0.05);
     g.computeVertexNormals();
-    g.rotateY(-Math.atan2(bz - az, bx - ax)); g.translate((ax + bx) / 2, F + 1.47, (az + bz) / 2);
-    const m = new THREE.Mesh(g, sheer); m.renderOrder = 3; group.add(m);
+    g.rotateY(-Math.atan2(bz - az, bx - ax)); g.translate((ax + bx) / 2, y0 + 1.47, (az + bz) / 2);
+    const m = new THREE.Mesh(g, sheerAt(y0)); m.renderOrder = 3; group.add(m);
   };
   const ci = 0.16;                                         // inside the glass
-  curtain(X0 + 0.3, Z1 - ci, X0 + 1.4, Z1 - ci, 4);        // north wall: the corners and either side of the door
+  curtain(X0 + 0.7, Z1 - ci, X0 + 1.7, Z1 - ci, 4);        // downstairs, north: the library corner and either side of the beach door
   curtain(BEACH_DOOR[0] - 2.0, Z1 - ci - 0.06, BEACH_DOOR[0] - 1.1, Z1 - ci - 0.06, 3);
   curtain(BEACH_DOOR[1] + 0.1, Z1 - ci, BEACH_DOOR[1] + 1.0, Z1 - ci, 3);
-  curtain(X1 - ci, Z1 - 1.1, X1 - ci, Z1 - 0.25, 3);       // west wall: the corner and the far end
-  curtain(X1 - ci, Z0 + 0.35, X1 - ci, Z0 + 1.25, 3);
-  for (const [ax, az, bx, bz] of [[X0 + 0.25, Z1 - ci, X1 - 0.2, Z1 - ci], [X1 - ci, Z0 + 0.3, X1 - ci, Z1 - 0.2]]) {
+  curtain(X1 - 1.4, Z1 - ci, X1 - 0.25, Z1 - ci, 3);
+  curtain(X1 - ci, Z0 + 0.35, X1 - ci, Z0 + 1.25, 3);       // downstairs, west: the far end
+  curtain(X0 + 0.35, Z1 - ci, X0 + 1.3, Z1 - ci, 3, U);     // upstairs, north: either end
+  curtain(UX1 - 1.5, Z1 - ci, UX1 - 0.4, Z1 - ci, 3, U);
+  for (const [ax, az, bx, bz, y] of [[X0 + 0.5, Z1 - ci, X1 - 0.2, Z1 - ci, F], [X1 - ci, Z0 + 0.3, X1 - ci, Z1 - 0.2, F], [X0 + 0.3, Z1 - ci, UX1 - 0.3, Z1 - ci, U]]) {
     const L = Math.hypot(bx - ax, bz - az), rod = new THREE.CylinderGeometry(0.012, 0.012, L, 8);
-    rod.rotateZ(Math.PI / 2); rod.rotateY(-Math.atan2(bz - az, bx - ax)); rod.translate((ax + bx) / 2, F + 2.92, (az + bz) / 2); add(rod, brass, false);
+    rod.rotateZ(Math.PI / 2); rod.rotateY(-Math.atan2(bz - az, bx - ax)); rod.translate((ax + bx) / 2, y + 2.92, (az + bz) / 2); add(rod, brass, false);
   }
 
   // ---- plants: a hanging pothos (north-west corner) and a monstera by the door

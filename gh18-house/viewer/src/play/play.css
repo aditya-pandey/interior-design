@@ -44,6 +44,7 @@ kbd { display: inline-block; min-width: 22px; padding: 1px 5px; margin-right: 3p
 #hud-menu hr { border: 0; border-top: 1px solid var(--line); margin: 5px 8px; }
 #foot-btn { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; padding: 9px 16px 9px 10px !important; }
 #foot-btn kbd { margin: 0; }
+#foot-btn[hidden] { display: none; }
 body.touch #foot-btn { bottom: 140px; }
 body.touch #foot-btn kbd, body.touch #hud-menu kbd { display: none; }
 body:has(#prompt:not([hidden])) #foot-btn { display: none; }

@@ -146,7 +146,7 @@ async function init() {
   footprints = createFootprints(scene);
   studio = buildStudio(M, pack);
   scene.add(studio.group);
-  cosy = buildCosy({ time: beach.time });
+  cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   scene.add(cosy.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
@@ -645,7 +645,8 @@ function placeHer(x, z, yaw, foot = null) {
 function updateModeUI() {
   const foot = state.mode === 'foot';
   document.body.classList.toggle('on-foot', foot);
-  setVal('foot', foot ? 'Get in the car' : 'Get out');
+  setVal('foot', 'Get out');
+  document.getElementById('foot-btn').hidden = foot;          // (on foot, the prompt by the car offers to get in)
   document.querySelector('[data-act="cam"]').disabled = foot;
 }
 // a control's current value, in the menu (and the time chip): Camera · Chase, Sound · On
@@ -744,7 +745,8 @@ function groundUnderfoot() {
 function isIndoors() {
   if (state.mode !== 'foot') return false;
   const x = head.position.x, z = head.position.z;
-  return (inHouse(x, z) && walker.foot > 0.3) || (x > STUDIO.x0 && x < STUDIO.x0 + STUDIO.w && z > STUDIO.z0 && z < STUDIO.z0 + STUDIO.d && walker.foot > 0.4);
+  const onTerrace = x > studio.terraceX && walker.foot > studio.upper - 0.2;     // (the roof terrace is outdoors)
+  return (inHouse(x, z) && walker.foot > 0.3) || (x > STUDIO.x0 && x < STUDIO.x0 + STUDIO.w && z > STUDIO.z0 && z < STUDIO.z0 + STUDIO.d && walker.foot > 0.4 && !onTerrace);
 }
 function getUp() {
   if (!state.lying) return;
@@ -754,11 +756,13 @@ function getUp() {
     // in the house: in front of it if that's clear (a coffee table is often there), else where she was
     const base = seat.stand[3];
     const free = (x, z) => { const h = walker.standAt(x * 1000, z * 1000, base); return h !== null && Math.abs(h - base) < 0.3 && !walker.blocked(x * 1000, z * 1000, h); };
-    const [sx, sz] = standSpot(seat.spot, prevSeatPos, free);
+    // (seats outside the house have no seat-list entry: a stand-up point and the seat itself are enough)
+    const spot = seat.spot || { stand: seat.stand, centre: [seat.x, seat.z], look: seat.look || [Math.sin(seat.stand[2]), Math.cos(seat.stand[2])], size: [1, 1] };
+    const [sx, sz] = standSpot(spot, prevSeatPos, free);
     placeHer(sx, sz, seat.stand[2], base);
   }
   else if (seat.eye) placeHer(seat.x + 1.1, seat.z, Math.PI / 2, 0.6);
-  else placeHer(seat.x - 0.95, seat.z, 0, 0.6);                 // beside the lounger, facing the sea
+  else placeHer(seat.x - 0.95, seat.z, 0, (seat.y ?? 1.22) - 0.62);   // beside the lounger, facing the sea (on its floor: the deck or the roof terrace)
 }
 
 // ------------------------------------------------------------------ photo album: "Deepti's Corner"

@@ -23,7 +23,7 @@ export const ROAD_PTS = [
 export const LANE = 3.6, SHOULDER = 1.6;
 export const ROAD_HALF = LANE + SHOULDER;          // 5.2 m from the centre line to the edge
 
-// Her studio: a glass pavilion on the beach, ~100 m west of GH-18, facing the sea (north) and the
+// Her studio (Deepti's Studio): two storeys and a roof terrace on the beach, ~100 m west of GH-18, facing the sea (north) and the
 // sunset (west). Interior floor at +0.6 m on a timber deck.
-export const STUDIO = { x0: 98, z0: 42, w: 14, d: 9, floor: 0.6 };
+export const STUDIO = { x0: 98, z0: 40, w: 18, d: 11, floor: 0.6 };
 export const STUDIO_PARK = { x: 91, z: 36.5, yaw: 0 };      // parking pad off the highway, nose to the sea
