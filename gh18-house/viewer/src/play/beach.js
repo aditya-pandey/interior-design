@@ -353,7 +353,8 @@ export function buildBeach(M, opts = {}) {
     palms.push({ x, z });
     if (r() < 0.4) palms.push({ x: x + 2 + r() * 3, z: z - 1 - r() * 2 });
   }
-  objects.push(...buildPalms(palms, low, time));
+  const palmSet = buildPalms(palms, low, time);
+  objects.push(...palmSet.objects);
   for (const p of palms) colliders.push({ circle: [p.x, p.z, 0.28] });
 
   // street lights on the inner side of the loop, every ~50 m
@@ -398,7 +399,7 @@ export function buildBeach(M, opts = {}) {
   meshes.push(hillMesh);
 
   return {
-    meshes, objects, colliders, lamps, time, palms, caustics: caus,
+    meshes, objects, colliders, lamps, time, palms, caustics: caus, palmLOD: palmSet.lod,
     materials: { lamp: LAMP_MAT, sand: sandMat, land: landMat, pad: padMat, road: roadMat },
     update(t) { time.value = t; },
     map: { coast: COAST, road: ROAD.filter((_, i) => i % 3 === 0), park: PARK },
@@ -458,112 +459,181 @@ export function windSway(mat, time, flutter, key, height = 9) {
 }
 
 // ------------------------------------------------------------------ palms
-function frondTexture() {
-  const c = document.createElement('canvas');
-  c.width = 128; c.height = 512;
-  const g = c.getContext('2d');
-  g.clearRect(0, 0, 128, 512);
-  const r = rng(5);
-  // rib down the middle, leaflets either side, longer in the middle of the frond
-  for (let y = 20; y < 500; y += 7) {
-    const t = y / 512, len = 58 * Math.sin(Math.PI * Math.min(1, t * 1.1)) + 4;
-    for (const side of [-1, 1]) {
-      const hue = 95 + r() * 18, l = 26 + r() * 12;
-      g.strokeStyle = `hsl(${hue}, 45%, ${l}%)`;
-      g.lineWidth = 3.2;
-      g.beginPath(); g.moveTo(64, y); g.quadraticCurveTo(64 + side * len * 0.5, y + 6, 64 + side * len, y + 22 + r() * 6); g.stroke();
-    }
-  }
-  g.strokeStyle = '#6b6a3a'; g.lineWidth = 3; g.beginPath(); g.moveTo(64, 0); g.lineTo(64, 512); g.stroke();
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
-}
-
-function buildPalms(list, low, time) {
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8a7258, roughness: 0.95, vertexColors: true });
-  const frondMat = new THREE.MeshStandardMaterial({ map: frondTexture(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.8 });
-  const nutMat = new THREE.MeshStandardMaterial({ color: 0x6b5a2a, roughness: 0.7 });
-  // the sea breeze: the trunk leans and sways gently (more towards the top), the fronds flutter
-  for (const [m, flutter] of [[trunkMat, 0], [frondMat, 1], [nutMat, 0]]) windSway(m, time, flutter ? 0.11 : 0, 'palm' + flutter);
-  const out = [];
-  const variants = [0, 1, 2].map((k) => palmGeometry(k, low));
-  const groups = variants.map(() => []);
-  list.forEach((p, i) => groups[i % 3].push(p));
-  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), pos = new THREE.Vector3();
-  variants.forEach((v, k) => {
-    const items = groups[k];
-    if (!items.length) return;
-    const parts = [[v.trunk, trunkMat], [v.fronds, frondMat], [v.nuts, nutMat]];
-    for (const [geo, mat] of parts) {
-      const im = new THREE.InstancedMesh(geo, mat, items.length);
-      items.forEach((p, i) => {
-        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), (p.x * 12.9898 + p.z * 78.233) % (Math.PI * 2));
-        const sc = 0.85 + ((p.x * 7 + p.z * 3) % 1 + 1) % 1 * 0.35;
-        s.setScalar(sc); pos.set(p.x, groundHeight(p.x, p.z) - 0.05, p.z);
-        m.compose(pos, q, s);
-        im.setMatrixAt(i, m);
-      });
-      im.castShadow = true; im.receiveShadow = true; im.name = 'palm';
-      out.push(im);
-    }
-  });
-  return out;
-}
-
-function palmGeometry(k, low) {
-  const r = rng(300 + k);
-  const H = 7 + r() * 3.5, lean = 0.9 + r() * 1.6;
+// Coconut palms, built as a botanist would draw one rather than as cards:
+//   - the trunk: a flared, slowly tapering curve with leaf-scar rings, grey at the foot, warmer towards the top,
+//     a collar of fibrous old frond bases under the crown
+//   - the crown: ~24 fronds round a golden-angle spiral. Each frond is a midrib arching under its own weight,
+//     with leaflets either side hanging in a shallow V and drooping more towards the tip. Young fronds stand up
+//     in the middle, mature ones arch out, the oldest droop; two or three dead brown fronds hang below.
+//   - coconuts: a cluster in the crown
+// Leaflets carry soft, mostly-upward normals (as foliage is lit in games: no black undersides) and are darker
+// deep in the crown. Two levels of detail: full near the camera, fewer and wider leaflets further away; the
+// instances are re-sorted between them every half second (palmLOD).
+const PALM_NEAR = 55;                       // metres: full detail within this
+function palmGeometry(k, detail) {
+  const r = rng(300 + k * 17);
+  const H = 6.4 + r() * 4.2, lean = 0.4 + r() * 1.1, wob = (r() - 0.5) * 0.5;
   const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(lean * 0.2, H * 0.35, 0), new THREE.Vector3(lean * 0.6, H * 0.7, 0), new THREE.Vector3(lean, H, 0),
+    new THREE.Vector3(0, 0, 0), new THREE.Vector3(lean * 0.12, H * 0.3, wob * 0.3), new THREE.Vector3(lean * 0.5, H * 0.66, wob), new THREE.Vector3(lean, H, wob * 0.6),
   ]);
-  const trunk = new THREE.TubeGeometry(curve, low ? 8 : 14, 0.17, low ? 6 : 9, false);
-  // taper and ring bands
-  const p = trunk.attributes.position, col = new Float32Array(p.count * 3), c = new THREE.Color();
-  const tmp = new THREE.Vector3();
+  // ---- trunk
+  const TS = detail ? 44 : 14, RS = detail ? 12 : 7;
+  const trunk = new THREE.TubeGeometry(curve, TS, 1, RS, false);
+  const p = trunk.attributes.position, col = new Float32Array(p.count * 3), c = new THREE.Color(), ax = new THREE.Vector3(), v = new THREE.Vector3();
+  const L = curve.getLength();
   for (let i = 0; i < p.count; i++) {
-    tmp.fromBufferAttribute(p, i);
-    const t = Math.min(1, Math.max(0, tmp.y / H));
-    const ax = curve.getPointAt(t);
-    const scale = 1.25 - t * 0.45;
-    p.setXYZ(i, ax.x + (tmp.x - ax.x) * scale, tmp.y, ax.z + (tmp.z - ax.z) * scale);
-    const band = 0.5 + 0.5 * Math.sin(tmp.y * 9.5);
-    c.setRGB(0.62 + band * 0.12, 0.52 + band * 0.1, 0.42 + band * 0.08);
+    const j = Math.floor(i / (RS + 1)), t = j / TS;
+    ax.copy(curve.getPointAt(t)); v.fromBufferAttribute(p, i).sub(ax);
+    const ring = ((t * L) / 0.12) % 1, bump = ring > 0.82 ? 1 : 0;
+    const rad = (0.15 + 0.17 * Math.exp(-t * 16)) * (1 - 0.18 * t) * (1 + 0.05 * bump) * (t > 0.94 ? 1.25 : 1);
+    v.multiplyScalar(rad).add(ax);
+    p.setXYZ(i, v.x, v.y, v.z);
+    const grey = new THREE.Color(0.34, 0.31, 0.28), warm = new THREE.Color(0.47, 0.39, 0.3);
+    c.copy(grey).lerp(warm, Math.min(1, t * 1.3)).multiplyScalar(bump ? 0.72 : 1 - 0.08 * Math.sin(i * 1.7) ** 2);
+    if (t > 0.93) c.setRGB(0.42, 0.31, 0.19);                                   // the fibrous collar
     col.set([c.r, c.g, c.b], i * 3);
   }
   trunk.setAttribute('color', new THREE.BufferAttribute(col, 3));
   trunk.computeVertexNormals();
-  const top = curve.getPointAt(1);
-  // fronds: curved strips radiating from the crown, drooping towards the tips
-  const fronds = [];
-  const n = low ? 10 : 14;
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + r() * 0.3;
-    const len = 3.6 + r() * 1.4, up = i % 3 === 0 ? 0.55 : 0.15 + r() * 0.2;
-    const g = new THREE.PlaneGeometry(1.5, len, 1, low ? 5 : 8);
-    g.translate(0, len / 2, 0);
-    const pp = g.attributes.position;
-    for (let j = 0; j < pp.count; j++) {
-      const y = pp.getY(j), t = y / len;
-      const droop = t * t * len * 0.75;
-      pp.setXYZ(j, pp.getX(j) * (0.35 + Math.sin(Math.PI * Math.min(1, t * 1.05)) * 0.65), y * Math.cos(up), y * Math.sin(up) - droop + Math.abs(pp.getX(j)) * 0.25);
+  const T = curve.getPointAt(1), Y = new THREE.Vector3(0, 1, 0);
+  // ---- the crown: one buffer for every frond's midrib and leaflets
+  const pos = [], nor = [], cols = [], idx = [];
+  const vert = (x, y, z, n, cc) => { pos.push(x, y, z); nor.push(n.x, n.y, n.z); cols.push(cc.r, cc.g, cc.b); return pos.length / 3 - 1; };
+  const quad = (a, b, cc2, d) => idx.push(a, b, cc2, b, d, cc2);
+  const NF = detail ? 24 : 15;
+  const GA = Math.PI * (3 - Math.sqrt(5));
+  const tmp = new THREE.Vector3(), tan = new THREE.Vector3(), side = new THREE.Vector3(), dir = new THREE.Vector3(), up = new THREE.Vector3(), base = new THREE.Vector3();
+  const green = new THREE.Color(), cc = new THREE.Color(), tip = new THREE.Color(0.62, 0.6, 0.28), deadC = new THREE.Color(0.5, 0.37, 0.21);
+  for (let f = 0; f < NF + 3; f++) {
+    const dead = f >= NF;
+    const a = f * GA + r() * 0.2;
+    const age = dead ? 1.2 : f / NF;                                   // 0 = young, in the middle
+    const e = dead ? -1.15 - r() * 0.3 : THREE.MathUtils.lerp(1.15, -0.45, age) + (r() - 0.5) * 0.2;
+    const len = dead ? 2.6 + r() * 0.8 : (age < 0.15 ? 2.4 : 3.4) + r() * 1.5;
+    const sag = dead ? 0.02 : 0.05 + age * 0.09;
+    const D = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+    green.setHSL(0.21 + r() * 0.05, 0.38 + r() * 0.14, 0.15 + r() * 0.05 + (age < 0.2 ? 0.05 : 0));
+    const start = tmp.copy(T).addScaledVector(D, 0.12).addScaledVector(Y, -0.05 - age * 0.15).clone();
+    const at = (s, out) => out.copy(start).addScaledVector(D, s * Math.cos(e)).addScaledVector(Y, s * Math.sin(e) - sag * s * s);
+    // midrib: a narrow strip
+    const MS = detail ? 12 : 5;
+    let prevA = -1, prevB = -1;
+    for (let m = 0; m <= MS; m++) {
+      const s = (m / MS) * len;
+      at(s, base); at(s + 0.01, tan).sub(base).normalize();
+      side.crossVectors(tan, Y).normalize();
+      const w = 0.035 * (1 - (m / MS) * 0.7);
+      cc.copy(dead ? deadC : green).lerp(new THREE.Color(0.55, 0.52, 0.3), 0.5);
+      const ia = vert(base.x - side.x * w, base.y, base.z - side.z * w, Y, cc), ib = vert(base.x + side.x * w, base.y, base.z + side.z * w, Y, cc);
+      if (m) quad(prevA, prevB, ia, ib);
+      prevA = ia; prevB = ib;
     }
-    // the strip lies along +Y (out) and +Z (up): turn it to lie outward, then spin it round the crown
-    g.rotateX(-Math.PI / 2);
-    g.rotateY(a);
-    g.translate(top.x, top.y, top.z);
-    g.computeVertexNormals();
-    fronds.push(g);
+    // leaflets
+    const ds = detail ? 0.085 : 0.2, LSEG = detail ? 3 : 1;
+    for (let s = len * 0.1; s < len * 0.98; s += ds * (0.85 + r() * 0.3)) {
+      const u = s / len;
+      at(s, base); at(s + 0.02, tan).sub(base).normalize();
+      side.crossVectors(tan, Y).normalize();
+      const ll = (0.18 + 0.82 * Math.sin(Math.PI * Math.min(1, u * 1.08))) * (age < 0.15 ? 0.75 : 1) * (dead ? 0.8 : 1) * (detail ? 1 : 1.1);
+      for (const sd of [-1, 1]) {
+        if (dead && r() < 0.35) continue;                                  // dead fronds are ragged
+        // out to the side and forward along the frond, drooping into a V; more droop out at the tip
+        dir.copy(side).multiplyScalar(sd * 0.8).addScaledVector(tan, 0.55);
+        dir.y -= dead ? 1.6 : 0.35 + 0.55 * u + (r() - 0.5) * 0.15;
+        dir.normalize();
+        up.crossVectors(dir, tan).normalize(); if (up.y < 0) up.negate();
+        const wdt = (detail ? 0.042 : 0.09) * (0.8 + r() * 0.4), across = tmp.crossVectors(dir, up).normalize().clone();
+        // light: mostly up, a little out from the crown; darker deep inside the crown and near the midrib
+        const n = up.clone().multiplyScalar(0.55).add(Y.clone().multiplyScalar(0.6)).addScaledVector(D, 0.3).normalize();
+        const ao = 0.55 + 0.45 * Math.min(1, u * 1.6);
+        let pa = -1, pb = -1;
+        for (let q = 0; q <= LSEG; q++) {
+          const t = q / LSEG;
+          const px = base.x + dir.x * ll * t, py = base.y + dir.y * ll * t - 0.12 * ll * t * t, pz = base.z + dir.z * ll * t;
+          const w = wdt * (1 - 0.75 * t) * (q ? 1 : 0.6);
+          cc.copy(dead ? deadC : green);
+          if (!dead) cc.lerp(tip, Math.max(0, t - 0.65) * (0.35 + age * 0.9));
+          cc.multiplyScalar(ao * (0.9 + r() * 0.2));
+          const ia = vert(px - across.x * w, py - across.y * w, pz - across.z * w, n, cc), ib = vert(px + across.x * w, py + across.y * w, pz + across.z * w, n, cc);
+          if (q) quad(pa, pb, ia, ib);
+          pa = ia; pb = ib;
+        }
+      }
+    }
   }
+  // the collar: short, broad old frond bases under the crown
+  const boots = [];
+  for (let b = 0; b < (detail ? 9 : 5); b++) {
+    const a = b * 2.4, g = new THREE.ConeGeometry(0.09, 0.55, 5, 1, true);
+    g.translate(0, -0.27, 0); g.rotateZ(-2.2); g.rotateY(a); g.translate(T.x, T.y - 0.25, T.z);
+    const cb = new Float32Array(g.attributes.position.count * 3); for (let i = 0; i < cb.length; i += 3) cb.set([0.4, 0.29, 0.17], i);
+    g.setAttribute('color', new THREE.BufferAttribute(cb, 3));
+    boots.push(g.index ? g.toNonIndexed() : g);
+  }
+  const crown = new THREE.BufferGeometry();
+  crown.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  crown.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  crown.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  crown.setIndex(idx);
+  const fronds = mergeGeometries([crown.toNonIndexed(), ...boots.map((g) => { g.deleteAttribute('uv'); return g; })]);
+  // coconuts: a cluster under the crown, green and ripening
   const nuts = [];
-  for (let i = 0; i < 4; i++) {
-    const s = new THREE.SphereGeometry(0.13, 8, 6);
-    const a = i * 1.7;
-    s.translate(top.x + Math.cos(a) * 0.22, top.y - 0.25, top.z + Math.sin(a) * 0.22);
+  for (let i = 0; i < (detail ? 8 : 5); i++) {
+    const a = i * 2.1 + r(), s = new THREE.SphereGeometry(0.12 + r() * 0.03, detail ? 10 : 6, detail ? 8 : 4);
+    s.scale(1, 1.15, 1); s.translate(T.x + Math.cos(a) * (0.18 + r() * 0.1), T.y - 0.3 - r() * 0.25, T.z + Math.sin(a) * (0.18 + r() * 0.1));
+    const cn = new Float32Array(s.attributes.position.count * 3), nc = r() < 0.6 ? [0.36, 0.42, 0.14] : [0.48, 0.34, 0.15];
+    for (let k2 = 0; k2 < cn.length; k2 += 3) cn.set(nc, k2);
+    s.setAttribute('color', new THREE.BufferAttribute(cn, 3));
     nuts.push(s);
   }
-  return { trunk, fronds: mergeGeometries(fronds), nuts: mergeGeometries(nuts) };
+  return { trunk, fronds, nuts: mergeGeometries(nuts), H };
+}
+
+function buildPalms(list, low, time) {
+  const trunkMat = new THREE.MeshStandardMaterial({ roughness: 0.95, vertexColors: true });
+  const frondMat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.72, emissive: 0x0b1306 });
+  const nutMat = new THREE.MeshStandardMaterial({ roughness: 0.6, vertexColors: true });
+  // the sea breeze: the trunk leans and sways gently (more towards the top), the fronds flutter
+  for (const [m, flutter] of [[trunkMat, 0], [frondMat, 1], [nutMat, 0]]) windSway(m, time, flutter ? 0.09 : 0, 'palm' + flutter);
+  const NV = low ? 3 : 5;
+  const near = Array.from({ length: NV }, (_, k) => palmGeometry(k, low ? 0 : 1));
+  const far = Array.from({ length: NV }, (_, k) => palmGeometry(k, 0));
+  const groups = near.map(() => []);
+  list.forEach((p, i) => groups[i % NV].push(p));
+  const out = [], sets = [];
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), pos = new THREE.Vector3(), yAxis = new THREE.Vector3(0, 1, 0);
+  const mats = groups.map((items) => items.map((p) => {
+    q.setFromAxisAngle(yAxis, (p.x * 12.9898 + p.z * 78.233) % (Math.PI * 2));
+    s.setScalar(0.85 + ((((p.x * 7 + p.z * 3) % 1) + 1) % 1) * 0.35); pos.set(p.x, groundHeight(p.x, p.z) - 0.05, p.z);
+    return new THREE.Matrix4().compose(pos, q, s);
+  }));
+  groups.forEach((items, k) => {
+    if (!items.length) return;
+    const lvl = [near[k], far[k]].map((v, li) => [[v.trunk, trunkMat], [v.fronds, frondMat], [v.nuts, nutMat]].map(([geo, mat]) => {
+      const im = new THREE.InstancedMesh(geo, mat, items.length);
+      im.castShadow = true; im.receiveShadow = true; im.name = li ? 'palm_far' : 'palm'; im.frustumCulled = false;
+      im.count = li ? items.length : 0;
+      mats[k].forEach((mm, i) => im.setMatrixAt(i, mm));
+      out.push(im);
+      return im;
+    }));
+    sets.push({ items, mats: mats[k], lvl });
+  });
+  // every half second: palms near the camera get the full crown
+  const lod = (cam) => {
+    for (const st of sets) {
+      let a = 0, b = 0;
+      st.items.forEach((p, i) => {
+        const nearOne = !low && (p.x - cam.x) ** 2 + (p.z - cam.z) ** 2 < PALM_NEAR * PALM_NEAR;
+        const mm = st.mats[i];
+        for (const im of st.lvl[nearOne ? 0 : 1]) im.setMatrixAt(nearOne ? a : b, mm);
+        if (nearOne) a++; else b++;
+      });
+      for (const im of st.lvl[0]) { im.count = a; im.instanceMatrix.needsUpdate = true; }
+      for (const im of st.lvl[1]) { im.count = b; im.instanceMatrix.needsUpdate = true; }
+    }
+  };
+  return { objects: out, lod };
 }
 
 // ------------------------------------------------------------------ street lights

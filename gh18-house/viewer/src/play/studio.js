@@ -1002,7 +1002,7 @@ function frangipani(parts, x, z, y0, r) {
     parts.add('wood', g, 0x8d8478);
     const ex = px + dir.x * len, ey = py + dir.y * len, ez = pz + dir.z * len;
     if (depth === 0) { tips.push([ex, ey, ez]); return; }
-    const n = depth > 1 ? 2 : 3;
+    const n = depth > 2 ? 2 : 3;
     for (let k = 0; k < n; k++) {
       const a = r() * Math.PI * 2;
       branch(ex, ey, ez, dir.x * 0.5 + Math.cos(a) * 0.7, 0.75 + r() * 0.3, dir.z * 0.5 + Math.sin(a) * 0.7, len * (0.62 + r() * 0.15), rad * 0.68, depth - 1);
@@ -1010,15 +1010,15 @@ function frangipani(parts, x, z, y0, r) {
   };
   branch(x, y0, z, 0.05, 1, 0.03, 1.25, 0.12, 3);
   for (const [tx, ty, tz] of tips) {
-    for (let k = 0; k < 11; k++) {
-      const a = (k / 11) * Math.PI * 2 + r(), L = 0.42 + r() * 0.14;
-      const g = new THREE.PlaneGeometry(L, L * 0.34); g.translate(L / 2, 0, 0); g.rotateX(-Math.PI / 2); g.rotateZ(0.55 + r() * 0.45); g.rotateY(a);
-      g.translate(tx, ty + 0.02, tz); parts.add('leaf', g, k % 2 ? 0x3e6a2f : 0x4c7a38);
+    for (let k = 0; k < 15; k++) {
+      const a = (k / 15) * Math.PI * 2 + r(), L = 0.42 + r() * 0.16;
+      const g = new THREE.PlaneGeometry(L, L * 0.28); g.translate(L / 2, 0, 0); g.rotateX(-Math.PI / 2); g.rotateZ(0.55 + r() * 0.45); g.rotateY(a);
+      g.translate(tx, ty + 0.02, tz); parts.add('leaf', g, k % 2 ? 0x4f7f36 : 0x5f8f40);
     }
-    for (let k = 0; k < 5; k++) {
-      const a = r() * Math.PI * 2, d = 0.04 + r() * 0.06;
+    for (let k = 0; k < 8; k++) {
+      const a = r() * Math.PI * 2, d = 0.04 + r() * 0.09;
       for (let p = 0; p < 5; p++) {
-        const g = new THREE.CircleGeometry(0.03, 8); g.scale(1.6, 1, 1); g.translate(0.035, 0, 0); g.rotateZ((p / 5) * Math.PI * 2);
+        const g = new THREE.CircleGeometry(0.042, 8); g.scale(1.6, 1, 1); g.translate(0.035, 0, 0); g.rotateZ((p / 5) * Math.PI * 2);
         g.rotateX(-Math.PI / 2 + 0.4); g.translate(tx + Math.cos(a) * d, ty + 0.1 + r() * 0.05, tz + Math.sin(a) * d);
         parts.add('bloom', g, p % 2 ? 0xfdfbf3 : 0xfff6dc);
       }

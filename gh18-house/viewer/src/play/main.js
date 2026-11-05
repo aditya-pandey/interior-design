@@ -110,6 +110,8 @@ const RISING = [[-16, 'night'], [-4, 'dawn'], [1.5, 'sunrise'], [14, 'morning'],
 const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00') : new Date();
 
 // ------------------------------------------------------------------ state
+let lodTimer = 0;
+const lodAt = new THREE.Vector3(1e9, 0, 0);
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -253,9 +255,17 @@ class FootWalker extends Walker {
     super.place(x, y, foot, yaw, pitch);
     const hs = this.heights(x, y);                     // (the shared walker always counts the sand as a choice)
     if (!hs.includes(this.foot)) { this.foot = hs.reduce((a, b) => (Math.abs(b - foot) < Math.abs(a - foot) ? b : a)); this.camera.position.y = this.foot + 1.6; }
+    this.eye = this.foot; this.mv = { x: 0, z: 0 };
   }
+  // (a slimmer body than the tour's 250 mm: she fits through an 800 mm door without brushing the frame)
   blocked(x, y, foot) {
-    if (super.blocked(x, y, foot)) return true;
+    const R = 210;
+    for (const c of this.data.colliders) {
+      if (c.y1 < foot + 0.2 || c.y0 > foot + 1.75) continue;
+      const b = c.bb;
+      if (x < b[0] - R || x > b[2] + R || y < b[1] - R || y > b[3] + R) continue;
+      if (circleHitsPoly(x, y, R, c.poly)) return true;
+    }
     if (coastDist(x / 1000, y / 1000) > 0.6) return true;
     if (state.mode === 'foot') {
       const c = sim.corners(sim.x, sim.z, -0.05).map(([a, b]) => [a * 1000, b * 1000]);
@@ -263,6 +273,129 @@ class FootWalker extends Walker {
     }
     return false;
   }
+  // Walking, the way a game does it: she eases into a walk and out of it (no instant start and stop), and
+  // when the way ahead is blocked she slides round it: the step is tried turned a little either way, up to
+  // ~80°, before giving up, so a door frame or a table corner guides her past instead of catching her. The
+  // eye follows steps and stairs through a spring, with a faint bob in time with her stride.
+  update(dt) {
+    if (this.classic) return super.update(dt);       // (the tour's own walking: kept for side-by-side tests)
+    if (!this.active) return;
+    const k = this.keys;
+    const fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + this.stick.y;
+    const side = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + this.stick.x;
+    const mag = Math.min(1, Math.hypot(fwd, side));
+    const vmax = (k.ShiftLeft || k.ShiftRight ? 3.2 : 1.6) * mag;
+    const dir = this._d ||= new THREE.Vector3();
+    const ry = this.camera.rotation.y; dir.set(-Math.sin(ry), 0, -Math.cos(ry));      // (from her heading now, not last frame's matrix)
+    let wx = 0, wz = 0;
+    if (mag > 0.08) { const n = Math.hypot(fwd, side); wx = (dir.x * fwd - dir.z * side) / n * vmax; wz = (dir.z * fwd + dir.x * side) / n * vmax; }
+    // door assist: heading roughly through a doorway close ahead, her path is drawn gently onto its centre line
+    if (wx || wz) {
+      const px = this.camera.position.x, pz = this.camera.position.z, sp0 = Math.hypot(wx, wz);
+      for (const d of DOORWAYS) {
+        if (Math.abs(d.y - this.foot) > 0.6) continue;
+        const rx = px - d.x, rz = pz - d.z, dist = Math.hypot(rx, rz);
+        if (dist > 1.8 || dist < 0.05) continue;
+        const nx = -d.tz, nz = d.tx;                              // the wall's normal
+        const along0 = rx * d.tx + rz * d.tz, off0 = rx * nx + rz * nz;
+        const vin = (wx * nx + wz * nz) / sp0;                    // how squarely she's heading at the wall
+        if (Math.abs(off0) < 0.05 || Math.sign(vin) === Math.sign(off0) || Math.abs(vin) < 0.5) continue;
+        const tHit = -off0 / ((wx * nx + wz * nz) || 1e-6);      // where she'd cross the wall line
+        const cross = along0 + (wx * d.tx + wz * d.tz) * tHit;
+        const safe = d.half - 0.24;
+        if (Math.abs(cross) <= safe || Math.abs(cross) > d.half + 0.45) continue;
+        const pull = Math.min(1, (Math.abs(cross) - safe) / 0.3) * 0.9 * Math.min(1, 1.8 - dist);
+        wx -= Math.sign(cross) * d.tx * pull * sp0; wz -= Math.sign(cross) * d.tz * pull * sp0;
+        const k3 = sp0 / Math.hypot(wx, wz); wx *= k3; wz *= k3;
+        break;
+      }
+    }
+    const v = this.mv ||= { x: 0, z: 0 };
+    const rate = mag > 0.08 ? 7 : 11;                          // speeding up, slowing down (1/s)
+    v.x += (wx - v.x) * (1 - Math.exp(-rate * dt)); v.z += (wz - v.z) * (1 - Math.exp(-rate * dt));
+    const sp = Math.hypot(v.x, v.z);
+    const p = this.camera.position;
+    if (sp < 0.03) { v.x = v.z = 0; }
+    else {
+      const x = p.x * 1000, y = p.z * 1000, sx = v.x * dt * 1000, sz = v.z * dt * 1000;
+      const stuck = this.blocked(x, y, this.foot);           // (already overlapping something: let her step out of it)
+      let moved = false;
+      for (const a of [0, 0.3, -0.3, 0.6, -0.6, 0.95, -0.95, 1.35, -1.35]) {
+        const c = Math.cos(a), s2 = Math.sin(a), f = Math.max(0.25, c);
+        const nx = x + (sx * c - sz * s2) * f, ny = y + (sx * s2 + sz * c) * f;
+        const h = this.standAt(nx, ny, this.foot);
+        if (h === null || (!stuck && this.blocked(nx, ny, h))) continue;
+        p.x = nx / 1000; p.z = ny / 1000; this.foot = h; moved = true;
+        if (a) { const k2 = 0.35; v.x = v.x * (1 - k2) + ((nx - x) / 1000 / dt) * k2; v.z = v.z * (1 - k2) + ((ny - y) / 1000 / dt) * k2; }   // glide along it
+        break;
+      }
+      if (!moved) { v.x *= 0.3; v.z *= 0.3; }
+    }
+    this.stride = (this.stride || 0) + sp * dt * 3.6;
+    this.eye = this.eye == null || Math.abs(this.eye - this.foot) > 1.2 ? this.foot : this.eye + (this.foot - this.eye) * (1 - Math.exp(-14 * dt));
+    p.y = this.eye + 1.6 + Math.sin(this.stride) * 0.016 * Math.min(1, sp / 1.6);
+  }
+}
+
+// ------------------------------------------------------------------ the house's rooms: where she is, the floor plan
+const ROOMS = house.floors.flatMap((f) => f.rooms.filter((r) => r.polygon && !['OTS', 'Lift'].includes(r.name)).map((r) => {
+  const xs = r.polygon.map((q) => q[0]), ys = r.polygon.map((q) => q[1]);
+  const at = r.label_at || [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+  return { floor: f.id, ffl: house.levels[f.id].ffl / 1000, name: r.name, poly: r.polygon, at };
+}));
+// the doorways (for door assist): centre, the wall's normal and along-vector, half-width, floor level
+const DOORWAYS = house.floors.flatMap((f) => f.walls.filter((w) => w.a && w.b).flatMap((w) => {
+  const [ax, ay] = w.a, [bx, by] = w.b, L = Math.hypot(bx - ax, by - ay);
+  return (w.openings || []).filter((o) => /door|opening/.test(o.type) && o.type !== 'lift_door' && o.width >= 600).map((o) => {
+    const t = (o.offset + o.width / 2) / L;
+    return { x: (ax + (bx - ax) * t) / 1000, z: (ay + (by - ay) * t) / 1000, tx: (bx - ax) / L, tz: (by - ay) / L, half: o.width / 2000, y: house.levels[f.id].ffl / 1000 };
+  });
+}));
+const FLOORS = ['GF', 'FF', 'SF'].map((id) => ({ id, ffl: house.levels[id].ffl / 1000, name: { GF: 'Ground floor', FF: 'First floor', SF: 'Second floor' }[id] }));
+function houseFloor(foot) { return FLOORS.reduce((a, b) => (Math.abs(b.ffl - foot) < Math.abs(a.ffl - foot) ? b : a)); }
+function roomAt(x, z, foot) {
+  if (!inHouse(x, z) || foot < 0.3) return null;
+  const fl = houseFloor(foot);
+  return ROOMS.find((r) => r.floor === fl.id && pointInPoly(x * 1000, z * 1000, r.poly)) || { name: fl.name, floor: fl.id };
+}
+let roomNow = null;
+function updateRoomChip() {
+  const r = state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null;
+  const label = r ? (r.name === houseFloor(walker.foot).name ? r.name : `${r.name} · ${houseFloor(walker.foot).id}`) : null;
+  if (label === roomNow) return;
+  roomNow = label;
+  const chip = document.getElementById('room-chip');
+  chip.hidden = !label;
+  if (label) { chip.querySelector('.val').textContent = label; chip.classList.remove('pop'); void chip.offsetWidth; chip.classList.add('pop'); }
+}
+// the minimap indoors: the plan of the floor she is on, rooms named, her arrow; north up as outside
+function drawPlan(g, S) {
+  const fl = houseFloor(walker.foot), k = S / 14, px = head.position.x, pz = head.position.z;
+  const tx = (x) => S / 2 - (x / 1000 - px) * k, ty = (y) => S / 2 - (y / 1000 - pz) * k;
+  g.fillStyle = '#ece4d6'; g.fillRect(0, 0, S, S);
+  const here = roomAt(px, pz, walker.foot);
+  for (const r of ROOMS.filter((q) => q.floor === fl.id)) {
+    g.beginPath(); r.poly.forEach(([x, y], i) => (i ? g.lineTo(tx(x), ty(y)) : g.moveTo(tx(x), ty(y)))); g.closePath();
+    g.fillStyle = here && here.name === r.name ? '#f6d9a8' : '#fbf8f2'; g.fill();
+    g.strokeStyle = '#5b4a3a'; g.lineWidth = 2; g.stroke();
+  }
+  // room names: the one she's in first, then the others that fit without overlapping
+  g.font = '600 11px Inter, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const placed = [];
+  const rooms = ROOMS.filter((q) => q.floor === fl.id).sort((a, b) => (here && b.name === here.name) - (here && a.name === here.name));
+  for (const r of rooms) {
+    const name = r.name.split(' (')[0].split(' + ')[0].replace('Guest Lounge / Study', 'Study'), x = tx(r.at[0]), y = ty(r.at[1]);
+    const w = g.measureText(name).width + 6, box = [x - w / 2, y - 7, x + w / 2, y + 7];
+    if (box[0] < 6 || box[2] > S - 6 || box[1] < 22 || box[3] > S - 32) continue;
+    if (placed.some((b) => !(box[2] < b[0] || box[0] > b[2] || box[3] < b[1] || box[1] > b[3]))) continue;
+    placed.push(box);
+    g.fillStyle = here && r.name === here.name ? '#2e2216' : '#5a4a3a'; g.fillText(name, x, y);
+  }
+  g.font = '700 11px Inter, sans-serif';
+  const fw = g.measureText(fl.name).width + 16;
+  g.fillStyle = 'rgba(46,34,22,0.82)'; g.beginPath(); g.roundRect(S / 2 - fw / 2, S - 30, fw, 18, 9); g.fill();
+  g.fillStyle = '#f6f1e8'; g.fillText(fl.name, S / 2, S - 21);
+  g.textBaseline = 'alphabetic';
 }
 
 // ------------------------------------------------------------------ time of day
@@ -1008,8 +1141,8 @@ function drawMap() {
   g.save();
   g.clearRect(0, 0, S, S);
   g.beginPath(); g.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2); g.clip();
-  g.fillStyle = '#7fb3c4'; g.fillRect(0, 0, S, S);
-  g.drawImage(mapBase, u - S / 2 / k, v - S / 2 / k, S / k, S / k, 0, 0, S, S);
+  if (state.mode === 'foot' && roomAt(px, pz, walker.foot)) drawPlan(g, S);
+  else { g.fillStyle = '#7fb3c4'; g.fillRect(0, 0, S, S); g.drawImage(mapBase, u - S / 2 / k, v - S / 2 / k, S / k, S / k, 0, 0, S, S); }
   g.translate(S / 2, S / 2);
   let yaw = pose.yaw;
   if (state.mode === 'foot') yaw = orb.yaw;
@@ -1058,6 +1191,9 @@ function draw() {
 }
 
 function frame(dt = 1 / 60, show = true) {
+  // palms near the camera get their full crowns (every half second, or at once after a jump)
+  lodTimer -= dt;
+  if (lodTimer <= 0 || camera.position.distanceToSquared(lodAt) > 25) { beach.palmLOD(camera.position); dressing.lod(camera.position); lodAt.copy(camera.position); lodTimer = 0.5; }
   clock += dt;
   if (night.update(dt, clock, state.stars, camera)) wish();
   clouds.update(clock, camera, skyLight);
@@ -1103,6 +1239,7 @@ function frame(dt = 1 / 60, show = true) {
     const moving = Math.abs(sim.speed) > 0.2;
     document.getElementById('gear').textContent = sim.reversing ? 'R' : moving ? 'D' + sim.gear : 'D';
     focus = findFocus();
+    updateRoomChip();
     // her message plays once, the first time she reaches the studio (by car or on foot)
     if (state.explore && !state.msgPlayed && pack?.studioMessage) {
       const atPad = state.mode === 'drive' && Math.hypot(sim.x - STUDIO_PARK.x, sim.z - STUDIO_PARK.z) < 14 && Math.abs(sim.speed) < 1.5;
@@ -1123,13 +1260,13 @@ window.play = {
   ready: false,
   setTime,
   // walk for `seconds` holding a key (W by default), the camera facing yawDeg (0 = north)
-  stroll: (seconds, code = 'KeyW', yawDeg = null) => {
+  stroll: (seconds, code = 'KeyW', yawDeg = null, draw = true) => {
     if (yawDeg != null) orb.yaw = THREE.MathUtils.degToRad(yawDeg);
     walker.keys[code] = true;
     for (let t = 0; t < seconds; t += 1 / 30) { updateFoot(1 / 30); placeFootCamera(1 / 30, false); }
     walker.keys[code] = false;
     for (let i = 0; i < 8; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, false); }
-    hudTimer = 0; frame(1 / 60);
+    if (draw) { hudTimer = 0; frame(1 / 60); }
     return { x: +head.position.x.toFixed(2), z: +head.position.z.toFixed(2), foot: +walker.foot.toFixed(2), focus: focus && focus.label };
   },
   camera: (mode) => { state.cam = mode; state.driven = true; placeCamera(true, 1 / 60); },
@@ -1156,14 +1293,14 @@ window.play = {
   exit: () => { exitCar(); for (let i = 0; i < 10; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, i === 0); } frame(1 / 60); return window.play.state(); },
   enter: () => { toggleFoot(); frame(1 / 60); return window.play.state(); },
   // on foot: put her at (x, z) metres facing yaw degrees (0 = north / +Z); the camera behind her
-  foot: (x, z, yawDeg = 0, pitch = 0.22, footY = 0) => {
+  foot: (x, z, yawDeg = 0, pitch = 0.22, footY = 0, draw = true) => {
     getUp();
     if (state.mode !== 'foot') state.mode = 'foot';
     placeHer(x, z, THREE.MathUtils.degToRad(yawDeg), footY);
     orb.pitch = pitch;
     for (let i = 0; i < 2; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, i === 0); }
     updateModeUI();
-    hudTimer = 0; frame(1 / 60);
+    if (draw) { hudTimer = 0; frame(1 / 60); }
     return { x: +head.position.x.toFixed(2), z: +head.position.z.toFixed(2), foot: +walker.foot.toFixed(2), focus: focus && focus.label };
   },
   interact: () => { focus = findFocus(); interact(); for (let i = 0; i < 10; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, i === 0); } hudTimer = 0; frame(1 / 60); return state.overlay || !!state.lying; },
@@ -1173,7 +1310,7 @@ window.play = {
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   sound: () => ({ audio, ambience, measureSfx }),

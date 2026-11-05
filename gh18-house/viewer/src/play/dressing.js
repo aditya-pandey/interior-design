@@ -49,6 +49,38 @@ function grassClump() {
   return mergeGeometries(parts);
 }
 
+// near the camera, a clump is real blades: tapered, arching out under their weight, green at the foot and
+// bleached to straw at the tips, a few dry ones among them
+function grassBlades(r) {
+  const pos = [], nor = [], col = [], c = new THREE.Color();
+  const N = 34;
+  for (let b = 0; b < N; b++) {
+    const a = r() * Math.PI * 2, rr = Math.sqrt(r()) * 0.14, bx = Math.cos(a) * rr, bz = Math.sin(a) * rr;
+    const h = 0.32 + r() * 0.42, lean = (0.12 + r() * 0.4) * h, dry = r() < 0.18;
+    const dx = Math.cos(a + (r() - 0.5) * 0.8), dz = Math.sin(a + (r() - 0.5) * 0.8), w0 = 0.016 + r() * 0.012;
+    const px = -dz, pz = dx;                                 // across the blade
+    const pt = (t) => [bx + dx * lean * t * t, h * t * (1 - 0.25 * t * t * (lean / h)), bz + dz * lean * t * t];
+    const S = 3;
+    for (let k = 0; k < S; k++) {
+      const t0 = k / S, t1 = (k + 1) / S, p0 = pt(t0), p1 = pt(t1), w0a = w0 * (1 - t0), w1a = w0 * (1 - t1);
+      const quad = [[p0, -w0a, t0], [p0, w0a, t0], [p1, -w1a, t1], [p0, w0a, t0], [p1, w1a, t1], [p1, -w1a, t1]];
+      for (const [pp, w, t] of quad) {
+        pos.push(pp[0] + px * w, pp[1], pp[2] + pz * w);
+        const n = new THREE.Vector3(dx * 0.35, 1, dz * 0.35).normalize(); nor.push(n.x, n.y, n.z);
+        if (dry) c.setRGB(0.66 + t * 0.12, 0.58 + t * 0.1, 0.38 + t * 0.08);
+        else c.setRGB(0.27 + t * 0.42, 0.34 + t * 0.32, 0.15 + t * 0.26);
+        c.multiplyScalar(0.75 + 0.25 * t);
+        col.push(c.r, c.g, c.b);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  return g;
+}
+
 // ---- seaweed and driftwood
 function wrackTexture() {
   return canvasTex(256, 256, (g, W, H) => {
@@ -199,9 +231,23 @@ export function buildDressing({ low = false, time }) {
   const grassMat = new THREE.MeshStandardMaterial({ map: grassTexture(), alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.85 });
   windSway(grassMat, time, 0.02, 'grass', 0.6);
   const grass = new THREE.InstancedMesh(grassClump(), grassMat, grassPos.length);
-  grassPos.forEach(([x, z, s, a], i) => { q.setFromAxisAngle(up, a); m.compose(p.set(x, groundHeight(x, z) - 0.02, z), q, sc.set(s, s * (0.8 + (s % 0.3)), s)); grass.setMatrixAt(i, m); });
+  const bladeMat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 });
+  windSway(bladeMat, time, 0.015, 'grassblades', 0.6);
+  const blades = new THREE.InstancedMesh(grassBlades(rng(404)), bladeMat, grassPos.length);
+  const gm = grassPos.map(([x, z, s, a]) => { q.setFromAxisAngle(up, a); return new THREE.Matrix4().compose(p.set(x, groundHeight(x, z) - 0.02, z), q, sc.set(s, s * (0.8 + (s % 0.3)), s)); });
+  gm.forEach((mm, i) => grass.setMatrixAt(i, mm));
+  blades.count = 0;
   grass.castShadow = true; grass.receiveShadow = true; grass.name = 'dune_grass';
-  objects.push(grass);
+  blades.castShadow = !low; blades.receiveShadow = true; blades.name = 'dune_grass_near'; blades.frustumCulled = false; grass.frustumCulled = false;
+  objects.push(grass, blades);
+  // every half second: clumps within ~40 m are drawn blade by blade, the rest as cards
+  const grassLOD = (cam) => {
+    if (low) return;
+    let a = 0, b = 0;
+    grassPos.forEach(([x, z], i) => { if ((x - cam.x) ** 2 + (z - cam.z) ** 2 < 1600) blades.setMatrixAt(a++, gm[i]); else grass.setMatrixAt(b++, gm[i]); });
+    blades.count = a; grass.count = b;
+    blades.instanceMatrix.needsUpdate = true; grass.instanceMatrix.needsUpdate = true;
+  };
 
   // the wrack line (seaweed) where the high tide reached, and driftwood
   const wrackPos = [];
@@ -253,6 +299,6 @@ export function buildDressing({ low = false, time }) {
   const [cx, cz] = place(chaiStall(), near(-30, 28), -1, 2.2);
   colliders.push({ poly: [[cx - 1.3, cz - 1.0], [cx + 1.3, cz - 1.0], [cx + 1.3, cz + 1.9], [cx - 1.3, cz + 1.9]] });
 
-  return { objects, colliders, counts: { grass: grassPos.length, wrack: wrackPos.length, driftwood: wood.length } };
+  return { objects, colliders, lod: grassLOD, counts: { grass: grassPos.length, wrack: wrackPos.length, driftwood: wood.length } };
 }
 void WATER_Y;
