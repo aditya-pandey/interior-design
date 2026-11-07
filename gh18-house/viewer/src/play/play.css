@@ -174,3 +174,6 @@ body.touring #prompt { display: none; }
 .album nav button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #d8ccb8; background: #fff; font-size: 22px; color: #3a2a1c; cursor: pointer; }
 .album nav button:disabled { opacity: 0.3; }
 #overlay.album-wrap .close { background: rgba(58, 42, 28, 0.15); color: #3a2a1c; }
+
+/* her own files: no video to show, just the controls */
+#music.local .m-video { display: none; }

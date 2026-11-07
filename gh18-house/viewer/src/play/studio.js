@@ -709,7 +709,7 @@ export function buildStudio(M, pack) {
   // a sleeve propped against the wall beside it, the one that's playing
   const now = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.31, 0.006), new THREE.MeshStandardMaterial({ map: sleeveTexture(), roughness: 0.7 }));
   now.position.set(crX + 0.4, F + CR.h + 0.16, CR.z0 + 0.05); now.rotation.set(-0.12, 0, 0.0); now.castShadow = true; group.add(now);
-  interact.push({ kind: 'radio', label: 'Play a record', pos: [crX, F + 0.85, CR.z0 + 0.23], r: 1.9 });
+  interact.push({ kind: 'radio', zone: 's-lounge', label: 'Play a record', pos: [crX, F + 0.85, CR.z0 + 0.23], r: 1.9 });
   const turntable = { spin, arm, led, angle: 0.0 };
 
   // ================================================================== the gallery (west)
@@ -961,6 +961,29 @@ export function buildStudio(M, pack) {
 
   for (const m of parts.meshes(mats)) group.add(m);
 
+  // ---- music in every space: speakers (ceiling grilles, the lounge's pair, one on the terrace's pergola) and a small
+  // brass panel in each (E: music here, or stop it)
+  const grille = (x, y, z) => { parts.cyl('metal', x, y - 0.012, z, 0.11, 0.11, 0.012, 0xe9e6e0, 24); parts.cyl('metal', x, y - 0.016, z, 0.085, 0.085, 0.004, 0x9a9690, 24); };
+  const studioZones = [
+    { id: 's-library', name: 'Library', group: 'studio', floor: 0, speakers: [[100.9, CH - 0.05, 45.4]], contains: (x, z, f) => f < U - 1 && x >= X0 && x < 103.5 && z >= Z0 && z <= Z1 },
+    { id: 's-lounge', name: 'Lounge', group: 'studio', floor: 0, open: true, speakers: [[CR.x0 + 0.19, F + 0.8, Z0 + T + 0.22], [CR.x1 - 0.19, F + 0.8, Z0 + T + 0.22]], contains: (x, z, f) => f < U - 1 && x >= 103.5 && x < VX && z >= Z0 && z <= Z1 },
+    { id: 's-gallery', name: 'Gallery', group: 'studio', floor: 0, speakers: [[116.5, CH - 0.05, 45.0]], contains: (x, z, f) => f < U - 1 && x >= VX && x <= X1 && z >= Z0 && z <= Z1 },
+    { id: 's-atelier', name: 'Atelier', group: 'studio', floor: 1, open: true, speakers: [[102.4, U1 - 0.05, 46.0]], contains: (x, z, f) => f >= U - 1 && x >= X0 && x < VX && z >= Z0 && z <= Z1 },
+    { id: 's-terrace', name: 'Terrace', group: 'studio', floor: 1, speakers: [[PG.x1 - 0.12, U + 2.3, PG.z0 + 0.12]], contains: (x, z, f) => f >= U - 1 && x >= VX && x <= X1 && z >= Z0 && z <= Z1 },
+  ];
+  grille(100.9, CH - 0.03, 45.4); grille(116.5, CH - 0.03, 45.0); grille(102.4, U1 - 0.03, 46.0);
+  parts.rbox('metal', PG.x1 - 0.12, U + 2.15, PG.z0 + 0.2, 0.16, 0.26, 0.14, 0.02, 0x1d1d1d);
+  const panel = (zone, x, y, z, face) => {                                 // face: [nx, nz], the way it looks
+    const rot = Math.atan2(face[0], face[1]);
+    const g = new RoundedBoxGeometry(0.1, 0.16, 0.02, 2, 0.008); g.rotateY(rot); g.translate(x, y, z); parts.add('brass', g, 0xb08d57);
+    const k = new THREE.CylinderGeometry(0.022, 0.022, 0.02, 20); k.rotateX(Math.PI / 2); k.rotateY(rot); k.translate(x + face[0] * 0.015, y + 0.02, z + face[1] * 0.015); parts.add('metal', k, 0x1d1d1d);
+    interact.push({ kind: 'musicpanel', zone, label: 'Music here', pos: [x, y, z], normal: face, r: 1.6 });
+  };
+  panel('s-library', 99.0, F + 1.3, Z0 + T + 0.02, [0, 1]);
+  panel('s-gallery', 119.3, F + 1.3, Z0 + T + 0.02, [0, 1]);
+  panel('s-atelier', X0 + T + 0.02, U + 1.3, 41.25, [1, 0]);
+  panel('s-terrace', PG.x0 - 0.08, U + 1.3, PG.z0, [-1, 0]);
+
   // lights after dark: the lounge, a wash on the front, the gallery, the atelier, the terrace
   const lights = [[109.3, F + 3.6, 46.6, 16, 14], [109.5, F + 2.4, Z0 - 2.2, 10, 5], [116.5, F + 2.9, 45.4, 10, 7], [102.4, U + 2.5, 46.2, 12, 11], [117.1, U + 2.4, 45.6, 10, 6]].map(([x, y, z, range, i]) => {
     const l = new THREE.PointLight(0xffc98f, 0, range, 2); l.position.set(x, y, z); l.userData.on = i; group.add(l); return l;
@@ -994,7 +1017,7 @@ export function buildStudio(M, pack) {
       turntable.led.material.emissiveIntensity = playing ? 2 : 0;
     },
     entry: { x: 99.0, z: 37.2 },          // on the boardwalk, facing the steps
-    upper: U, terraceX: VX,
+    upper: U, terraceX: VX, audioZones: studioZones,
   };
 }
 

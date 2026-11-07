@@ -23,6 +23,7 @@ import { buildDressing, createFootprints } from './dressing.js';
 import { Ambience, measureSfx } from './ambience.js';
 import { buildCosy } from './cosy.js';
 import { buildBillboards } from './billboards.js';
+import { RoomAudio } from './roomaudio.js';
 import { ChaseCam, headMotion } from './chasecam.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
@@ -114,7 +115,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards;
+let billboards, roomAudio;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -224,9 +225,14 @@ async function init() {
   audio = new CarAudio();
   ambience = new Ambience(audio);
   footprints.onStep = () => ambience.footstep(groundUnderfoot());
-  music = new Music(pack?.music, document.getElementById('ytplayer'));
+  // her songs: her own files when the pack has them (played at the speakers of the room), else YouTube
+  const files = (pack?.tracks || []).map((t) => ({ title: t.title, url: (pack.base || 'play/deepti/') + t.file }));
+  music = new Music(pack?.music, document.getElementById('ytplayer'), files);
+  roomAudio = new RoomAudio([...studio.audioZones, ...houseZones()]);
+  music.onNeedAudio = () => { audio.start(); audio.setOn(state.sound); music.connect(audio.ctx, roomAudio, audio.master); };
+  document.getElementById('music').classList.toggle('local', music.local);
   music.onChange = updateMusicUI;
-  if (!pack) document.getElementById('music-btn').hidden = true;
+  if (!pack || (!pack.music?.length && !files.length)) document.getElementById('music-btn').hidden = true;
   const b = pack?.birthday, today = new Date();
   state.birthday = params.has('birthday') || !!(b && today.getMonth() + 1 === b.month && today.getDate() === b.day);
 
@@ -588,7 +594,7 @@ function readInput(dt) {
 // gamepad buttons, the right stick, the horn and rumble (once a frame)
 let padHorn = false;
 function padExtras(dt) {
-  for (const ev of driver.events || []) ({ foot: toggleFoot, camera: cycleCam, lights: toggleBeams, time: cycleTime, music: () => music.toggle() })[ev]?.();
+  for (const ev of driver.events || []) ({ foot: toggleFoot, camera: cycleCam, lights: toggleBeams, time: cycleTime, music: playMusicHere })[ev]?.();
   if (driver.horn !== padHorn) { padHorn = driver.horn; horn(padHorn); }
   const lx = driver.padLook.x, ly = driver.padLook.y;
   if (state.mode === 'foot') {
@@ -623,7 +629,7 @@ function bindUI() {
     if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
     if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
     if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
-    const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: () => music.toggle(), KeyN: () => music.next(), KeyG: goStudio }[e.code];
+    const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -645,7 +651,7 @@ function bindUI() {
       b.addEventListener('pointerdown', () => horn(true));
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => horn(false));
     } else {
-      b.addEventListener('click', () => ({ aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
+      b.addEventListener('click', () => ({ musiczone: cycleMusicZone, aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
     }
   }
   for (const b of document.querySelectorAll('#touch button')) {
@@ -826,7 +832,7 @@ function interact() {
   if (it.kind === 'getup') return getUp();
   if (it.kind === 'poem') return showPoem(pack.poems[it.index]);
   if (it.kind === 'art') return showArt(it.url);
-  if (it.kind === 'radio') { toggleMusicPanel(true); music.toggle(); return; }
+  if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'lounger') return lieDown(it.seat);
   if (it.kind === 'album') return showAlbum();
 }
@@ -968,18 +974,56 @@ function placeFootCamera(dt) {
 }
 
 // ------------------------------------------------------------------ music UI
+// music: P plays (or pauses) in the room she's in; O switches between this room and everywhere; the panels in
+// the studio (and the record player) play their own room
+function zoneHere() { return state.mode === 'foot' ? roomAudio.zoneAt(head.position.x, head.position.z, walker.foot) : null; }
+function playMusicHere() {
+  if (music.playing) { music.pause(); return; }
+  const z = zoneHere();
+  roomAudio.here = z; if (!z && roomAudio.mode === 'here' && state.mode === 'foot') roomAudio.mode = 'all';
+  if (!music.local) toggleMusicPanel(true);
+  music.play(); updateMusicUI();
+}
+function musicPanel(zoneId) {
+  const z = roomAudio.zones.find((q) => q.id === zoneId);
+  if (music.playing && roomAudio.mode === 'here' && roomAudio.here === z) { music.pause(); flash('Music off'); return; }
+  roomAudio.here = z; roomAudio.mode = 'here';
+  if (!music.local) toggleMusicPanel(true);
+  if (!music.playing) music.play();
+  flash(`Music · ${z.name}`); updateMusicUI();
+}
+function cycleMusicZone() {
+  roomAudio.mode = roomAudio.mode === 'all' ? 'here' : 'all';
+  if (roomAudio.mode === 'here') roomAudio.here = zoneHere() || roomAudio.here;
+  flash(roomAudio.mode === 'all' ? 'Music everywhere' : `Music in this room${roomAudio.here ? ' · ' + roomAudio.here.name : ''}`);
+  updateMusicUI();
+}
+// the house's rooms as music zones: a ceiling speaker in each
+function houseZones() {
+  const geo = new THREE.CylinderGeometry(0.1, 0.1, 0.014, 24), mat = new THREE.MeshStandardMaterial({ color: 0xece9e3, roughness: 0.6 });
+  const zones = ROOMS.filter((r) => r.floor !== 'SF' || !/Terrace/.test(r.name)).map((r) => ({
+    id: 'h-' + r.floor + '-' + r.name, name: r.name, group: 'house', floor: { GF: 0, FF: 1, SF: 2 }[r.floor],
+    speakers: [[r.at[0] / 1000, r.ffl + 2.9, r.at[1] / 1000]],
+    contains: (x, z, f) => Math.abs(f - r.ffl) < 1.2 && pointInPoly(x * 1000, z * 1000, r.poly),
+  }));
+  const im = new THREE.InstancedMesh(geo, mat, zones.length), m = new THREE.Matrix4();
+  zones.forEach((zn, i) => { const [x, y, z] = zn.speakers[0]; im.setMatrixAt(i, m.makeTranslation(x, y + 0.08, z)); });
+  im.name = 'house_speakers'; scene.add(im);
+  return zones;
+}
 function toggleMusicPanel(force) {
   const p = document.getElementById('music');
   const open = typeof force === 'boolean' ? force : p.hidden;
   p.hidden = !open;
   if (open) music.load();
-  else music.pause();               // YouTube asks for the player to be visible while it plays
+  else if (!music.local) music.pause();               // YouTube asks for the player to be visible while it plays
 }
 function updateMusicUI() {
   document.getElementById('m-title').textContent = music.error || music.title || 'Her songs';
   document.getElementById('m-play').textContent = music.playing ? '❚❚' : '▶';
   document.getElementById('music-btn').classList.toggle('on', music.playing);
   setVal('music', music.playing ? 'Playing' : '');
+  setVal('musiczone', roomAudio?.mode === 'all' ? 'Everywhere' : roomAudio?.here ? roomAudio.here.name : 'This room');
 }
 
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
@@ -1214,6 +1258,7 @@ function frame(dt = 1 / 60, show = true) {
   clouds.update(clock, camera, skyLight);
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
+  if (roomAudio) music.setLevel(roomAudio.update(dt, camera, { playing: music.playing, inCar: state.mode === 'drive', foot: walker?.foot ?? 0 }));
   studio.update(clock, !!music?.playing || state.recordDemo);
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
@@ -1325,7 +1370,7 @@ window.play = {
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   sound: () => ({ audio, ambience, measureSfx }),
