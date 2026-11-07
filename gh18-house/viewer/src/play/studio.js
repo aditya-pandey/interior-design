@@ -816,11 +816,11 @@ export function buildStudio(M, pack) {
       const body = new THREE.Mesh(new RoundedBoxGeometry(0.16, 0.009, 0.21, 3, 0.004), shell); body.position.y = 0.0045;
       const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.174), ink); scr.rotation.x = -Math.PI / 2; scr.position.set(0, 0.0093, -0.007);
       body.castShadow = true; g.add(body, scr); group.add(g);
-      interact.push({ kind: 'reader', tab, label, pos: [x, y + 0.2, z], r: 1.7 });
+      interact.push({ kind: 'reader', tab, label, device: g, pos: [x, y + 0.2, z], r: 1.7 });
     };
-    device(DK.x - 0.62, U + 0.76, DK.z - 0.02, Math.PI + 0.22, 'poems', 'Read her poems');
-    device(103.82, F + 0.322, 49.98, Math.PI - 0.5, 'poems', 'Open her reader');
-    device(99.09, F + 0.541, 47.83, Math.PI / 2 + 0.25, 'art', 'Open her reader');
+    device(DK.x - 0.62, U + 0.76, DK.z - 0.02, Math.PI + 0.22, 'poems', 'Pick up her reader');
+    device(103.82, F + 0.322, 49.98, Math.PI - 0.5, 'poems', 'Pick up her reader');
+    device(99.09, F + 0.541, 47.83, Math.PI / 2 + 0.25, 'poems', 'Pick up her reader');
   }
   // pendants upstairs
   for (const [x, z] of [[103.5, 46.5], [100.6, 44.0]]) {
@@ -923,7 +923,7 @@ export function buildStudio(M, pack) {
       if (!png) setTimeout(() => addImpasto(canvasMat, tex.image), 50 + Math.random() * 1500);
     });
     if (png) { canvasMat.transparent = false; canvasMat.alphaTest = 0.4; }
-    interact.push({ kind: 'art', index: art.indexOf(a), label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], r: 1.9 });
+    interact.push({ kind: 'art', index: art.indexOf(a), label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], size: [w, h], r: 1.9 });
     if (p.light) {                                                              // a brass picture light
       parts.box('brass', p.cx - w * 0.3, p.cy + h / 2 + 0.12, SWZ, p.cx + w * 0.3, p.cy + h / 2 + 0.17, SWZ + 0.12, 0xb08d57);
       parts.box('glow', p.cx - w * 0.28, p.cy + h / 2 + 0.115, SWZ + 0.08, p.cx + w * 0.28, p.cy + h / 2 + 0.122, SWZ + 0.11, 0xffffff);
@@ -938,7 +938,7 @@ export function buildStudio(M, pack) {
     mesh.rotation.set(-0.12, easel.rot, 0, 'YXZ');
     group.add(mesh);
     loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
-    interact.push({ kind: 'art', index: art.indexOf(easelPick), label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
+    interact.push({ kind: 'art', index: art.indexOf(easelPick), label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.12, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], size: [w, h], r: 1.8 });
   }
   // her poems: a wall of them along the atelier's east wall (over the flat files), each framed behind glass under
   // a little brass light; Hindi ones set in Devanagari

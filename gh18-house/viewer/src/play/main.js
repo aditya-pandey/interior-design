@@ -8,7 +8,8 @@ import { Walker } from '../walk.js';
 import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence, ROAD } from './beach.js';
 const ROAD_PTS2 = () => ROAD.map((p) => [+p.x.toFixed(2), +p.z.toFixed(2)]);
 import { buildStudio, DEVANAGARI } from './studio.js';
-import { createReader } from './reader.js';
+import { createEReader } from './ereader.js';
+import { createArtView } from './artview.js';
 import { fontsReady } from './fonts.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
 import { CollisionWorld } from './collide.js';
@@ -120,7 +121,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool, reader;
+let billboards, roomAudio, court, houseLife, lightPool, reader, artView;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -158,12 +159,12 @@ async function init() {
   await fontsReady;                                  // (her name, the poems and the labels are drawn in the bundled type)
   studio = buildStudio(M, pack);
   scene.add(studio.group);
-  // her reader: poems and paintings, over the studio (E on a poem or painting, a click on one, or a reader device)
-  reader = createReader({
-    pack, base: pack?.base || 'play/deepti/',
-    onOpen: () => { state.overlay = true; for (const k in keys) keys[k] = false; if (walker) walker.keys = {}; document.getElementById('prompt').hidden = true; },
-    onClose: () => { state.overlay = false; hudTimer = 0; },
-  });
+  // her e-reader (poems) and the paintings seen up close, both in the studio itself
+  const quiet = () => { state.overlay = true; for (const k in keys) keys[k] = false; for (const k in walker?.keys || {}) walker.keys[k] = false; document.body.classList.add('viewing'); };
+  const awake = () => { state.overlay = false; hudTimer = 0; document.body.classList.remove('viewing'); };
+  reader = createEReader({ pack, camera, scene, clockLabel: () => fmtClock(state.clock.h), onOpen: quiet, onClose: awake });
+  const artworks = studio.interact.filter((it) => it.kind === 'art' && it.size && it.index >= 0);
+  artView = createArtView({ camera, canvas: renderer.domElement, artworks, total: pack?.art?.length || artworks.length, veil: document.getElementById('veil'), onStart: quiet, onEnd: awake });
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
   scene.add(billboards.group);
@@ -637,7 +638,8 @@ function bindUI() {
     if (e.target.tagName === 'INPUT') return;
     keys[e.code] = true;
     if (e.repeat || !state.started) return;
-    if (state.overlay && reader?.isOpen) { reader.key(e); return; }
+    if (reader?.busy) { if (reader.isOpen) reader.key(e); return; }
+    if (artView?.active) { artView.key(e); return; }
     if (state.overlay) {
       if (album && (e.code === 'ArrowRight' || e.code === 'ArrowLeft')) { turnAlbum(e.code === 'ArrowRight' ? 1 : -1); return; }
       if (['Escape', 'KeyE', 'Enter', 'Space'].includes(e.code)) closeOverlay();
@@ -698,12 +700,15 @@ function bindUI() {
   // a click (not a drag) on something she can read, look at or use: that thing
   el.addEventListener('pointerup', (e) => {
     const p = press; press = null;
+    if (p && reader?.isOpen && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) { const r = el.getBoundingClientRect(); reader.click(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); return; }
+    if (p && reader?.isOpen && Math.abs(e.clientX - p.x) > 50) { reader.turn(e.clientX < p.x ? 1 : -1); return; }       // (a swipe)
     if (!p || state.overlay || state.rally || state.mode !== 'foot' || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 6 || performance.now() - p.t > 500) return;
     const it = pickAt(e.clientX, e.clientY);
     if (it) interact(it);
   });
   window.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
+    if (reader?.busy || artView?.active) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.x = e.clientX; drag.y = e.clientY;
     if (state.mode === 'foot') {                 // look around
@@ -716,7 +721,13 @@ function bindUI() {
     look.last = performance.now() / 1000;
   });
   window.addEventListener('pointerup', () => { drag = null; });
+  let wheelAcc = 0, wheelAt = 0;
   el.addEventListener('wheel', (e) => {
+    if (reader?.isOpen) {                          // (a trackpad sends many: one page per flick)
+      wheelAcc += e.deltaY; const now = performance.now();
+      if (Math.abs(wheelAcc) > 60 && now - wheelAt > 420) { reader.turn(wheelAcc > 0 ? 1 : -1); wheelAt = now; wheelAcc = 0; }
+      return;
+    }
     if (state.mode !== 'foot') look.zoom = Math.max(0.55, Math.min(2.2, look.zoom * (e.deltaY > 0 ? 1.08 : 0.93)));
   }, { passive: true });
   window.addEventListener('resize', () => {
@@ -860,9 +871,9 @@ function interact(it = focus || findFocus()) {
   if (!it) return;
   if (it.kind === 'car') return toggleFoot();
   if (it.kind === 'getup') return getUp();
-  if (it.kind === 'poem') return reader.open({ tab: 'poems', index: it.index });
-  if (it.kind === 'art') return it.index != null ? reader.open({ tab: 'art', index: it.index }) : showArt(it.url);
-  if (it.kind === 'reader') return reader.open({ tab: it.tab });
+  if (it.kind === 'poem') return reader.open({ index: it.index });
+  if (it.kind === 'art') return it.size ? artView.start(it.index) : showArt(it.url);
+  if (it.kind === 'reader') return reader.open({ source: it.device });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
@@ -882,6 +893,16 @@ function pickAt(cx, cy) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r * 1.6 || Math.abs(it.pos[1] - hy) > 2.2) continue;
     if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;
+    if (it.size && it.normal) {                 // a painting: is the click on it (its outline on the screen)?
+      let x0 = 9, x1 = -9, y0 = 9, y1 = -9, behind = false;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        pickV.set(it.pos[0] - it.normal[1] * sx * it.size[0] / 2, it.pos[1] + sy * it.size[1] / 2, it.pos[2] + it.normal[0] * sx * it.size[0] / 2).project(camera);
+        if (pickV.z > 1) behind = true;
+        x0 = Math.min(x0, pickV.x); x1 = Math.max(x1, pickV.x); y0 = Math.min(y0, pickV.y); y1 = Math.max(y1, pickV.y);
+      }
+      if (!behind && nx > x0 && nx < x1 && ny > y0 && ny < y1 && d < bestD + 10) { best = it; bestD = -1 + d * 0.01; }
+      continue;
+    }
     pickV.set(it.pos[0], it.pos[1], it.pos[2]).project(camera);
     if (pickV.z > 1 || Math.abs(pickV.x) > 1.05 || Math.abs(pickV.y) > 1.05) continue;
     const sd = Math.hypot(pickV.x - nx, (pickV.y - ny) * (r.height / r.width));
@@ -898,12 +919,6 @@ function showOverlay(html, cls) {
 }
 function closeOverlay() { document.getElementById('overlay').hidden = true; state.overlay = false; album = null; }
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-function showPoem(p) {
-  const line = (ln) => (/^\*.*\*$/.test(ln.trim()) ? `<em>${esc(ln.trim().slice(1, -1))}</em>` : esc(ln));
-  const body = p.stanzas.map((st) => `<p>${st.map(line).join('<br>')}</p>`).join('');
-  const hi = DEVANAGARI.test(p.title + p.stanzas.flat().join(''));
-  showOverlay(`<button class="close" aria-label="Close">×</button><article class="poem${hi ? ' hi' : ''}" lang="${hi ? 'hi' : 'en'}"><h2>${esc(p.title)}</h2><i class="rule" aria-hidden="true"></i>${p.date ? `<time>${esc(p.date)}</time>` : ''}${body}<footer>— ${esc(p.author || 'Deepti')}</footer></article>`, 'paper');
-}
 function showArt(url) {
   showOverlay(`<button class="close" aria-label="Close">×</button><figure class="art"><img src="${url}" alt="A painting by Deepti"><figcaption>Painted by Deepti</figcaption></figure>`, 'dark');
 }
@@ -1387,7 +1402,7 @@ function frame(dt = 1 / 60, show = true) {
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
-  if (!state.cine) placeCamera(false, dt);
+  if (!state.cine && !artView?.update(dt)) placeCamera(false, dt);
   tickClock(dt);
   let focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
   if (state.cine) { focusX = state.cine.tx; focusZ = state.cine.tz; }      // (a film shot: the sun's shadows round what the camera looks at)
@@ -1436,6 +1451,7 @@ function frame(dt = 1 / 60, show = true) {
     if (focus) pr.innerHTML = `<kbd>E</kbd> ${esc(focus.label)}`;
     drawMap();
   }
+  if (reader) { reader.setLight(state.glow || 0); reader.update(dt); }
   dev.frame();
   if (show) draw();
 }
@@ -1528,7 +1544,9 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader, artView, studio }),
+  // let time pass with the view drawn (the reader rising, a glide to a painting)
+  tick: (seconds) => { for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); },
   pick: (x, y) => { const it = pickAt(x, y); return it && { kind: it.kind, index: it.index, label: it.label }; },
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
