@@ -17,6 +17,7 @@ const clear = (x, z) => {
   if (x > -6 && x < 16 && z > -4 && z < 44) return false;                                     // GH-18 and its gate
   if (x > STUDIO.x0 - 4 && x < STUDIO.x0 + STUDIO.w + 4 && z > STUDIO.z0 - 4 && z < STUDIO.z0 + STUDIO.d + 6) return false;
   if (x > STUDIO_PARK.x - 6 && x < STUDIO_PARK.x + 14 && z > 26 && z < STUDIO_PARK.z + 6) return false;
+  if (x > 119 && x < 139 && z > 30.5 && z < 53) return false;                                 // the badminton court, its boardwalk and bench
   return true;
 };
 

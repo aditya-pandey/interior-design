@@ -32,6 +32,7 @@ export function createPost(renderer, scene, camera, { low = false } = {}) {
     composer, bloom, gtao,
     render() { composer.render(); },
     setSize(w, h) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); },
+    rest() { quality.waitUntil = performance.now() + 4000; quality.samples.length = 0; },
     setBloom(strength, threshold) { bloom.strength = strength; bloom.threshold = threshold; },
     // call once a frame with the frame time; returns a message when it steps quality down
     watch(dt, onPixelRatio, onReflection) {

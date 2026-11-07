@@ -260,9 +260,10 @@ async function init() {
   // she has just walked up to the car in the tour and got in (a key press or tap, so sound may start)
   placeHer(HOME.x - 1.45, HOME.z, 0);
   enterCar();
+  lightPool = poolLights(scene, LOW ? 5 : 8);          // (all the point lights above, played by a fixed few)
+  await warmUp();                                      // (behind the curtain: no stutter as she drives off)
   document.getElementById('hud').hidden = false;
   document.getElementById('play-loading').hidden = true;
-  lightPool = poolLights(scene, LOW ? 5 : 8);          // (all the point lights above, played by a fixed few)
   window.play.ready = true;
   const unlock = () => { audio.start(); audio.setOn(state.sound); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
@@ -1346,6 +1347,31 @@ function drawMap() {
   g.restore();
   g.fillStyle = '#1b1b1b'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center';
   g.fillText('N', S / 2, 14);
+}
+
+// ------------------------------------------------------------------ warm-up
+// Before the curtain lifts: every texture is sent to the GPU and every shader compiled (in parallel where the
+// browser can), for everything in the world, the hidden things too (night lights, the reader, the rally), then a
+// few frames are drawn from where she starts and from the studio. Otherwise the first seconds of the drive stall
+// on each new thing that comes into view.
+async function warmUp() {
+  const t0 = performance.now(), tex = new Set(), shown = [];
+  scene.traverse((o) => {
+    if (!o.visible && !o.isLight) { o.visible = true; shown.push(o); }
+    for (const m of Array.isArray(o.material) ? o.material : o.material ? [o.material] : []) for (const k in m) if (m[k]?.isTexture) tex.add(m[k]);
+  });
+  for (const t of tex) { try { renderer.initTexture(t); } catch { /* (a texture still loading) */ } }
+  try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
+  for (const o of shown) o.visible = false;
+  // the post-processing's own shaders and the sea's reflections: drawn once from each place
+  const keep = { x: camera.position.clone(), q: camera.quaternion.clone() };
+  for (const [px, py, pz, tx, ty, tz] of [[60, 30, 10, 100, 0, 45], [109, 2.2, 55, 109, 2, 44], [131, 8, 30, 131, 0, 42]]) {
+    camera.position.set(px, py, pz); camera.lookAt(tx, ty, tz); camera.updateMatrixWorld(); draw();
+  }
+  camera.position.copy(keep.x); camera.quaternion.copy(keep.q);
+  placeCamera(true, 1 / 60); frame(1 / 60);
+  post?.rest?.();                                      // (the quality watcher starts counting from here)
+  if (!HEADLESS) console.info(`warm-up: ${tex.size} textures, ${renderer.info.programs.length} shaders, ${Math.round(performance.now() - t0)} ms`);
 }
 
 // ------------------------------------------------------------------ loop
