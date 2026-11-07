@@ -805,6 +805,23 @@ export function buildStudio(M, pack) {
   parts.cyl('metal', DK.x + 0.6, U + 0.76, DK.z + 0.15, 0.008, 0.008, 0.4, 0x1d1d1d, 6);
   const dl = new THREE.ConeGeometry(0.11, 0.14, 20, 1, true); dl.translate(DK.x + 0.55, U + 1.13, DK.z + 0.1); parts.add('glow', dl, 0xf3e6cf);
   chair(DK.x, DK.z - 0.85, 0, 0x3f6f8f, U);
+  // her reader: a slim e-reader on the desk, one on the window bed, one on the book by the reading nook
+  // (E or a click opens it: her poems and paintings, readable at any size)
+  if (pack && (pack.poems?.length || pack.art?.length)) {
+    const screenTex = readerScreen(pack);
+    const shell = new THREE.MeshStandardMaterial({ color: 0x24211d, roughness: 0.42, metalness: 0.15 });
+    const ink = new THREE.MeshStandardMaterial({ map: screenTex, roughness: 0.9, emissive: 0xffffff, emissiveMap: screenTex, emissiveIntensity: 0.06 });
+    const device = (x, y, z, rot, tab, label) => {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot;
+      const body = new THREE.Mesh(new RoundedBoxGeometry(0.16, 0.009, 0.21, 3, 0.004), shell); body.position.y = 0.0045;
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.174), ink); scr.rotation.x = -Math.PI / 2; scr.position.set(0, 0.0093, -0.007);
+      body.castShadow = true; g.add(body, scr); group.add(g);
+      interact.push({ kind: 'reader', tab, label, pos: [x, y + 0.2, z], r: 1.7 });
+    };
+    device(DK.x - 0.62, U + 0.76, DK.z - 0.02, Math.PI + 0.22, 'poems', 'Read her poems');
+    device(103.82, F + 0.322, 49.98, Math.PI - 0.5, 'poems', 'Open her reader');
+    device(99.09, F + 0.541, 47.83, Math.PI / 2 + 0.25, 'art', 'Open her reader');
+  }
   // pendants upstairs
   for (const [x, z] of [[103.5, 46.5], [100.6, 44.0]]) {
     parts.cyl('metal', x, U + 2.1, z, 0.004, 0.004, H2 - 2.1, 0x1d1d1d, 4);
@@ -906,7 +923,7 @@ export function buildStudio(M, pack) {
       if (!png) setTimeout(() => addImpasto(canvasMat, tex.image), 50 + Math.random() * 1500);
     });
     if (png) { canvasMat.transparent = false; canvasMat.alphaTest = 0.4; }
-    interact.push({ kind: 'art', label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], r: 1.9 });
+    interact.push({ kind: 'art', index: art.indexOf(a), label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], r: 1.9 });
     if (p.light) {                                                              // a brass picture light
       parts.box('brass', p.cx - w * 0.3, p.cy + h / 2 + 0.12, SWZ, p.cx + w * 0.3, p.cy + h / 2 + 0.17, SWZ + 0.12, 0xb08d57);
       parts.box('glow', p.cx - w * 0.28, p.cy + h / 2 + 0.115, SWZ + 0.08, p.cx + w * 0.28, p.cy + h / 2 + 0.122, SWZ + 0.11, 0xffffff);
@@ -921,7 +938,7 @@ export function buildStudio(M, pack) {
     mesh.rotation.set(-0.12, easel.rot, 0, 'YXZ');
     group.add(mesh);
     loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
-    interact.push({ kind: 'art', label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
+    interact.push({ kind: 'art', index: art.indexOf(easelPick), label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
   }
   // her poems: a wall of them along the atelier's east wall (over the flat files), each framed behind glass under
   // a little brass light; Hindi ones set in Devanagari
@@ -1304,7 +1321,7 @@ function paintingMesh(w, h, frameColor, tex, { glazed = false } = {}) {
   weave.repeat.set(w / 0.06, h / 0.06);
   weave.needsUpdate = true;
   const canvas = glazed
-    ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: tex || null, roughness: 0.9, clearcoat: 1, clearcoatRoughness: 0.04 })
+    ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: tex || null, roughness: 0.92, clearcoat: 0.3, clearcoatRoughness: 0.1, envMapIntensity: 0.45 })     // (glass, but not so much it hides the words)
     : new THREE.MeshPhysicalMaterial({ color: tex ? 0xffffff : 0xece6da, map: tex || null, roughness: 0.62, normalMap: weave, normalScale: new THREE.Vector2(0.35, 0.35), clearcoat: 0.45, clearcoatRoughness: 0.32 });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), canvas);
   plane.position.z = 0.025;
@@ -1393,8 +1410,24 @@ function drawPoem(c, poem, W, Hh) {
   const r = rng(5);
   for (let i = 0; i < 6000; i++) { g.fillStyle = `rgba(120,95,60,${r() * 0.035})`; g.fillRect(r() * W, r() * Hh, 1.5, 1.5); }
   g.strokeStyle = 'rgba(176,141,87,0.55)'; g.lineWidth = 2; g.strokeRect(46, 46, W - 92, Hh - 92);
-  const lines = poem.stanzas.reduce((n, s) => n + s.length, 0) + poem.stanzas.length * 0.6;
-  const size = Math.min(40, Math.floor((Hh - 380) / (lines * lh)));
+  // long lines wrap (at a word) rather than being squeezed; the size is the largest at which it all fits
+  const maxW = W - 170, bodyFont = (sz, em) => (em && !hi ? `italic 400 ${Math.round(sz * 1.12)}px ${SERIF}` : hi ? `400 ${sz}px ${bodyFace}` : `500 ${Math.round(sz * 1.12)}px ${bodyFace}`);
+  const isEm = (ln) => /^\*.*\*$/.test(ln.trim()), plain = (ln) => (isEm(ln) ? ln.trim().slice(1, -1) : ln);
+  const wrap = (txt, sz, em) => {
+    g.font = bodyFont(sz, em);
+    if (g.measureText(txt).width <= maxW * 1.1) return [txt];
+    const out = []; let cur = '';
+    for (const w of txt.split(/\s+/)) { const t = cur ? cur + ' ' + w : w; if (cur && g.measureText(t).width > maxW) { out.push(cur); cur = w; } else cur = t; }
+    if (cur) out.push(cur);
+    return out;
+  };
+  const linesAt = (sz) => poem.stanzas.reduce((n, st) => n + st.reduce((m, ln) => m + wrap(plain(ln), sz, isEm(ln)).length, 0), 0) + poem.stanzas.length * 0.6;
+  // (a long poem keeps a readable size on the wall: what fits, then "read on" in her reader)
+  const MIN = hi ? 30 : 31;
+  let fitSize = 40;
+  while (fitSize > MIN && fitSize * lh * linesAt(fitSize) > Hh - 380) fitSize--;
+  const cut = fitSize * lh * linesAt(fitSize) > Hh - 380, size = fitSize;
+  const stopAt = Hh - 230;
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   let y = 170;
   g.fillStyle = '#2b211a';
@@ -1411,20 +1444,52 @@ function drawPoem(c, poem, W, Hh) {
     if ('letterSpacing' in g) g.letterSpacing = '0px';
   }
   y += size * 2.2;
-  g.fillStyle = '#3a2c22';
+  g.fillStyle = '#2a1f18';
   g.font = hi ? `400 ${size}px ${bodyFace}` : `500 ${Math.round(size * 1.12)}px ${bodyFace}`;
+  let stopped = false;
   for (const st of poem.stanzas) {
+    if (stopped) break;
     for (const ln of st) {
-      const em = /^\*.*\*$/.test(ln.trim()), base = g.font;
-      if (em && !hi) g.font = `italic 400 ${Math.round(size * 1.12)}px ${SERIF}`;
-      fitText(g, em ? ln.trim().slice(1, -1) : ln, W / 2, y, W - 170); y += size * lh;
-      g.font = base;
+      if (cut && y > stopAt) { stopped = true; break; }
+      for (const part of wrap(plain(ln), size, isEm(ln))) {
+        if (cut && y > stopAt) { stopped = true; break; }
+        g.font = bodyFont(size, isEm(ln)); fitText(g, part, W / 2, y, maxW); y += size * lh;
+      }
+      if (stopped) break;
     }
     y += size * 0.7;
+  }
+  if (stopped) {
+    g.fillStyle = 'rgba(176,141,87,0.95)';
+    for (const dx of [-26, 0, 26]) { g.beginPath(); g.arc(W / 2 + dx, Hh - 168, 4, 0, Math.PI * 2); g.fill(); }
+    g.font = `600 22px ${SANS}`; g.fillStyle = '#9a7b55';
+    if ('letterSpacing' in g) g.letterSpacing = '5px';
+    g.fillText('READ ON IN HER READER', W / 2, Hh - 112);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+    return;
   }
   g.font = `italic 400 ${Math.round(size * 1.25)}px ${SERIF}`;
   g.fillStyle = '#8a6a48';
   g.fillText('— ' + (poem.author || 'Deepti'), W / 2, Math.min(Hh - 90, y + size * 0.6));
+}
+// the e-reader's screen: e-ink paper, her name, what's inside
+function readerScreen(pack) {
+  const W = 520, Hh = 696, c = document.createElement('canvas'); c.width = W; c.height = Hh;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ecE8df'; g.fillRect(0, 0, W, Hh);
+  const r = rng(11);
+  for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(60,50,40,${r() * 0.04})`; g.fillRect(r() * W, r() * Hh, 1.4, 1.4); }
+  g.textAlign = 'center'; g.fillStyle = '#2a2420';
+  g.font = `600 17px ${SANS}`; if ('letterSpacing' in g) g.letterSpacing = '6px';
+  g.fillText('HER READER', W / 2, 92); if ('letterSpacing' in g) g.letterSpacing = '0px';
+  g.font = `italic 400 112px ${SERIF}`; g.fillText('Deepti', W / 2, 330);
+  g.strokeStyle = '#2a2420'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(W / 2 - 70, 378); g.lineTo(W / 2 - 14, 378); g.moveTo(W / 2 + 14, 378); g.lineTo(W / 2 + 70, 378); g.stroke();
+  g.save(); g.translate(W / 2, 378); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.restore();
+  g.font = `500 34px ${SERIF}`; g.fillText('Poems & Paintings', W / 2, 440);
+  g.font = `500 16px ${SANS}`; g.fillStyle = '#6b6058'; if ('letterSpacing' in g) g.letterSpacing = '3px';
+  g.fillText(`${pack.poems?.length || 0} POEMS  ·  ${pack.art?.length || 0} PAINTINGS`, W / 2, Hh - 70);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
 }
 function fitText(g, s, x, y, maxW) {
   const w = g.measureText(s).width;

@@ -8,6 +8,7 @@ import { Walker } from '../walk.js';
 import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence, ROAD } from './beach.js';
 const ROAD_PTS2 = () => ROAD.map((p) => [+p.x.toFixed(2), +p.z.toFixed(2)]);
 import { buildStudio, DEVANAGARI } from './studio.js';
+import { createReader } from './reader.js';
 import { fontsReady } from './fonts.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
 import { CollisionWorld } from './collide.js';
@@ -119,7 +120,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool;
+let billboards, roomAudio, court, houseLife, lightPool, reader;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -157,6 +158,12 @@ async function init() {
   await fontsReady;                                  // (her name, the poems and the labels are drawn in the bundled type)
   studio = buildStudio(M, pack);
   scene.add(studio.group);
+  // her reader: poems and paintings, over the studio (E on a poem or painting, a click on one, or a reader device)
+  reader = createReader({
+    pack, base: pack?.base || 'play/deepti/',
+    onOpen: () => { state.overlay = true; for (const k in keys) keys[k] = false; if (walker) walker.keys = {}; document.getElementById('prompt').hidden = true; },
+    onClose: () => { state.overlay = false; hudTimer = 0; },
+  });
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
   scene.add(billboards.group);
@@ -630,6 +637,7 @@ function bindUI() {
     if (e.target.tagName === 'INPUT') return;
     keys[e.code] = true;
     if (e.repeat || !state.started) return;
+    if (state.overlay && reader?.isOpen) { reader.key(e); return; }
     if (state.overlay) {
       if (album && (e.code === 'ArrowRight' || e.code === 'ArrowLeft')) { turnAlbum(e.code === 'ArrowRight' ? 1 : -1); return; }
       if (['Escape', 'KeyE', 'Enter', 'Space'].includes(e.code)) closeOverlay();
@@ -655,7 +663,7 @@ function bindUI() {
   menuBtn.addEventListener('click', (e) => { e.stopPropagation(); openMenu(menu.hidden); });
   window.addEventListener('pointerdown', (e) => { if (!menu.hidden && !e.target.closest('#hud-menu, #hud-menu-btn')) openMenu(false); });
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Tab' && state.started) { e.preventDefault(); openMenu(menu.hidden); }
+    if (e.code === 'Tab' && state.started && !state.overlay) { e.preventDefault(); openMenu(menu.hidden); }
     if (e.code === 'Escape' && !menu.hidden) openMenu(false);
   });
   for (const b of document.querySelectorAll('#hud [data-act]')) {
@@ -685,7 +693,15 @@ function bindUI() {
   // drag to look around (the car view eases back when you drive on; on foot it turns your head)
   const el = renderer.domElement;
   let drag = null;
-  el.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+  let press = null;
+  el.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; press = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  // a click (not a drag) on something she can read, look at or use: that thing
+  el.addEventListener('pointerup', (e) => {
+    const p = press; press = null;
+    if (!p || state.overlay || state.rally || state.mode !== 'foot' || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 6 || performance.now() - p.t > 500) return;
+    const it = pickAt(e.clientX, e.clientY);
+    if (it) interact(it);
+  });
   window.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -839,13 +855,14 @@ function findFocus() {
   if (!best && dc < 3.4) return { kind: 'car', label: 'Get in the car' };
   return best;
 }
-function interact() {
-  const it = focus || findFocus();
+function interact(it = focus || findFocus()) {
+  if (!it || it instanceof Event) it = focus || findFocus();
   if (!it) return;
   if (it.kind === 'car') return toggleFoot();
   if (it.kind === 'getup') return getUp();
-  if (it.kind === 'poem') return showPoem(pack.poems[it.index]);
-  if (it.kind === 'art') return showArt(it.url);
+  if (it.kind === 'poem') return reader.open({ tab: 'poems', index: it.index });
+  if (it.kind === 'art') return it.index != null ? reader.open({ tab: 'art', index: it.index }) : showArt(it.url);
+  if (it.kind === 'reader') return reader.open({ tab: it.tab });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
@@ -853,6 +870,24 @@ function interact() {
   if (it.kind === 'lift') return showLift(it.floor);
   if (it.kind === 'lounger') return lieDown(it.seat);
   if (it.kind === 'album') return showAlbum();
+}
+// what's under the pointer: the nearest thing she could use whose spot is close to where she clicked on the screen
+const pickV = new THREE.Vector3();
+function pickAt(cx, cy) {
+  if (state.mode !== 'foot' || state.overlay || state.lying || !state.explore) return null;
+  const r = renderer.domElement.getBoundingClientRect(), nx = ((cx - r.left) / r.width) * 2 - 1, ny = -((cy - r.top) / r.height) * 2 + 1;
+  const hx = head.position.x, hy = head.position.y, hz = head.position.z;
+  let best = null, bestD = 0.16;
+  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact]) {
+    const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
+    if (d > it.r * 1.6 || Math.abs(it.pos[1] - hy) > 2.2) continue;
+    if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;
+    pickV.set(it.pos[0], it.pos[1], it.pos[2]).project(camera);
+    if (pickV.z > 1 || Math.abs(pickV.x) > 1.05 || Math.abs(pickV.y) > 1.05) continue;
+    const sd = Math.hypot(pickV.x - nx, (pickV.y - ny) * (r.height / r.width));
+    if (sd < bestD) { best = it; bestD = sd; }
+  }
+  return best;
 }
 function showOverlay(html, cls) {
   const o = document.getElementById('overlay');
@@ -1493,7 +1528,8 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader }),
+  pick: (x, y) => { const it = pickAt(x, y); return it && { kind: it.kind, index: it.index, label: it.label }; },
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   sound: () => ({ audio, ambience, measureSfx }),
