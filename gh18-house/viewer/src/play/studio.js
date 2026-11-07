@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { STUDIO } from './site.js';
 import { normalFromImage, plasterNormal, weaveNormal, canvasNormal, spineAtlas, spineUV, SPINE_CELLS } from './surfaces.js';
 import { groundHeight } from './beach.js';
+import { fontsReady, SERIF, SANS, DEVA } from './fonts.js';
 
 // Deepti's Studio, on the beach: two storeys and a roof terrace, facing the sea (north) and the sunset (west).
 //   Ground floor (oak, +0.6 m on a teak deck):
@@ -332,6 +333,7 @@ export function buildStudio(M, pack) {
 
   // ---- the name on the front: dark bronze letters on the white wall, a warm halo behind them at night
   const signTex = signTexture("Deepti's Studio", 'paintings · poems · music', false), haloTex = signTexture("Deepti's Studio", 'paintings · poems · music', true);
+  fontsReady.then(() => { signTex.userData.redraw(); haloTex.userData.redraw(); });
   const signMat = new THREE.MeshStandardMaterial({ map: signTex, transparent: true, alphaTest: 0.35, metalness: 0.35, roughness: 0.45, color: 0xffffff });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(signW, signW * 0.25), signMat);
   sign.position.set(signX, signY, signZ - 0.025); sign.rotation.y = Math.PI; sign.castShadow = true;
@@ -900,11 +902,7 @@ export function buildStudio(M, pack) {
       interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [-1, 0], r: 2.0 });
     }
   });
-  if (poems.some((p) => DEVANAGARI.test(JSON.stringify(p))) && typeof FontFace !== 'undefined') {
-    new FontFace(DEVA_FONT, 'url(play/fonts/NotoSerifDevanagari-Regular.ttf)').load()
-      .then((f) => { document.fonts.add(f); for (const t of poemTexs) t.userData.redraw(); })
-      .catch(() => { /* the system's own Devanagari font will do */ });
-  }
+  fontsReady.then(() => { for (const t of poemTexs) t.userData.redraw(); });
   // a mood board on the atelier's south wall: her photographs pinned to cork
   const photos = pack?.album?.photos || [];
   if (photos.length) {
@@ -956,13 +954,21 @@ export function buildStudio(M, pack) {
 function signTexture(name, tag, halo) {
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 512;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  t.userData.redraw = () => { drawSign(c, name, tag, halo); t.needsUpdate = true; };
+  t.userData.redraw();
+  return t;
+}
+function drawSign(c, name, tag, halo) {
   const g = c.getContext('2d');
+  g.clearRect(0, 0, 2048, 512);
   g.textAlign = 'center';
   if (halo) g.filter = 'blur(18px)';
   g.fillStyle = halo ? '#ffffff' : '#3b2a1c';
-  g.font = "italic 400 220px 'Cormorant Garamond', 'Playfair Display', Didot, Georgia, serif";
+  g.font = `italic 400 236px ${SERIF}`;
   g.fillText(name, 1024, 280);
-  g.font = "500 54px Inter, 'Helvetica Neue', Arial, sans-serif";
+  g.font = `500 50px ${SANS}`;
   if ('letterSpacing' in g) g.letterSpacing = '18px';
   g.fillText(tag.toUpperCase(), 1024, 420);
   if (!halo) {                                   // a fine highlight on the letters' upper edges: cast bronze
@@ -971,22 +977,25 @@ function signTexture(name, tag, halo) {
     grad.addColorStop(0, '#6e5232'); grad.addColorStop(0.5, '#3a2818'); grad.addColorStop(1, '#22170e');
     g.fillStyle = grad; g.fillRect(0, 0, 2048, 512);
   }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  return t;
 }
 function plaqueTexture() {
   const c = document.createElement('canvas');
   c.width = 460; c.height = 300;
-  const g = c.getContext('2d'), r = rng(31);
-  g.fillStyle = '#8a6240'; g.fillRect(0, 0, 460, 300);
-  for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(50,30,15,${0.05 + r() * 0.1})`; g.beginPath(); const y = r() * 300; g.moveTo(0, y); g.bezierCurveTo(150, y + 4, 300, y - 4, 460, y + r() * 4); g.stroke(); }
-  g.strokeStyle = 'rgba(240,215,160,0.6)'; g.lineWidth = 3; g.strokeRect(16, 16, 428, 268);
-  g.fillStyle = '#f1dcae'; g.textAlign = 'center';
-  g.font = "italic 52px Georgia, serif"; g.fillText("Deepti's Studio", 230, 132);
-  g.font = '22px Georgia, serif'; g.fillText('paintings · poems · music', 230, 186);
-  g.font = '20px Georgia, serif'; g.fillText('come in ❦', 230, 236);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  const draw = () => {
+    const g = c.getContext('2d'), r = rng(31);
+    g.fillStyle = '#8a6240'; g.fillRect(0, 0, 460, 300);
+    for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(50,30,15,${0.05 + r() * 0.1})`; g.beginPath(); const y = r() * 300; g.moveTo(0, y); g.bezierCurveTo(150, y + 4, 300, y - 4, 460, y + r() * 4); g.stroke(); }
+    g.strokeStyle = 'rgba(240,215,160,0.6)'; g.lineWidth = 2; g.strokeRect(18, 18, 424, 264);
+    g.fillStyle = '#f1dcae'; g.textAlign = 'center';
+    g.font = `italic 400 66px ${SERIF}`; g.fillText("Deepti's Studio", 230, 140);
+    g.font = `600 17px ${SANS}`; if ('letterSpacing' in g) g.letterSpacing = '5px';
+    g.fillText('PAINTINGS · POEMS · MUSIC', 230, 190);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+    g.font = `italic 400 28px ${SERIF}`; g.fillText('come in', 230, 240);
+    t.needsUpdate = true;
+  };
+  draw(); fontsReady.then(draw);
   return t;
 }
 
@@ -1048,8 +1057,8 @@ function vinylTexture() {
   if (sheen) { sheen.addColorStop(0, 'rgba(255,255,255,0)'); sheen.addColorStop(0.08, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.16, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, 'rgba(255,255,255,0)'); sheen.addColorStop(0.58, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.66, 'rgba(255,255,255,0)'); g.fillStyle = sheen; g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.arc(256, 256, 88, 0, Math.PI * 2, true); g.fill(); }
   g.fillStyle = '#efe3c8'; g.beginPath(); g.arc(256, 256, 84, 0, Math.PI * 2); g.fill();
   g.strokeStyle = '#a4532e'; g.lineWidth = 3; g.beginPath(); g.arc(256, 256, 76, 0, Math.PI * 2); g.stroke();
-  g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.font = 'italic 26px Georgia, serif'; g.fillText("Deepti's Studio", 256, 236);
-  g.font = '15px Georgia, serif'; g.fillText('SIDE A · 33⅓', 256, 296);
+  g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.font = `italic 400 32px ${SERIF}`; g.fillText("Deepti's Studio", 256, 236);
+  g.font = `600 13px ${SANS}`; g.fillText('SIDE A · 33⅓', 256, 296);
   g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(256, 256, 7, 0, Math.PI * 2); g.fill();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
@@ -1062,7 +1071,7 @@ function sleeveTexture() {
   g.fillStyle = sky; g.fillRect(0, 0, 512, 512);
   g.fillStyle = '#fbe3b0'; g.beginPath(); g.arc(256, 282, 70, Math.PI, 0); g.fill();
   for (let y = 300; y < 500; y += 14) { g.fillStyle = `rgba(251,227,176,${0.5 - (y - 300) / 500})`; g.fillRect(256 - 60 + (y % 28), y, 120 - (y - 300) / 3, 3); }
-  g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = 'italic 34px Georgia, serif'; g.textAlign = 'left'; g.fillText('Her songs', 28, 58);
+  g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = `italic 400 44px ${SERIF}`; g.textAlign = 'left'; g.fillText('Her songs', 28, 64);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
 }
@@ -1234,7 +1243,6 @@ function birchTexture() {
 
 // a poem on cream paper: title, lines in stanzas, date, signature
 export const DEVANAGARI = /[\u0900-\u097F]/;
-export const DEVA_FONT = 'Noto Serif Devanagari';
 export function poemTexture(poem, ratio) {
   const W = 1024, Hh = Math.round(W / ratio);
   const c = document.createElement('canvas');
@@ -1248,29 +1256,46 @@ export function poemTexture(poem, ratio) {
 }
 function drawPoem(c, poem, W, Hh) {
   const g = c.getContext('2d');
-  // Hindi in Devanagari: upright (no false italic), a little more room between lines for the matras
+  // a warm paper card: a soft wash of colour in two corners, fine grain, a gold hairline inset; the title in an
+  // editorial italic serif under a small gold rule, the date in spaced capitals, the lines set generously.
+  // Hindi in Devanagari: upright, with more room between lines for the matras.
   const hi = DEVANAGARI.test(poem.title + poem.stanzas.flat().join(''));
-  const it = hi ? '' : 'italic ', face = hi ? `'${DEVA_FONT}', Georgia, serif` : "Georgia, 'Times New Roman', serif", lh = hi ? 1.6 : 1.45;
-  g.fillStyle = '#f7f1e3'; g.fillRect(0, 0, W, Hh);
-  const r = rng(5);
-  for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(150,120,80,${r() * 0.05})`; g.fillRect(r() * W, r() * Hh, 2, 2); }
-  g.strokeStyle = 'rgba(140,110,70,0.35)'; g.lineWidth = 2; g.strokeRect(40, 40, W - 80, Hh - 80);
-  const lines = poem.stanzas.reduce((n, s) => n + s.length, 0) + poem.stanzas.length;
-  const size = Math.min(34, Math.floor((Hh - 330) / (lines * lh)));
-  g.fillStyle = '#3a2a1c'; g.textAlign = 'center';
-  g.font = `${it}600 ${Math.round(size * (hi ? 1.45 : 1.7))}px ${face}`;
-  fitText(g, poem.title, W / 2, 150, W - 150);
-  if (poem.date) { g.font = `${Math.round(size * 0.8)}px Georgia, serif`; g.fillStyle = '#7a6448'; g.fillText(poem.date, W / 2, 150 + size * 1.5); }
-  g.fillStyle = '#3a2a1c';
-  g.font = `${it}${size}px ${face}`;
-  let y = 150 + size * 3.4;
-  for (const st of poem.stanzas) {
-    for (const ln of st) { fitText(g, ln, W / 2, y, W - 150); y += size * lh; }
-    y += size * 0.8;
+  const bodyFace = hi ? DEVA : SERIF, lh = hi ? 1.7 : 1.5;
+  const bg = g.createLinearGradient(0, 0, 0, Hh); bg.addColorStop(0, '#fbf8f2'); bg.addColorStop(1, '#f2eadc');
+  g.fillStyle = bg; g.fillRect(0, 0, W, Hh);
+  for (const [x, y, rad, col] of [[0, 0, W * 0.9, 'rgba(222,160,128,0.13)'], [W, Hh, W * 0.95, 'rgba(140,172,150,0.13)']]) {
+    const w = g.createRadialGradient(x, y, 0, x, y, rad); w.addColorStop(0, col); w.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = w; g.fillRect(0, 0, W, Hh);
   }
-  g.font = `italic ${Math.round(size * 1.05)}px Georgia, serif`;
-  g.fillStyle = '#7a6448';
-  g.fillText('— Deepti', W / 2, Math.min(Hh - 80, y + size));
+  const r = rng(5);
+  for (let i = 0; i < 6000; i++) { g.fillStyle = `rgba(120,95,60,${r() * 0.035})`; g.fillRect(r() * W, r() * Hh, 1.5, 1.5); }
+  g.strokeStyle = 'rgba(176,141,87,0.55)'; g.lineWidth = 2; g.strokeRect(46, 46, W - 92, Hh - 92);
+  const lines = poem.stanzas.reduce((n, s) => n + s.length, 0) + poem.stanzas.length * 0.6;
+  const size = Math.min(40, Math.floor((Hh - 380) / (lines * lh)));
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  let y = 170;
+  g.fillStyle = '#2b211a';
+  g.font = hi ? `400 ${Math.round(size * 1.35)}px ${DEVA}` : `italic 400 ${Math.round(size * 2.0)}px ${SERIF}`;
+  fitText(g, poem.title, W / 2, y, W - 170);
+  y += size * 0.9;
+  g.strokeStyle = 'rgba(176,141,87,0.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(W / 2 - 46, y); g.lineTo(W / 2 - 10, y); g.moveTo(W / 2 + 10, y); g.lineTo(W / 2 + 46, y); g.stroke();
+  g.fillStyle = 'rgba(176,141,87,0.95)'; g.beginPath(); g.moveTo(W / 2, y - 6); g.lineTo(W / 2 + 6, y); g.lineTo(W / 2, y + 6); g.lineTo(W / 2 - 6, y); g.fill();
+  if (poem.date) {
+    y += size * 1.05;
+    g.font = `600 ${Math.max(14, Math.round(size * 0.5))}px ${SANS}`; g.fillStyle = '#9a7b55';
+    if ('letterSpacing' in g) g.letterSpacing = '4px';
+    g.fillText(poem.date.toUpperCase(), W / 2, y);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+  }
+  y += size * 2.2;
+  g.fillStyle = '#3a2c22';
+  g.font = hi ? `400 ${size}px ${bodyFace}` : `500 ${Math.round(size * 1.12)}px ${bodyFace}`;
+  for (const st of poem.stanzas) {
+    for (const ln of st) { fitText(g, ln, W / 2, y, W - 170); y += size * lh; }
+    y += size * 0.7;
+  }
+  g.font = `italic 400 ${Math.round(size * 1.25)}px ${SERIF}`;
+  g.fillStyle = '#8a6a48';
+  g.fillText('— Deepti', W / 2, Math.min(Hh - 90, y + size * 0.6));
 }
 function fitText(g, s, x, y, maxW) {
   const w = g.measureText(s).width;
@@ -1288,9 +1313,9 @@ function albumCover(title) {
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(255,255,255,${r() * 0.06})`; g.fillRect(r() * 512, r() * 408, 2, 1); g.fillStyle = `rgba(0,0,0,${r() * 0.05})`; g.fillRect(r() * 512, r() * 408, 1, 2); }
   g.strokeStyle = '#d9b46a'; g.lineWidth = 3; g.strokeRect(26, 26, 460, 356);
   g.fillStyle = '#e3c27d'; g.textAlign = 'center';
-  g.font = 'italic 600 54px Georgia, serif';
+  g.font = `italic 400 64px ${SERIF}`;
   g.fillText(title, 256, 220);
-  g.font = '22px Georgia, serif';
+  g.font = `500 22px ${SERIF}`;
   g.fillText('❦', 256, 268);
   // the book lies with its top face up and its spine to the left: the texture is seen from above
   const t = new THREE.CanvasTexture(c);
