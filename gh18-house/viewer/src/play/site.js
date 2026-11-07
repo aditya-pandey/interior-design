@@ -25,5 +25,5 @@ export const ROAD_HALF = LANE + SHOULDER;          // 5.2 m from the centre line
 
 // Her studio (Deepti's Studio): two storeys and a roof terrace on the beach, ~100 m west of GH-18, facing the sea (north) and the
 // sunset (west). Interior floor at +0.6 m on a timber deck.
-export const STUDIO = { x0: 98, z0: 40, w: 18, d: 11, floor: 0.6 };
+export const STUDIO = { x0: 98, z0: 40, w: 22, d: 11, floor: 0.6 };
 export const STUDIO_PARK = { x: 91, z: 36.5, yaw: 0 };      // parking pad off the highway, nose to the sea

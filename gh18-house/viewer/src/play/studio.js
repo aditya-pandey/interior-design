@@ -31,16 +31,18 @@ import { fontsReady, SERIF, SANS, DEVA } from './fonts.js';
 
 const { x0: X0, z0: Z0, w: SW, d: SD, floor: F } = STUDIO;
 const X1 = X0 + SW, Z1 = Z0 + SD;
-const CH = F + 3.1;                  // ground floor ceiling
-const U = F + 3.4;                   // upstairs floor (and the terrace)
+const CH = F + 3.6;                  // ground floor ceiling
+const U = F + 3.9;                   // upstairs floor (and the terrace, and the bridge)
 const H2 = 3.0;                      // upstairs, floor to ceiling
-const UX1 = 107;                     // the upper storey's west wall; the terrace beyond it
+const UX1 = 106;                     // the atelier's west edge, open to the lounge's double-height void
+const VX = 113;                      // the void's west wall; the roof terrace beyond it
 const T = 0.25;                      // solid wall thickness
 const DOOR = [99.6, 101.4];          // the front door, in the south wall
 export const BEACH_DOOR = [106.5, 108.3];   // glass slider in the north wall, out onto the deck and down to the beach
-const TD = [45.8, 47.6];             // upstairs: the door out onto the terrace (in the west wall)
-// the stair: along the south wall, rising east from the lounge to the atelier; 19 risers
-const ST = { xBot: 106.9, z0: Z0 + T, z1: Z0 + 1.45, n: 19, R: (U - F) / 19, G: 0.28 };
+const BR = { z0: 49.72, z1: Z1 - 0.08 };   // upstairs: the bridge across the void, along the north glass
+const TD = [49.8, 50.85];            // its door out onto the terrace (in the void's west wall)
+// the stair: along the south wall, rising east from the lounge to the atelier; 22 risers
+const ST = { xBot: 107.0, z0: Z0 + T, z1: Z0 + 1.45, n: 22, R: (U - F) / 22, G: 0.28 };
 ST.xTop = ST.xBot - (ST.n - 1) * ST.G;
 const DECK = { x0: X0 - 1.0, x1: X1 + 1.0, z0: Z0 - 1.2, z1: Z1 + 2.6 };
 
@@ -185,30 +187,34 @@ export function buildStudio(M, pack) {
   parts.box('deck', 95.2, -0.1, 36.4, DOOR[1] + 0.4, 0.12, DECK.z0 - 0.8, 0xd8c7b2);
   surf(95.2, 36.4, DOOR[1] + 0.4, DECK.z0 - 0.8, 0.12);
 
-  // ---- floors: oak downstairs (round the stair), oak upstairs (round the stairwell), teak on the terrace
+  // ---- floors: oak downstairs (round the stair); upstairs the atelier (round the stairwell) and the bridge across
+  // the void; teak on the roof terrace
   parts.box('floor', X0, F, Z0, X1, F + 0.01, Z1, 0xffffff);
   surf(X0, ST.z1, X1, Z1, F); surf(X0, Z0, ST.xTop, ST.z1, F); surf(ST.xBot, Z0, X1, ST.z1, F);
   parts.box('floor', X0, U - 0.01, ST.z1, UX1, U, Z1, 0xffffff);
   parts.box('floor', X0, U - 0.01, Z0, ST.xTop, U, ST.z1, 0xffffff);
   surf(X0, ST.z1, UX1, Z1, U); surf(X0, Z0, ST.xTop, ST.z1, U);
-  parts.box('deck', UX1, U - 0.01, Z0, X1, U, Z1, 0xf0e4d4);
-  surf(UX1, Z0, X1, Z1, U);
-  // the slab between the floors (white fascia outside, deep eaves to the north over the deck) and the
-  // ceiling under it, open over the stair
-  for (const [a, b, c, d] of [[X0 - 0.4, ST.z1, X1 + 0.9, Z1 + 1.8], [X0 - 0.4, Z0 - 0.5, ST.xTop, ST.z1], [UX1, Z0 - 0.5, X1 + 0.9, ST.z1], [ST.xTop, Z0 - 0.5, UX1, Z0]]) {
+  parts.box('floor', UX1, U - 0.01, BR.z0, VX, U, BR.z1, 0xffffff); surf(UX1, BR.z0, VX, BR.z1, U);
+  parts.box('deck', VX, U - 0.01, Z0, X1, U, Z1, 0xf0e4d4);
+  surf(VX, Z0, X1, Z1, U);
+  // the slabs (white fascia outside, deep eaves to the north over the deck) and the ceilings under them; none
+  // over the void, a slim one under the bridge
+  for (const [a, b, c, d] of [[X0 - 0.4, ST.z1, UX1, Z1 + 1.8], [X0 - 0.4, Z0 - 0.5, ST.xTop, ST.z1], [VX, Z0 - 0.5, X1 + 0.9, Z1 + 1.8], [UX1, Z1, VX, Z1 + 1.8], [ST.xTop, Z0 - 0.5, VX, Z0]]) {
     parts.box('plaster', a, CH, b, c, U - 0.01, d, 0xfbfaf6);
   }
-  for (const [a, b, c, d] of [[X0, ST.z1, X1, Z1], [X0, Z0, ST.xTop, ST.z1], [UX1, Z0, X1, ST.z1]]) parts.box('plaster', a, CH - 0.03, b, c, CH, d, 0xf7f3ec);
+  parts.box('wood', UX1, U - 0.22, BR.z0, VX, U - 0.01, BR.z1, 0xc49a6c);                         // the bridge: an oak deck
+  parts.box('metal', UX1, U - 0.26, BR.z0 - 0.02, VX, U - 0.22, BR.z0 + 0.04, 0x1d1d1d);
+  for (const [a, b, c, d] of [[X0, ST.z1, UX1, Z1], [X0, Z0, ST.xTop, ST.z1], [VX, Z0, X1, Z1]]) parts.box('plaster', a, CH - 0.03, b, c, CH, d, 0xf7f3ec);
   parts.box('wood', X0 - 0.38, CH - 0.03, Z1, X1 + 0.88, CH, Z1 + 1.78, 0xe9d6bd);              // oak soffit on the eaves
   parts.box('wood', X1, CH - 0.03, Z0 - 0.48, X1 + 0.88, CH, Z1, 0xe9d6bd);
 
   // ---- ground floor walls: solid east and south (front door), glass to the sea (north) and the sunset (west)
-  const GW = 0xf6f2ea;
+  const GW = 0xf6f2ea, U1 = U + H2;
   parts.box('plaster', X0, F, Z0, X0 + T, CH, Z1, GW); solid(X0, Z0, X0 + T, Z1);
   parts.box('plaster', X0, F, Z0, DOOR[0], CH, Z0 + T, GW); solid(X0, Z0, DOOR[0], Z0 + T);
   parts.box('plaster', DOOR[1], F, Z0, X1, CH, Z0 + T, GW); solid(DOOR[1], Z0, X1, Z0 + T);
   parts.box('plaster', DOOR[0], F + 2.5, Z0, DOOR[1], CH, Z0 + T, GW);
-  parts.box('plaster', ST.xTop, CH, Z0, UX1, U, Z0 + T, GW);                                     // the stair wall runs up through the slab
+  parts.box('plaster', ST.xTop, CH, Z0, VX, U1, Z0 + T, GW);                                      // the stair and void wall: double height, her big wall
   // the front door: a tall oak pivot door, standing open
   parts.box('wood', DOOR[0] + 0.02, F, Z0 + T, DOOR[0] + 0.08, F + 2.48, Z0 + T + 0.95, 0x8a6240);
   parts.cyl('brass', DOOR[0] + 0.1, F + 0.9, Z0 + T + 0.85, 0.012, 0.012, 0.4, 0xb08d57, 8);
@@ -230,6 +236,7 @@ export function buildStudio(M, pack) {
   };
   glassX(X0 + T, BEACH_DOOR[0], Z1, F, CH);
   glassX(BEACH_DOOR[1], X1, Z1, F, CH);
+  glassX(UX1, VX, Z1, CH, U1);                                                                    // over the void: the glass runs on up, full height
   parts.box('glass', BEACH_DOOR[0] - 1.75, F, Z1 - 0.12, BEACH_DOOR[0] + 0.05, F + 2.5, Z1 - 0.08);          // the beach door, slid open
   parts.box('metal', BEACH_DOOR[0] - 1.75, F + 2.47, Z1 - 0.14, BEACH_DOOR[0] + 0.05, F + 2.53, Z1 - 0.06, 0x1b1b1b);
   parts.box('metal', BEACH_DOOR[0] - 0.02, F, Z1 - 0.14, BEACH_DOOR[0] + 0.04, F + 2.5, Z1 - 0.06, 0x1b1b1b);
@@ -255,25 +262,36 @@ export function buildStudio(M, pack) {
   slant('glass', ST.xTop, U + 0.04, ST.xBot, F + 0.04, ST.z1 - 0.01, 0.92, 0.015);
   slant('brass', ST.xTop, U + 0.96, ST.xBot, F + 0.96, ST.z1 - 0.01, 0.035, 0.05, 0xb08d57);
   solid(ST.xTop, ST.z1 - 0.04, ST.xBot, ST.z1 + 0.04, F, U + 1.2);
-  // upstairs: a glass guard along the stairwell
-  parts.box('glass', ST.xTop, U, ST.z1 - 0.02, UX1, U + 1.0, ST.z1 - 0.005);
-  parts.box('brass', ST.xTop, U + 1.0, ST.z1 - 0.035, UX1, U + 1.035, ST.z1 + 0.015, 0xb08d57);
+  // upstairs: glass guards along the stairwell, the atelier's edge over the void, and the bridge
+  const guard = (x0, z0, x1, z1) => {
+    parts.box('glass', x0, U, z0, x1, U + 1.0, z1);
+    parts.box('brass', x0 - (x0 === x1 ? 0.02 : 0), U + 1.0, z0 - (z0 === z1 ? 0.02 : 0), x1 + (x0 === x1 ? 0.02 : 0), U + 1.035, z1 + (z0 === z1 ? 0.02 : 0), 0xb08d57);
+    solid(x0 - 0.03, z0 - 0.03, x1 + 0.03, z1 + 0.03, U, U + 1.2);
+  };
+  guard(ST.xTop, ST.z1 - 0.02, UX1, ST.z1 - 0.005);
+  guard(UX1, ST.z1, UX1 + 0.015, BR.z0);
+  guard(UX1, BR.z0, VX, BR.z0 + 0.015);
 
-  // ---- upstairs: her atelier. Solid east, south and west (a door to the terrace), all glass to the sea
-  const UW = 0xf8f5ef, U1 = U + H2;
+  // ---- upstairs: her atelier, open to the void on the west; solid east and south, all glass to the sea
+  const UW = 0xf8f5ef;
   parts.box('plaster', X0, U, Z0, X0 + T, U1, Z1, UW); solid(X0, Z0, X0 + T, Z1, U);
-  parts.box('plaster', X0, U, Z0, UX1, U1, Z0 + T, UW); solid(X0, Z0, UX1, Z0 + T, U);
-  parts.box('plaster', UX1 - T, U, Z0, UX1, U1, TD[0], UW); solid(UX1 - T, Z0, UX1, TD[0], U);
-  parts.box('plaster', UX1 - T, U, TD[1], UX1, U1, Z1, UW); solid(UX1 - T, TD[1], UX1, Z1, U);
-  parts.box('plaster', UX1 - T, U + 2.5, TD[0], UX1, U1, TD[1], UW);
-  parts.box('glass', UX1 - 0.12, U, TD[0] - 1.75, UX1 - 0.08, U + 2.5, TD[0] + 0.05);           // the terrace door, slid open
-  parts.box('metal', UX1 - 0.14, U, TD[0] - 0.02, UX1 - 0.06, U + 2.5, TD[0] + 0.04, 0x1b1b1b);
-  parts.box('wood', UX1 - T, U, TD[0], UX1, U + 0.012, TD[1], 0x9c7450);
-  glassX(X0 + T, UX1 - T, Z1, U, U1);
-  parts.box('plaster', X0, U1 - 0.03, Z0, UX1, U1, Z1, 0xf7f3ec);                                 // ceiling
-  parts.box('plaster', X0 - 0.5, U1, Z0 - 0.5, UX1 + 0.5, U1 + 0.25, Z1 + 0.9, 0xfbfaf6);         // roof, its eaves
-  parts.box('wood', X0 - 0.48, U1 - 0.02, Z1, UX1 + 0.48, U1, Z1 + 0.88, 0xe9d6bd);
-  // outside, the upper volume is wrapped in vertical oak battens (south and east), flat oak on the west
+  parts.box('plaster', X0, U, Z0, ST.xTop, U1, Z0 + T, UW); solid(X0, Z0, VX, Z0 + T, U);
+  glassX(X0 + T, UX1, Z1, U, U1);
+  // the void's west wall, between it and the terrace, with a glass door at the end of the bridge
+  parts.box('plaster', VX - T, CH, Z0, VX, U1, TD[0], UW); solid(VX - T, Z0, VX, TD[0], U);
+  parts.box('plaster', VX - T, CH, TD[1], VX, U1, Z1 - 0.08, UW); solid(VX - T, TD[1], VX, Z1, U);
+  parts.box('plaster', VX - T, U + 2.5, TD[0], VX, U1, TD[1], UW);
+  parts.box('plaster', VX - T, CH, TD[0], VX, U, TD[1], UW);
+  parts.box('metal', VX - T, U, TD[0] - 0.02, VX, U + 2.5, TD[0] + 0.02, 0x1b1b1b);
+  parts.box('wood', VX - T, U, TD[0], VX, U + 0.012, TD[1], 0x9c7450);
+  // ceiling and roof over the atelier and the void, a long skylight over the void
+  const SK = { z0: 43.2, z1: 48.2 };
+  for (const [a, b, c, d] of [[X0, Z0, UX1, Z1], [UX1, Z0, VX, SK.z0], [UX1, SK.z1, VX, Z1]]) parts.box('plaster', a, U1 - 0.03, b, c, U1, d, 0xf7f3ec);
+  for (const [a, b, c, d] of [[X0 - 0.5, Z0 - 0.5, UX1 + 0.4, Z1 + 0.9], [VX - 0.4, Z0 - 0.5, VX + 0.5, Z1 + 0.9], [UX1 + 0.4, Z0 - 0.5, VX - 0.4, SK.z0], [UX1 + 0.4, SK.z1, VX - 0.4, Z1 + 0.9]]) parts.box('plaster', a, U1, b, c, U1 + 0.25, d, 0xfbfaf6);
+  parts.box('glass', UX1 + 0.4, U1 + 0.1, SK.z0, VX - 0.4, U1 + 0.13, SK.z1);
+  for (let x = UX1 + 0.4; x <= VX - 0.39; x += (VX - UX1 - 0.8) / 3) parts.box('metal', x - 0.02, U1 + 0.02, SK.z0, x + 0.02, U1 + 0.15, SK.z1, 0x1b1b1b);
+  parts.box('wood', X0 - 0.48, U1 - 0.02, Z1, VX + 0.48, U1, Z1 + 0.88, 0xe9d6bd);
+  // outside, the upper volume is wrapped in vertical oak battens (south and east), flat oak to the terrace
   const BAT = 0xb98a5c;
   const battens = (axis, a, b, fixed, out) => {
     for (let s = a + 0.05; s < b - 0.02; s += 0.11) {
@@ -283,19 +301,19 @@ export function buildStudio(M, pack) {
     if (axis === 'x') parts.box('wood', a, U - 0.3, fixed + out * 0.005, b, U1, fixed + out * 0.02, 0x4a3524);
     else parts.box('wood', fixed + out * 0.005, U - 0.3, a, fixed + out * 0.02, U1, b, 0x4a3524);
   };
-  battens('x', X0 - 0.07, UX1, Z0, -1);
+  battens('x', X0 - 0.07, VX, Z0, -1);
   battens('z', Z0, Z1, X0, -1);
-  parts.box('wood', UX1, U, Z0, UX1 + 0.03, U1, TD[0], 0xc49a6c);
-  parts.box('wood', UX1, U, TD[1], UX1 + 0.03, U1, Z1, 0xc49a6c);
-  parts.box('wood', UX1, U + 2.5, TD[0], UX1 + 0.03, U1, TD[1], 0xc49a6c);
+  parts.box('wood', VX, U, Z0, VX + 0.03, U1, TD[0], 0xc49a6c);
+  parts.box('wood', VX, U, TD[1], VX + 0.03, U1, Z1, 0xc49a6c);
+  parts.box('wood', VX, U + 2.5, TD[0], VX + 0.03, U1, TD[1], 0xc49a6c);
 
   // ---- the roof terrace: a glass balustrade, a pergola, planters; bougainvillea spilling over the edge
   const PH = 1.05;
-  parts.box('glass', UX1, U, Z0, X1, U + PH, Z0 + 0.03); parts.box('brass', UX1, U + PH, Z0 - 0.01, X1, U + PH + 0.035, Z0 + 0.045, 0xb08d57);
+  parts.box('glass', VX, U, Z0, X1, U + PH, Z0 + 0.03); parts.box('brass', VX, U + PH, Z0 - 0.01, X1, U + PH + 0.035, Z0 + 0.045, 0xb08d57);
   parts.box('glass', X1 - 0.03, U, Z0, X1, U + PH, Z1); parts.box('brass', X1 - 0.045, U + PH, Z0, X1 + 0.01, U + PH + 0.035, Z1, 0xb08d57);
-  parts.box('glass', UX1, U, Z1 - 0.03, X1, U + PH, Z1); parts.box('brass', UX1, U + PH, Z1 - 0.045, X1, U + PH + 0.035, Z1 + 0.01, 0xb08d57);
-  solid(UX1, Z0, X1, Z0 + 0.06, U, U + 1.3); solid(X1 - 0.06, Z0, X1, Z1, U, U + 1.3); solid(UX1, Z1 - 0.06, X1, Z1, U, U + 1.3);
-  const PG = { x0: 110.9, x1: 115.4, z0: 42.6, z1: 48.8, h: 2.65 };
+  parts.box('glass', VX, U, Z1 - 0.03, X1, U + PH, Z1); parts.box('brass', VX, U + PH, Z1 - 0.045, X1, U + PH + 0.035, Z1 + 0.01, 0xb08d57);
+  solid(VX, Z0, X1, Z0 + 0.06, U, U + 1.3); solid(X1 - 0.06, Z0, X1, Z1, U, U + 1.3); solid(VX, Z1 - 0.06, X1, Z1, U, U + 1.3);
+  const PG = { x0: 114.9, x1: 119.3, z0: 42.6, z1: 48.6, h: 2.65 };
   for (const [px, pz] of [[PG.x0, PG.z0], [PG.x1, PG.z0], [PG.x0, PG.z1], [PG.x1, PG.z1]]) {
     parts.box('wood', px - 0.06, U, pz - 0.06, px + 0.06, U + PG.h, pz + 0.06, 0x8a6240);
     solid(px - 0.1, pz - 0.1, px + 0.1, pz + 0.1, U, U + 2);
@@ -304,10 +322,10 @@ export function buildStudio(M, pack) {
   for (let x = PG.x0 - 0.2; x <= PG.x1 + 0.2; x += 0.3) parts.box('wood', x - 0.025, U + PG.h + 0.16, PG.z0 - 0.4, x + 0.025, U + PG.h + 0.26, PG.z1 + 0.4, 0xa87b52);
   // planters along the south and west parapets
   const planter = (x0, z0, x1, z1, y) => { parts.box('plaster', x0, y, z0, x1, y + 0.45, z1, 0xe4dccd); parts.box('paint', x0 + 0.04, y + 0.4, z0 + 0.04, x1 - 0.04, y + 0.43, z1 - 0.04, 0x4a3828); solid(x0, z0, x1, z1, y, y + 0.5); };
-  planter(UX1 + 0.3, Z0 + 0.08, X1 - 0.6, Z0 + 0.55, U);
+  planter(VX + 0.3, Z0 + 0.08, X1 - 0.6, Z0 + 0.55, U);
   planter(X1 - 0.55, Z0 + 0.6, X1 - 0.08, 46.0, U);
 
-  const signW = 5.6, signX = 107.0, signY = F + 2.05, signZ = Z0 - 0.03;
+  const signW = 5.6, signX = 110.2, signY = F + 2.05, signZ = Z0 - 0.03;
   // ---- foliage: leaves and flowers as small cards (merged)
   const leafCard = (x, y, z, s, col, key = 'leaf', tilt = 0.6, r = Math.random) => {
     const g = new THREE.PlaneGeometry(s, s * 0.62);
@@ -318,7 +336,7 @@ export function buildStudio(M, pack) {
   const fr = rng(4242);
   // bougainvillea: in the terrace planters, tumbling down the south facade
   for (let i = 0; i < 1100; i++) {
-    const x = UX1 + 0.4 + fr() * (X1 - UX1 - 1.0), drop = fr() ** 1.6 * (x < signX + signW / 2 + 0.3 ? 0.5 : 2.1);   // (clear of the sign)
+    const x = VX + 0.4 + fr() * (X1 - VX - 1.0), drop = fr() ** 1.6 * (x < signX + signW / 2 + 0.3 ? 0.5 : 2.1);   // (clear of the sign)
     const out = drop > 0.1 ? -0.12 - fr() * 0.25 : 0.1 + fr() * 0.35;
     const y = U + 0.5 + fr() * 0.35 - drop, z = Z0 + out;
     if (fr() < 0.6) leafCard(x, y, z, 0.12 + fr() * 0.08, BOUG[i % 4], 'bloom', 1.4, fr);
@@ -520,10 +538,10 @@ export function buildStudio(M, pack) {
   solid(102.0, 49.85, 102.5, 50.35, F, F + 0.7);
 
   // ================================================================== the lounge (middle)
-  parts.box('fabric', 103.1, F, 44.4, 108.9, F + 0.012, 49.6, 0xd8cdb8);              // a big wool rug
-  parts.box('fabric', 103.25, F + 0.012, 44.55, 108.75, F + 0.014, 49.45, 0xc9bca4);
+  parts.box('fabric', 106.2, F, 44.3, 112.4, F + 0.012, 49.7, 0xd8cdb8);              // a big wool rug
+  parts.box('fabric', 106.35, F + 0.012, 44.45, 112.25, F + 0.014, 49.55, 0xc9bca4);
   // a long, low linen sofa facing the sea
-  const SX = 105.6, SZ = 45.6, SL = 3.0;
+  const SX = 109.3, SZ = 45.6, SL = 3.2;
   parts.rbox('wood', SX, F, SZ, SL, 0.12, 1.0, 0.02, 0x6b4a2f);
   parts.rbox('fabric', SX, F + 0.12, SZ + 0.05, SL - 0.1, 0.3, 0.9, 0.08, 0xefe9de);
   parts.rbox('fabric', SX, F + 0.12, SZ - 0.38, SL, 0.62, 0.24, 0.1, 0xe7dfd0);
@@ -536,7 +554,7 @@ export function buildStudio(M, pack) {
   interact.push({ kind: 'lounger', label: 'Sit on the sofa', pos: [SX, F + 0.6, SZ + 0.3], r: 1.8, normal: [0, 1],
     seat: { x: SX - 0.3, z: SZ + 0.1, y: F, eye: [SX - 0.3, F + 1.12, SZ + 0.05], look: [0, 1], pitch: 0.04, flash: 'Sit back · E to get up', stand: [SX - 0.3, SZ + 1.05, 0, F] } });
   // coffee table: a slab of oak on a plinth, her album, candles, shells
-  const CT = { x: 105.6, z: 47.55 };
+  const CT = { x: 109.3, z: 47.6 };
   parts.rbox('wood', CT.x, F, CT.z, 0.9, 0.3, 0.5, 0.02, 0x5b3e28);
   parts.rbox('wood', CT.x, F + 0.3, CT.z, 1.5, 0.06, 0.8, 0.02, 0xb88c5e);
   solid(CT.x - 0.75, CT.z - 0.4, CT.x + 0.75, CT.z + 0.4, F, F + 0.4);
@@ -553,7 +571,7 @@ export function buildStudio(M, pack) {
     group.add(alb);
     interact.push({ kind: 'album', label: `Open “${pack.album.title || "Deepti's Corner"}”`, pos: [CT.x + 0.1, F + 0.4, CT.z + 0.15], r: 1.7 });
   }
-  chair(103.75, 47.6, Math.PI / 2, 0x3f6f8f);
+  chair(111.75, 47.5, -Math.PI / 2, 0x3f6f8f);
   // a window bed: a deep floor mattress on a low oak platform by the glass, piled with pillows, a knitted
   // throw, a sheepskin beside it, a lantern and a tray of chai; E to curl up and watch the sea.
   const WB = { x: 104.2, z: 49.62, w: 2.6, d: 1.85 };
@@ -589,21 +607,21 @@ export function buildStudio(M, pack) {
   solid(WB.x - WB.w / 2, WB.z - WB.d / 2, WB.x + WB.w / 2, WB.z + WB.d / 2, F, F + 0.5);
   interact.push({ kind: 'lounger', label: 'Curl up on the window bed', pos: [WB.x, F + 0.5, WB.z], r: 2.1,
     seat: { x: WB.x - 0.2, z: WB.z, y: F, eye: [WB.x - 0.2, F + 0.86, WB.z - 0.35], look: [0.1, 1], pitch: 0.03, flash: 'Curl up and watch the sea · E to get up', stand: [WB.x - 0.2, WB.z - WB.d / 2 - 0.42, Math.PI, F] } });
-  // an oak-slatted ceiling over the lounge
-  for (let x = 103.05; x < 110.0; x += 0.1) parts.box('wood', x, CH - 0.075, ST.z1 + 0.6, x + 0.05, CH - 0.03, Z1 - 0.35, 0xd9b48a);
-  parts.box('paint', 103.0, CH - 0.032, ST.z1 + 0.6, 110.0, CH - 0.03, Z1 - 0.35, 0x2a2018);
+  // an oak-slatted ceiling over the window bed's corner (under the atelier)
+  for (let x = 102.45; x < UX1 - 0.05; x += 0.1) parts.box('wood', x, CH - 0.075, 45.6, x + 0.05, CH - 0.03, Z1 - 0.35, 0xd9b48a);
+  parts.box('paint', 102.4, CH - 0.032, 45.6, UX1, CH - 0.03, Z1 - 0.35, 0x2a2018);
 
-  // three brass pendants over the table
-  for (const [dx, dz, dy] of [[-0.45, 0, 1.95], [0.1, 0.15, 1.75], [0.55, -0.1, 2.05]]) {
+  // a cascade of brass globes dropping from the top of the void over the table
+  for (const [dx, dz, dy] of [[-0.55, 0.05, 2.35], [0.0, 0.25, 2.05], [0.5, -0.1, 2.5], [-0.2, -0.3, 2.8], [0.3, 0.45, 3.1], [-0.6, 0.5, 3.35], [0.65, 0.35, 2.2]]) {
     const x = CT.x + dx, z = CT.z + dz;
-    parts.cyl('metal', x, F + dy, z, 0.004, 0.004, CH - F - dy, 0x1d1d1d, 4);
+    parts.cyl('metal', x, F + dy, z, 0.004, 0.004, U + H2 - F - dy, 0x1d1d1d, 4);
     const dome = new THREE.SphereGeometry(0.17, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2); dome.translate(x, F + dy, z); parts.add('brass', dome, 0xb08d57);
     const bulb = new THREE.SphereGeometry(0.05, 12, 8); bulb.translate(x, F + dy - 0.02, z); parts.add('glow', bulb, 0xffffff);
   }
   // the listening corner, under her elephant: a walnut record console, open-fronted, its shelves full of
   // records; a turntable on top with its lid up (E to play her music: the platter spins and the arm swings
   // onto the record while it plays), a pair of walnut speakers either side
-  const CR = { x0: 107.6, x1: 110.2, z0: Z0 + T, z1: Z0 + T + 0.46, h: 0.62 }, WAL = 0x5e3c26, crX = (CR.x0 + CR.x1) / 2;
+  const CR = { x0: 108.4, x1: 111.0, z0: Z0 + T, z1: Z0 + T + 0.46, h: 0.62 }, WAL = 0x5e3c26, crX = (CR.x0 + CR.x1) / 2;
   parts.box('wood', CR.x0, F + CR.h - 0.03, CR.z0, CR.x1, F + CR.h, CR.z1, WAL);                          // top
   parts.box('wood', CR.x0 + 0.02, F + 0.1, CR.z0, CR.x1 - 0.02, F + 0.125, CR.z1, WAL);                  // bottom shelf
   for (const x of [CR.x0, CR.x1 - 0.025, crX - 0.4, crX + 0.4]) parts.box('wood', x, F + 0.1, CR.z0, x + 0.025, F + CR.h - 0.03, CR.z1, WAL);
@@ -669,7 +687,7 @@ export function buildStudio(M, pack) {
   const turntable = { spin, arm, led, angle: 0.0 };
 
   // ================================================================== the gallery (west)
-  const GP = { x: 112.7, z0: 42.3, z1: 48.5 };
+  const GP = { x: 116.5, z0: 42.3, z1: 48.5 };
   parts.box('plaster', GP.x - 0.09, F, GP.z0, GP.x + 0.09, F + 2.55, GP.z1, 0xfbf9f4);
   parts.box('wood', GP.x - 0.1, F, GP.z0 - 0.01, GP.x + 0.1, F + 0.08, GP.z1 + 0.01, 0x5b3e28);
   solid(GP.x - 0.12, GP.z0, GP.x + 0.12, GP.z1, F, F + 2.6);
@@ -683,18 +701,18 @@ export function buildStudio(M, pack) {
     }
   }
   // a gallery bench, to sit and look
-  parts.rbox('wood', 110.85, F + 0.4, 45.4, 0.45, 0.06, 1.7, 0.01, 0xb88c5e);
+  parts.rbox('wood', 114.6, F + 0.4, 45.4, 0.45, 0.06, 1.7, 0.01, 0xb88c5e);
   for (const dz of [-0.7, 0.7]) parts.box('metal', 110.66, F, 45.4 + dz - 0.02, 111.04, F + 0.4, 45.4 + dz + 0.02, 0x1d1d1d);
-  solid(110.6, 44.5, 111.1, 46.3, F, F + 0.5);
-  interact.push({ kind: 'lounger', label: 'Sit and look at her paintings', pos: [110.85, F + 0.6, 45.4], r: 1.6,
-    seat: { x: 110.85, z: 45.4, y: F, eye: [110.8, F + 1.15, 45.4], look: [1, 0], pitch: -0.05, flash: 'Take your time · E to get up', stand: [110.0, 45.4, -Math.PI / 2, F] } });
+  solid(114.35, 44.5, 114.85, 46.3, F, F + 0.5);
+  interact.push({ kind: 'lounger', label: 'Sit and look at her paintings', pos: [114.6, F + 0.6, 45.4], r: 1.6,
+    seat: { x: 114.6, z: 45.4, y: F, eye: [114.55, F + 1.15, 45.4], look: [1, 0], pitch: -0.05, flash: 'Take your time · E to get up', stand: [113.75, 45.4, -Math.PI / 2, F] } });
   // a sculpture on a plinth, a tall olive in a pot, cane chairs facing the sunset
-  parts.box('plaster', 114.2, F, 49.4, 114.75, F + 0.95, 49.95, 0xf3efe6);
-  const sc = new THREE.TorusKnotGeometry(0.16, 0.05, 90, 12, 2, 3); sc.translate(114.475, F + 1.2, 49.675); parts.add('paint', sc, 0x2e2a26);
-  solid(114.15, 49.35, 114.8, 50.0, F, F + 1.4);
-  pottedTree(parts, 115.3, 41.0, F, rng(5), solid);
-  pottedTree(parts, 107.75, 43.1, U, rng(6), solid);                // (on the terrace, by the door)
-  for (const [cx, cz, rot] of [[113.4, 50.15, 0.5], [115.1, 48.3, -0.9]]) chair(cx, cz, rot, 0xd8c3a0);
+  parts.box('plaster', 118.2, F, 49.4, 118.75, F + 0.95, 49.95, 0xf3efe6);
+  const sc = new THREE.TorusKnotGeometry(0.16, 0.05, 90, 12, 2, 3); sc.translate(118.475, F + 1.2, 49.675); parts.add('paint', sc, 0x2e2a26);
+  solid(118.15, 49.35, 118.8, 50.0, F, F + 1.4);
+  pottedTree(parts, 119.3, 41.0, F, rng(5), solid);
+  pottedTree(parts, 113.9, 41.1, U, rng(6), solid);                // (on the terrace)
+  for (const [cx, cz, rot] of [[117.2, 50.15, 0.5], [119.1, 48.3, -0.9]]) chair(cx, cz, rot, 0xd8c3a0);
 
   // ================================================================== upstairs: the atelier
   // two easels by the north glass: one with a canvas of hers in progress, one blank
@@ -709,17 +727,17 @@ export function buildStudio(M, pack) {
     parts.add('wood', geo, 0xa87b52);
     solid(x - 0.45, z - 0.45, x + 0.45, z + 0.45, y, y + 1.8);
   };
-  const easel = { x: 103.4, z: 49.2, rot: Math.PI + 0.25 };
+  const easel = { x: 102.9, z: 48.9, rot: Math.PI + 0.25 };
   easelAt(easel.x, easel.z, easel.rot, U);
   const easel2 = { x: 100.6, z: 48.7, rot: Math.PI - 0.35 };
   easelAt(easel2.x, easel2.z, easel2.rot, U);
   const blank = paintingMesh(0.6, 0.75, 0xf4f0e8);
   blank.position.set(easel2.x + Math.sin(easel2.rot) * 0.1, U + 1.18, easel2.z + Math.cos(easel2.rot) * 0.1); blank.rotation.set(-0.12, easel2.rot, 0, 'YXZ'); group.add(blank);
   // a stool with her palette, a work table of jars, brushes, tubes and a sketchbook
-  parts.cyl('wood', 102.6, U, 48.3, 0.18, 0.18, 0.6, 0x8a6240, 12);
-  const pal = new THREE.CylinderGeometry(0.17, 0.17, 0.01, 20); pal.scale(1.2, 1, 0.85); pal.translate(102.6, U + 0.61, 48.3); parts.add('wood', pal, 0xd9b98a);
-  for (const [i, c] of [0xc0392b, 0xe1a92a, 0x1f6f8b, 0xffffff, 0x2e7d32].entries()) parts.cyl('paint', 102.5 + Math.cos(i) * 0.1, U + 0.615, 48.3 + Math.sin(i) * 0.07, 0.022, 0.022, 0.012, c, 8);
-  solid(102.35, 48.05, 102.85, 48.55, U, U + 0.7);
+  parts.cyl('wood', 101.9, U, 47.8, 0.18, 0.18, 0.6, 0x8a6240, 12);
+  const pal = new THREE.CylinderGeometry(0.17, 0.17, 0.01, 20); pal.scale(1.2, 1, 0.85); pal.translate(101.9, U + 0.61, 47.8); parts.add('wood', pal, 0xd9b98a);
+  for (const [i, c] of [0xc0392b, 0xe1a92a, 0x1f6f8b, 0xffffff, 0x2e7d32].entries()) parts.cyl('paint', 101.8 + Math.cos(i) * 0.1, U + 0.615, 47.8 + Math.sin(i) * 0.07, 0.022, 0.022, 0.012, c, 8);
+  solid(101.65, 47.55, 102.15, 48.05, U, U + 0.7);
   const WT = { x: 104.4, z: 44.6 };
   parts.rbox('wood', WT.x, U + 0.86, WT.z, 2.0, 0.05, 0.95, 0.01, 0xd8c3a0);
   for (const [dx, dz] of [[-0.9, -0.4], [0.9, -0.4], [-0.9, 0.4], [0.9, 0.4]]) parts.box('metal', WT.x + dx - 0.02, U, WT.z + dz - 0.02, WT.x + dx + 0.02, U + 0.86, WT.z + dz + 0.02, 0x1d1d1d);
@@ -751,7 +769,7 @@ export function buildStudio(M, pack) {
   const sh2 = new THREE.CylinderGeometry(0.12, 0.2, 0.24, 20, 1, true); sh2.translate(99.05, U + 1.45, 50.35); parts.add('glow', sh2, 0xf3e6cf);
   solid(98.8, 50.2, 99.2, 50.6, U, U + 1.5);
   // the writing desk at the glass, her poems on the wall beside it
-  const DK = { x: 105.6, z: 50.3 };
+  const DK = { x: 104.6, z: 50.3 };
   parts.rbox('wood', DK.x, U + 0.72, DK.z, 1.7, 0.04, 0.7, 0.01, 0xc49a6c);
   for (const [dx, dz] of [[-0.78, -0.28], [0.78, -0.28], [-0.78, 0.28], [0.78, 0.28]]) parts.cyl('metal', DK.x + dx, U, DK.z + dz, 0.018, 0.018, 0.72, 0x1d1d1d, 8);
   solid(DK.x - 0.88, DK.z - 0.38, DK.x + 0.88, DK.z + 0.38, U, U + 0.8);
@@ -804,7 +822,7 @@ export function buildStudio(M, pack) {
   addBeads(X0 - 0.3, CH - 0.08, Z1 + 1.7, X1 + 0.8, CH - 0.08, Z1 + 1.7);                       // and along the north eave over the deck
   const fairy = new THREE.Mesh(mergeGeometries(beads), mats.fairy); fairy.name = 'fairy_lights'; group.add(fairy);
   // two loungers along the north balustrade, to the sea and the sunset
-  for (const lx of [108.3, 109.9]) {
+  for (const lx of [117.0, 118.6]) {
     parts.rbox('wood', lx, U, 49.4, 0.7, 0.3, 1.9, 0.03, 0x9c7450);
     parts.rbox('fabric', lx, U + 0.3, 49.5, 0.66, 0.08, 1.5, 0.03, 0xf2ece0);
     const bk = new RoundedBoxGeometry(0.66, 0.08, 0.7, 3, 0.03); bk.rotateX(-0.85); bk.translate(lx, U + 0.55, 48.67); parts.add('fabric', bk, 0xf2ece0);
@@ -812,7 +830,7 @@ export function buildStudio(M, pack) {
     interact.push({ kind: 'lounger', label: 'Lie down and watch the sunset', pos: [lx, U + 0.5, 49.4], r: 1.9, seat: { x: lx, z: 49.55, y: U + 0.62, yaw: 0 } });
   }
   // lanterns on the terrace
-  for (const [x, z] of [[107.6, 41.0], [115.4, 50.4], [110.6, 50.5]]) {
+  for (const [x, z] of [[113.6, 42.4], [119.4, 50.4], [115.6, 50.5]]) {
     parts.box('metal', x - 0.11, U, z - 0.11, x + 0.11, U + 0.42, z + 0.11, 0x1d1d1d);
     parts.box('glow', x - 0.08, U + 0.06, z - 0.08, x + 0.08, U + 0.36, z + 0.08, 0xffffff);
     solid(x - 0.15, z - 0.15, x + 0.15, z + 0.15, U, U + 0.5);
@@ -829,18 +847,21 @@ export function buildStudio(M, pack) {
   const slots = { big: [], small: [] };
   slots.big.push({ cx: 104.55, cy: stairH(104.55) + 1.5, z: SWZ, face: 'n', h: 1.0, frame: 0x2a1f16, light: true });
   slots.big.push({ cx: 102.4, cy: stairH(102.4) + 1.35, z: SWZ, face: 'n', h: 0.8, frame: 0x2a1f16, light: true });
-  slots.big.push({ cx: 113.4, cy: F + 1.75, z: SWZ, face: 'n', h: 1.15, frame: 0xb08d57, light: true });
-  slots.big.push({ cx: 108.9, cy: F + 1.75, z: SWZ, face: 'n', h: 0.78, frame: null });
+  slots.big.push({ cx: 109.7, cy: F + 3.05, z: SWZ, face: 'n', h: 1.7, frame: 0xb08d57, light: true });          // the void's tall wall: her horses, large
+  slots.big.push({ cx: 116.5, cy: F + 1.8, z: SWZ, face: 'n', h: 0.9, frame: null });
   for (const x of [106.35, 105.55, 103.55, 101.0]) slots.small.push({ cx: x, cy: (x < ST.xTop ? U : stairH(x)) + 1.4, z: SWZ, face: 'n', h: 0.42, maxW: 0.5 });
   for (const s of [-1, 1]) for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) {
     slots.small.push({ cx: GP.x + s * 0.1, cz: GP.z0 + 0.55 + c * ((GP.z1 - GP.z0 - 1.1) / 4), cy: F + (r ? 1.12 : 1.78) + (c % 2 ? 0.04 : -0.03), face: s > 0 ? 'px' : 'nx', h: 0.42, maxW: 0.6 });
   }
   // upstairs (only used when the pack has more than fits downstairs)
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) slots.small.push({ cx: 101.6 + c * 0.98, cy: U + (r ? 1.75 : 2.5), z: SWZ, face: 'n', h: 0.42, maxW: 0.6, up: true });
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) slots.small.push({ cz: 44.9 + c * 0.82, cx: X0 + T + 0.03, cy: U + (r ? 1.45 : 2.3), face: 'px', h: 0.42, maxW: 0.6, up: true });
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) slots.small.push({ cx: 101.7 + c * 0.95, cy: U + (r ? 1.75 : 2.5), z: SWZ, face: 'n', h: 0.42, maxW: 0.6, up: true });
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) slots.small.push({ cx: 106.9 + c * 1.12, cy: U + (r ? 1.4 : 2.35), z: SWZ, face: 'n', h: 0.5, maxW: 0.7, up: true });   // high on the void's wall
   const hang = [];
   const bigs = art.filter(isBig), smalls = art.filter((a) => !isBig(a));
-  bigs.forEach((a, i) => { if (slots.big[i]) hang.push({ a, ...slots.big[i] }); else smalls.push(a); });
+  // the void's tall wall takes the widest painting (her horses), the others keep their places
+  const wide = bigs.reduce((m, a) => (!m || a.w / a.h > m.w / m.h ? a : m), null);
+  const order = wide ? [...bigs.filter((a) => a !== wide).slice(0, 2), wide, ...bigs.filter((a) => a !== wide).slice(2)] : bigs;
+  order.forEach((a, i) => { if (slots.big[i]) hang.push({ a, ...slots.big[i] }); else smalls.push(a); });
   const FRAMES = [0x1d1d1d, 0xf4f0e8, 0x8a6240];
   smalls.forEach((a, i) => { if (slots.small[i]) hang.push({ a, ...slots.small[i], frame: slots.small[i].frame ?? FRAMES[i % 3] }); });
   const loader = new THREE.TextureLoader();
@@ -876,31 +897,23 @@ export function buildStudio(M, pack) {
     loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
     interact.push({ kind: 'art', label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.1, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], r: 1.8 });
   }
-  // her poems: a wall of them in the atelier (its west wall, either side of the terrace door), each framed
-  // behind glass under a little brass light. Hindi ones are set in Devanagari (Noto Serif Devanagari, loaded
-  // below; the frames are redrawn once it has arrived).
+  // her poems: a wall of them along the atelier's east wall (over the flat files), each framed behind glass under
+  // a little brass light; Hindi ones set in Devanagari
   const poems = (pack && pack.poems) || [];
   const poemTexs = [];
-  const wallX = UX1 - T - 0.03;
-  const runs = [[41.75, 45.6], [47.85, 50.6]];                       // wall either side of the door (the desk sits under the second)
-  const perRun = [Math.ceil(poems.length / 2), Math.floor(poems.length / 2)];
-  let pi = 0;
-  runs.forEach(([z0, z1], ri) => {
-    const n = perRun[ri];
-    if (!n) return;
-    const w = Math.min(0.62, (z1 - z0 - 0.2 * (n - 1)) / n), gap = (z1 - z0 - n * w) / Math.max(1, n - 1);
-    for (let k = 0; k < n; k++, pi++) {
-      const poem = poems[pi], lines = poem.stanzas.reduce((m, st) => m + st.length, 0) + poem.stanzas.length;
-      const h = Math.max(0.62, Math.min(1.25, 0.32 + lines * 0.042));
-      const tex = poemTexture(poem, w / h); poemTexs.push(tex);
-      const mesh = paintingMesh(w, h, 0xf4f0e8, tex, { glazed: true });
-      const cz = n === 1 ? (z0 + z1) / 2 : z0 + w / 2 + k * (w + gap), cy = U + 1.62;
-      mesh.position.set(wallX, cy, cz); mesh.rotation.y = -Math.PI / 2;
-      group.add(mesh);
-      parts.box('brass', wallX - 0.12, cy + h / 2 + 0.1, cz - w * 0.3, wallX, cy + h / 2 + 0.14, cz + w * 0.3, 0xb08d57);
-      parts.box('glow', wallX - 0.1, cy + h / 2 + 0.095, cz - w * 0.28, wallX - 0.07, cy + h / 2 + 0.1, cz + w * 0.28, 0xffffff);
-      interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [-1, 0], r: 2.0 });
-    }
+  const wallX = X0 + T + 0.03, PZ = [41.75, 48.45];
+  const n = poems.length, pw = n ? Math.min(0.62, (PZ[1] - PZ[0] - 0.18 * (n - 1)) / n) : 0, pgap = n > 1 ? (PZ[1] - PZ[0] - n * pw) / (n - 1) : 0;
+  poems.forEach((poem, pi) => {
+    const lines = poem.stanzas.reduce((m, st) => m + st.length, 0) + poem.stanzas.length;
+    const h = Math.max(0.62, Math.min(1.25, 0.32 + lines * 0.042));
+    const tex = poemTexture(poem, pw / h); poemTexs.push(tex);
+    const mesh = paintingMesh(pw, h, 0xf4f0e8, tex, { glazed: true });
+    const cz = n === 1 ? (PZ[0] + PZ[1]) / 2 : PZ[0] + pw / 2 + pi * (pw + pgap), cy = U + 1.66;
+    mesh.position.set(wallX, cy, cz); mesh.rotation.y = Math.PI / 2;
+    group.add(mesh);
+    parts.box('brass', wallX, cy + h / 2 + 0.1, cz - pw * 0.3, wallX + 0.12, cy + h / 2 + 0.14, cz + pw * 0.3, 0xb08d57);
+    parts.box('glow', wallX + 0.07, cy + h / 2 + 0.095, cz - pw * 0.28, wallX + 0.1, cy + h / 2 + 0.1, cz + pw * 0.28, 0xffffff);
+    interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [1, 0], r: 2.0 });
   });
   fontsReady.then(() => { for (const t of poemTexs) t.userData.redraw(); });
   // a mood board on the atelier's south wall: her photographs pinned to cork
@@ -923,7 +936,7 @@ export function buildStudio(M, pack) {
   for (const m of parts.meshes(mats)) group.add(m);
 
   // lights after dark: the lounge, a wash on the front, the gallery, the atelier, the terrace
-  const lights = [[104.8, F + 2.7, 46.8, 14, 10], [106.5, F + 2.4, Z0 - 2.2, 9, 5], [112.7, F + 2.6, 45.4, 10, 7], [102.8, U + 2.5, 46.4, 12, 11], [113.1, U + 2.4, 45.7, 10, 6]].map(([x, y, z, range, i]) => {
+  const lights = [[109.3, F + 3.6, 46.6, 16, 14], [109.5, F + 2.4, Z0 - 2.2, 10, 5], [116.5, F + 2.9, 45.4, 10, 7], [102.4, U + 2.5, 46.2, 12, 11], [117.1, U + 2.4, 45.6, 10, 6]].map(([x, y, z, range, i]) => {
     const l = new THREE.PointLight(0xffc98f, 0, range, 2); l.position.set(x, y, z); l.userData.on = i; group.add(l); return l;
   });
 
@@ -946,7 +959,7 @@ export function buildStudio(M, pack) {
       turntable.led.material.emissiveIntensity = playing ? 2 : 0;
     },
     entry: { x: 99.0, z: 37.2 },          // on the boardwalk, facing the steps
-    upper: U, terraceX: UX1,
+    upper: U, terraceX: VX,
   };
 }
 

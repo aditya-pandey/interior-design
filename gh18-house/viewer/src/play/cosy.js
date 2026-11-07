@@ -59,24 +59,25 @@ export function buildCosy({ time, anchors = {} }) {
   group.add(candleLight, diyaLight);
 
   // ---- curtains: sheer linen, gathered either side of each glass bay, hanging from a rod
-  const U = F + 3.4, UX1 = 107;
+  const U = F + 3.9, UX1 = 106, GH = 3.4;                 // (upstairs floor, the atelier's west edge, ground-floor curtain drop)
   const sheers = {};
   const sheerAt = (y0) => sheers[y0] ||= (() => {
     const m = new THREE.MeshPhysicalMaterial({ color: 0xf6f1e7, roughness: 0.9, transparent: true, opacity: 0.62, side: THREE.DoubleSide, sheen: 0.6, sheenColor: 0xffffff, depthWrite: false });
     m.onBeforeCompile = (sh) => {
       sh.uniforms.uTime = time;
       sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-        float hang = clamp((${(y0 + 2.9).toFixed(2)} - position.y) / 2.8, 0.0, 1.0);
+        float hang = clamp((${(y0 + (y0 === F ? GH : 2.85) + 0.05).toFixed(2)} - position.y) / 2.8, 0.0, 1.0);
         transformed += normal * sin(uTime * 1.3 + position.x * 1.7 + position.z * 1.9 + position.y * 0.8) * 0.035 * hang * hang;`);
     };
     m.customProgramCacheKey = () => 'gh18-sheer-' + y0;
     return m;
   })();
   const curtain = (ax, az, bx, bz, folds, y0 = F) => {
-    const L = Math.hypot(bx - ax, bz - az), g = new THREE.PlaneGeometry(L, 2.85, folds * 6, 8), p = g.attributes.position;
+    const ch = y0 === F ? GH : 2.85;
+    const L = Math.hypot(bx - ax, bz - az), g = new THREE.PlaneGeometry(L, ch, folds * 6, 8), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin((p.getX(i) / L) * folds * Math.PI * 2) * 0.05);
     g.computeVertexNormals();
-    g.rotateY(-Math.atan2(bz - az, bx - ax)); g.translate((ax + bx) / 2, y0 + 1.47, (az + bz) / 2);
+    g.rotateY(-Math.atan2(bz - az, bx - ax)); g.translate((ax + bx) / 2, y0 + ch / 2 + 0.045, (az + bz) / 2);
     const m = new THREE.Mesh(g, sheerAt(y0)); m.renderOrder = 3; group.add(m);
   };
   const ci = 0.16;                                         // inside the glass
@@ -89,7 +90,7 @@ export function buildCosy({ time, anchors = {} }) {
   curtain(UX1 - 1.5, Z1 - ci, UX1 - 0.4, Z1 - ci, 3, U);
   for (const [ax, az, bx, bz, y] of [[X0 + 0.5, Z1 - ci, X1 - 0.2, Z1 - ci, F], [X1 - ci, Z0 + 0.3, X1 - ci, Z1 - 0.2, F], [X0 + 0.3, Z1 - ci, UX1 - 0.3, Z1 - ci, U]]) {
     const L = Math.hypot(bx - ax, bz - az), rod = new THREE.CylinderGeometry(0.012, 0.012, L, 8);
-    rod.rotateZ(Math.PI / 2); rod.rotateY(-Math.atan2(bz - az, bx - ax)); rod.translate((ax + bx) / 2, y + 2.92, (az + bz) / 2); add(rod, brass, false);
+    rod.rotateZ(Math.PI / 2); rod.rotateY(-Math.atan2(bz - az, bx - ax)); rod.translate((ax + bx) / 2, y + (y === F ? GH + 0.07 : 2.92), (az + bz) / 2); add(rod, brass, false);
   }
 
   // ---- plants: a hanging pothos (north-west corner) and a monstera by the door
