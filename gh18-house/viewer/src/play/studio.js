@@ -923,7 +923,7 @@ export function buildStudio(M, pack) {
       if (!png) setTimeout(() => addImpasto(canvasMat, tex.image), 50 + Math.random() * 1500);
     });
     if (png) { canvasMat.transparent = false; canvasMat.alphaTest = 0.4; }
-    interact.push({ kind: 'art', index: art.indexOf(a), label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], size: [w, h], r: 1.9 });
+    interact.push({ kind: 'art', index: art.indexOf(a), label: 'Look at the painting', url: base + a.file, pos: [mesh.position.x, p.cy, mesh.position.z], normal: NORMAL[p.face], size: [w, h], px: [a.w, a.h], mesh, r: 1.9 });
     if (p.light) {                                                              // a brass picture light
       parts.box('brass', p.cx - w * 0.3, p.cy + h / 2 + 0.12, SWZ, p.cx + w * 0.3, p.cy + h / 2 + 0.17, SWZ + 0.12, 0xb08d57);
       parts.box('glow', p.cx - w * 0.28, p.cy + h / 2 + 0.115, SWZ + 0.08, p.cx + w * 0.28, p.cy + h / 2 + 0.122, SWZ + 0.11, 0xffffff);
@@ -938,7 +938,7 @@ export function buildStudio(M, pack) {
     mesh.rotation.set(-0.12, easel.rot, 0, 'YXZ');
     group.add(mesh);
     loader.load(base + easelPick.file, (tex) => { tex.colorSpace = THREE.SRGBColorSpace; mesh.userData.canvas.map = tex; mesh.userData.canvas.color.set(0xffffff); mesh.userData.canvas.needsUpdate = true; addImpasto(mesh.userData.canvas, tex.image); });
-    interact.push({ kind: 'art', index: art.indexOf(easelPick), label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.12, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], size: [w, h], r: 1.8 });
+    interact.push({ kind: 'art', index: art.indexOf(easelPick), label: 'Look at the canvas', url: base + easelPick.file, pos: [mesh.position.x, U + 1.12, mesh.position.z], normal: [Math.sin(easel.rot), Math.cos(easel.rot)], size: [w, h], px: [easelPick.w, easelPick.h], mesh, tilt: -0.12, r: 1.8 });
   }
   // her poems: a wall of them along the atelier's east wall (over the flat files), each framed behind glass under
   // a little brass light; Hindi ones set in Devanagari

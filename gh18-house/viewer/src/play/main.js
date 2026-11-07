@@ -164,7 +164,8 @@ async function init() {
   const awake = () => { state.overlay = false; hudTimer = 0; document.body.classList.remove('viewing'); };
   reader = createEReader({ pack, camera, scene, clockLabel: () => fmtClock(state.clock.h), onOpen: quiet, onClose: awake });
   const artworks = studio.interact.filter((it) => it.kind === 'art' && it.size && it.index >= 0);
-  artView = createArtView({ camera, canvas: renderer.domElement, artworks, total: pack?.art?.length || artworks.length, veil: document.getElementById('veil'), onStart: quiet, onEnd: awake });
+  artView = createArtView({ camera, canvas: renderer.domElement, scene, artworks, meta: pack?.art || [], total: pack?.art?.length || artworks.length, veil: document.getElementById('veil'), onStart: quiet, onEnd: awake,
+    onSlideshow: (on) => { if (on && music && !music.playing) { music.play(); updateMusicUI(); } } });
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
   scene.add(billboards.group);

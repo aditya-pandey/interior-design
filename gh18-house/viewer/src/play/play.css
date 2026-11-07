@@ -196,19 +196,31 @@ body.touring #prompt { display: none; }
 /* ---------------------------------------------------------------- reading and looking (ereader.js, artview.js) */
 #hud, #prompt, #music { transition: opacity 0.4s ease; }
 body.viewing #hud, body.viewing #prompt, body.viewing #music, body.viewing #toast { opacity: 0; pointer-events: none; }
-#artcap { position: fixed; left: max(28px, env(safe-area-inset-left)); bottom: max(26px, env(safe-area-inset-bottom)); z-index: 16; color: #f6efe3; pointer-events: none;
-  opacity: 0; transform: translateY(8px); transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55); }
+#artcap { position: fixed; left: max(28px, env(safe-area-inset-left)); bottom: max(26px, env(safe-area-inset-bottom)); z-index: 16; color: #f6efe3; pointer-events: none; max-width: min(420px, 80vw);
+  opacity: 0; transform: translateY(8px); transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 18px rgba(0, 0, 0, 0.6); }
 #artcap[hidden] { display: none; }
 #artcap.in { opacity: 1; transform: none; }
 #artcap p { margin: 0; }
-#artcap .t { font: italic 400 26px 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.01em; }
-#artcap .n { font: 600 12px Inter, sans-serif; letter-spacing: 0.22em; margin-top: 6px; color: #e3c48f; }
+#artcap p[hidden] { display: none; }
+#artcap .label { border-left: 2px solid #e3c48f; padding: 2px 0 2px 14px; }
+#artcap .t { font: italic 400 27px/1.15 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.01em; }
+#artcap .by { font: 600 11px Inter, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 6px; color: #e3c48f; }
+#artcap .md { font: 500 12.5px Inter, sans-serif; margin-top: 4px; color: rgba(246, 239, 227, 0.8); }
+#artcap .note { font: italic 400 17px/1.35 'Cormorant Garamond', Georgia, serif; margin-top: 8px; color: rgba(246, 239, 227, 0.9); }
+#artcap .n { font: 600 12px Inter, sans-serif; letter-spacing: 0.22em; margin: 10px 0 0 16px; color: #e3c48f; }
 #artcap .n span { color: rgba(246, 239, 227, 0.6); }
-#artcap .k { display: flex; gap: 18px; margin-top: 14px; font: 500 12px Inter, sans-serif; color: rgba(246, 239, 227, 0.75); opacity: 0; transition: opacity 0.8s ease; }
+#artcap .k { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0 16px; font: 500 12px Inter, sans-serif; color: rgba(246, 239, 227, 0.75); opacity: 0; transition: opacity 0.8s ease; }
 #artcap.hints .k { opacity: 1; }
+#artcap .wallhint { display: none; margin: 12px 0 0 16px; font: 500 12.5px Inter, sans-serif; color: rgba(246, 239, 227, 0.85); }
+#artcap.wall .wallhint { display: block; }
+#artcap.wall .label, #artcap.wall .n, #artcap.wall .k { display: none; }
 #artcap kbd { display: inline-block; min-width: 20px; padding: 1px 5px; margin-right: 3px; border: 1px solid rgba(246, 239, 227, 0.35); border-radius: 5px; font: 600 11px Inter, sans-serif; text-align: center; }
-#artcap .back { display: none; pointer-events: auto; margin-top: 14px; font: 600 13px Inter, sans-serif; color: #f6efe3; background: rgba(20, 16, 12, 0.45); border: 1px solid rgba(246, 239, 227, 0.3); border-radius: 999px; padding: 8px 16px; backdrop-filter: blur(6px); }
+#artcap .back { display: none; pointer-events: auto; margin: 14px 0 0 16px; font: 600 13px Inter, sans-serif; color: #f6efe3; background: rgba(20, 16, 12, 0.45); border: 1px solid rgba(246, 239, 227, 0.3); border-radius: 999px; padding: 8px 16px; backdrop-filter: blur(6px); }
 @media (hover: none) { #artcap .k { display: none; } #artcap .back { display: inline-block; } }
+/* the room falls away round the painting */
+body::after { content: ''; position: fixed; inset: 0; z-index: 9; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+  background: radial-gradient(ellipse 62% 70% at 50% 48%, rgba(8, 6, 4, 0) 55%, rgba(8, 6, 4, 0.55) 100%); }
+body.looking::after { opacity: 1; }
 #readhint { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 16; transform: translate(-50%, 6px); display: flex; gap: 20px; align-items: center;
   font: 500 12px Inter, sans-serif; color: rgba(246, 239, 227, 0.8); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; white-space: nowrap; }
 #readhint[hidden] { display: none; }
