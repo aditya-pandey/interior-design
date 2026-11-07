@@ -24,6 +24,8 @@ import { Ambience, measureSfx } from './ambience.js';
 import { buildCosy } from './cosy.js';
 import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
+import { buildCourt } from './court.js';
+import { buildHouseLife } from './houselife.js';
 import { ChaseCam, headMotion } from './chasecam.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
@@ -115,7 +117,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio;
+let billboards, roomAudio, court, houseLife;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -156,6 +158,10 @@ async function init() {
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
   scene.add(billboards.group);
+  court = buildCourt();
+  scene.add(court.group);
+  houseLife = buildHouseLife({ house, rooms: ROOMS, pack });
+  scene.add(houseLife.group);
   scene.add(cosy.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
@@ -181,18 +187,18 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...court.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
   walkData = {
-    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders],
-    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces],
+    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders, ...court.walk.colliders],
+    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces],
     stair: data.stair, levels: data.levels,
   };
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
   walker = new FootWalker(head, renderer.domElement, walkData);
-  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces];
+  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces];
   for (const c of walkData.colliders) c.bb = c.bb || bbOf(c.poly);
   // sitting and lying down in the house
   seatSpots = houseSeats(house).map((s) => {
@@ -353,7 +359,7 @@ class FootWalker extends Walker {
 const ROOMS = house.floors.flatMap((f) => f.rooms.filter((r) => r.polygon && !['OTS', 'Lift'].includes(r.name)).map((r) => {
   const xs = r.polygon.map((q) => q[0]), ys = r.polygon.map((q) => q[1]);
   const at = r.label_at || [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
-  return { floor: f.id, ffl: house.levels[f.id].ffl / 1000, name: r.name, poly: r.polygon, at };
+  return { id: r.id, floor: f.id, ffl: house.levels[f.id].ffl / 1000, name: r.name, poly: r.polygon, at, finish: String(r.floor || '') };
 }));
 // the doorways (for door assist): centre, the wall's normal and along-vector, half-width, floor level
 const DOORWAYS = house.floors.flatMap((f) => f.walls.filter((w) => w.a && w.b).flatMap((w) => {
@@ -372,6 +378,7 @@ function roomAt(x, z, foot) {
 }
 let roomNow = null;
 function updateRoomChip() {
+  if (state.rally) return;
   const r = state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null;
   const label = r ? (r.name === houseFloor(walker.foot).name ? r.name : `${r.name} · ${houseFloor(walker.foot).id}`) : null;
   if (label === roomNow) return;
@@ -467,6 +474,7 @@ function applyTime(t, regen = true) {
   beach.materials.lamp.emissiveIntensity = t.lamps;
   studio.setNight(t.glow > 0.3);
   billboards?.setNight(t.glow > 0.3);
+  court?.setNight(t.glow > 0.3);
   if (DASH.mat) DASH.mat.emissiveIntensity = t.glow > 0.3 ? 0.9 : 0.12;     // the gauges and screen glow after dark
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
   // the sea's own light: the sky's colour on the water body
@@ -628,12 +636,14 @@ function bindUI() {
     if (e.code === 'F3') { e.preventDefault(); dev.toggleOverlay(); return; }
     if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
     if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
+    if (state.rally && (e.code === 'Space' || e.code === 'Escape')) { e.preventDefault(); if (e.code === 'Space') court.game.swing(); else stopRally(); return; }
     if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
     const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   });
+  renderer.domElement.addEventListener('pointerdown', () => { if (state.rally) court.game.swing(); });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'KeyH') horn(false); });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; horn(false); });
   // the menu: ☰ (or Tab) opens it; a click outside or Escape closes it
@@ -651,7 +661,7 @@ function bindUI() {
       b.addEventListener('pointerdown', () => horn(true));
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => horn(false));
     } else {
-      b.addEventListener('click', () => ({ musiczone: cycleMusicZone, aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
+      b.addEventListener('click', () => ({ goto: showGoTo, musiczone: cycleMusicZone, aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
     }
   }
   for (const b of document.querySelectorAll('#touch button')) {
@@ -813,7 +823,7 @@ function findFocus() {
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...seatSpots] : seatSpots) {
+  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -833,6 +843,10 @@ function interact() {
   if (it.kind === 'poem') return showPoem(pack.poems[it.index]);
   if (it.kind === 'art') return showArt(it.url);
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
+  if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
+  if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
+  if (it.kind === 'chai') { houseLife.makeChai(); flash('Putting the chai on…'); return; }
+  if (it.kind === 'lift') return showLift(it.floor);
   if (it.kind === 'lounger') return lieDown(it.seat);
   if (it.kind === 'album') return showAlbum();
 }
@@ -882,7 +896,7 @@ function inHouse(x, z) { return x > 0 && x < 9.4 && z > 0 && z < 22.3; }
 function inStudio(x, z) { return x > STUDIO.x0 - 1 && x < STUDIO.x0 + STUDIO.w + 1 && z > STUDIO.z0 - 1.2 && z < STUDIO.z0 + STUDIO.d + 2.6; }
 function groundUnderfoot() {
   const x = head.position.x, z = head.position.z, f = walker.foot;
-  if (inHouse(x, z) && f > 0.3) return 'tile';
+  if (inHouse(x, z) && f > 0.3) { const r = roomAt(x, z, f); return /wood|oak|laminate|deck/i.test(r?.finish || '') ? 'wood' : 'tile'; }
   if (inStudio(x, z) && f > 0.4) return 'wood';
   if (f > 0.08 && f < 0.2) return 'wood';                     // the boardwalk
   const surf = surfaceAt(x, z);
@@ -998,6 +1012,72 @@ function cycleMusicZone() {
   flash(roomAudio.mode === 'all' ? 'Music everywhere' : `Music in this room${roomAudio.here ? ' · ' + roomAudio.here.name : ''}`);
   updateMusicUI();
 }
+// the lift: choose a floor; the doors, a hum, a chime, and she steps out there
+const FLOOR_NAME = { GF: 'Ground', FF: 'First', SF: 'Second' };
+function showLift(from) {
+  const btns = ['SF', 'FF', 'GF'].map((f) => `<button data-f="${f}"${f === from ? ' class="here"' : ''}>${{ GF: 'G', FF: '1', SF: '2' }[f]}<small>${FLOOR_NAME[f]}</small></button>`).join('');
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="lift"><h3>Lift</h3><div class="pad">${btns}</div></div>`, 'paper');
+  for (const b of document.querySelectorAll('#overlay .lift button')) b.addEventListener('click', () => rideLift(from, b.dataset.f));
+}
+function rideLift(from, to) {
+  closeOverlay();
+  const d = houseLife.liftDoors.find((q) => q.floor === to);
+  if (!d || from === to) return;
+  const veil = document.getElementById('veil') || Object.assign(document.body.appendChild(document.createElement('div')), { id: 'veil' });
+  veil.classList.add('on');
+  setTimeout(() => {
+    placeHer(d.x + d.nx * 0.9, d.z + d.nz * 0.9, Math.atan2(d.nx, d.nz), d.y);
+    houseLife.chime(audio?.ctx, audio?.master);
+    veil.classList.remove('on'); flash(`${FLOOR_NAME[to]} floor`);
+  }, 1600);
+}
+// go to: any room of the house, the studio, the court
+function showGoTo() {
+  const fl = ['GF', 'FF', 'SF'].map((f) => `<section><h4>${FLOORS.find((q) => q.id === f).name}</h4>${ROOMS.filter((r) => r.floor === f && !/Toilet|Washroom|Store|Storage|Utility|Lobby/.test(r.name)).map((r) => `<button data-room="${esc(r.id || r.name)}">${esc(r.name)}</button>`).join('')}</section>`).join('');
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto"><h3>Go to</h3>${fl}<section><h4>Outside</h4><button data-place="studio">Deepti's Studio</button><button data-place="court">The court</button><button data-place="home">The gate</button></section></div>`, 'paper');
+  for (const b of document.querySelectorAll('#overlay .goto button')) b.addEventListener('click', () => {
+    closeOverlay();
+    if (state.mode === 'drive') { exitCar(); if (state.mode === 'drive') return; }
+    getUp();
+    if (b.dataset.place === 'studio') return placeHer(studio.entry.x, studio.entry.z, 0, 0.12);
+    if (b.dataset.place === 'court') return placeHer(124.6, 39.6, Math.PI / 2, court.Y);
+    if (b.dataset.place === 'home') return placeHer(4.6, 23.6, Math.PI);
+    const r = ROOMS.find((q) => (q.id || q.name) === b.dataset.room);
+    if (r) { placeHer(r.at[0] / 1000, r.at[1] / 1000, 0, r.ffl); flash(r.name); }
+  });
+}
+
+// the badminton rally: E at the court's bench; Space or a click swings; Esc (or walking off the court) stops
+function startRally() {
+  state.rally = true; court.game.start();
+  flash('Rally · Space or click to swing · look up to lob · Esc to stop');
+}
+function stopRally() {
+  state.rally = false; court.game.stop(); roomNow = null; updateRoomChip();
+}
+function rallyTick(dt) {
+  const ev = court.game.update(dt, head.position, orb.yaw, orb.pitch);
+  for (const e of ev) {
+    if (e === 'hit') thwack();
+    if (e.startsWith('end:')) {
+      const n = court.game.count, why = e.slice(4);
+      flash({ net: 'Into the net', missed: 'Missed it', out: 'Out', out_theirs: 'Theirs went out', winner: 'A winner!' }[why] + ` · rally ${n}`);
+    }
+  }
+  const chip = document.getElementById('room-chip');
+  chip.hidden = false; chip.querySelector('.val').textContent = `Rally ${court.game.count} · Best ${court.game.best}`; roomNow = '__rally';
+  if (Math.hypot(head.position.x - 131, head.position.z - 41.7) > 12 || state.mode !== 'foot') stopRally();
+}
+function thwack() {
+  const ctx = audio?.ctx; if (!ctx || !state.sound) return;
+  const b = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.008));
+  const src = ctx.createBufferSource(); src.buffer = b;
+  const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.4;
+  const g = ctx.createGain(); g.gain.value = 0.5;
+  src.connect(f).connect(g).connect(audio.master); src.start();
+}
+
 // the house's rooms as music zones: a ceiling speaker in each
 function houseZones() {
   const geo = new THREE.CylinderGeometry(0.1, 0.1, 0.014, 24), mat = new THREE.MeshStandardMaterial({ color: 0xece9e3, roughness: 0.6 });
@@ -1258,6 +1338,9 @@ function frame(dt = 1 / 60, show = true) {
   clouds.update(clock, camera, skyLight);
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
+  court.update(clock);
+  if (houseLife.update(clock, dt, { x: head.position.x, z: head.position.z, foot: walker.foot, room: state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null, night: (state.glow || 0) > 0.3, ctx: audio?.ctx, out: audio?.master, indoors: isIndoors() })) flash('Chai’s ready ☕');
+  if (state.rally) rallyTick(dt);
   if (roomAudio) music.setLevel(roomAudio.update(dt, camera, { playing: music.playing, inCar: state.mode === 'drive', foot: walker?.foot ?? 0 }));
   studio.update(clock, !!music?.playing || state.recordDemo);
   spray.update(clock, sun, waterAmb);
@@ -1370,7 +1453,7 @@ window.play = {
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court }),
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
   dev: () => dev,
   sound: () => ({ audio, ambience, measureSfx }),
