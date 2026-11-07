@@ -216,3 +216,31 @@ body.viewing #hud, body.viewing #prompt, body.viewing #music, body.viewing #toas
 #readhint kbd { display: inline-block; min-width: 20px; padding: 1px 5px; margin-right: 3px; border: 1px solid rgba(246, 239, 227, 0.35); border-radius: 5px; font: 600 11px Inter, sans-serif; text-align: center; }
 #readhint button { display: none; font: 600 13px Inter, sans-serif; color: #f6efe3; background: rgba(20, 16, 12, 0.5); border: 1px solid rgba(246, 239, 227, 0.3); border-radius: 999px; padding: 8px 16px; }
 @media (hover: none) { #readhint span { display: none; } #readhint button { display: inline-block; } #readhint { opacity: 1; } }
+
+/* ---------------------------------------------------------------- badminton (badminton.js) */
+#bm { position: fixed; inset: 0; z-index: 16; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; font-family: Inter, sans-serif; color: #f7f1e6; }
+#bm[hidden] { display: none; }
+#bm.in { opacity: 1; }
+.bm-score { position: absolute; top: max(18px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+  padding: 9px 20px; border-radius: 999px; background: rgba(16, 14, 12, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.12); white-space: nowrap; }
+.bm-score .who, .bm-score .lbl { font: 600 11px Inter, sans-serif; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(247, 241, 230, 0.75); position: relative; }
+.bm-score .who.srv::before { content: ''; position: absolute; left: -11px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: #e9c27a; box-shadow: 0 0 8px #e9c27a; }
+.bm-score .who.srv:last-child::before { left: auto; right: -11px; }
+.bm-score b { font: 600 21px/1 Inter, sans-serif; font-variant-numeric: tabular-nums; min-width: 22px; text-align: center; }
+.bm-score .sep { color: rgba(247, 241, 230, 0.45); }
+.bm-score .sep:empty { width: 14px; }
+.bm-call { position: absolute; left: 50%; top: 30%; transform: translate(-50%, 10px) scale(0.96); font: italic 400 46px 'Cormorant Garamond', Georgia, serif; text-shadow: 0 2px 22px rgba(0, 0, 0, 0.6);
+  opacity: 0; transition: opacity 0.25s ease, transform 0.35s cubic-bezier(.2, .8, .2, 1); white-space: nowrap; }
+.bm-call.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.bm-call.gold { color: #f3cf86; }
+.bm-call.soft { font-size: 34px; color: rgba(247, 241, 230, 0.9); }
+.bm-call.title { font-size: 54px; }
+.bm-call.big { font-size: 58px; top: 34%; }
+.bm-help { position: absolute; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translate(-50%, 8px); text-align: center; opacity: 0; transition: opacity 0.6s ease, transform 0.6s ease;
+  background: rgba(16, 14, 12, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 12px 20px; max-width: min(720px, 92vw); }
+.bm-help.show { opacity: 1; transform: translate(-50%, 0); }
+.bm-help p { margin: 4px 0; font: 500 12.5px/1.5 Inter, sans-serif; color: rgba(247, 241, 230, 0.88); }
+.bm-help kbd { display: inline-block; min-width: 18px; padding: 1px 5px; margin: 0 1px; border: 1px solid rgba(247, 241, 230, 0.35); border-radius: 5px; font: 600 11px Inter, sans-serif; text-align: center; }
+.bm-stop { position: absolute; right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); pointer-events: auto; font: 600 13px Inter, sans-serif; color: #f7f1e6;
+  background: rgba(16, 14, 12, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px; padding: 8px 16px; cursor: pointer; backdrop-filter: blur(8px); }
+@media (max-width: 600px) { .bm-call { font-size: 34px; } .bm-call.big { font-size: 38px; } .bm-help p:nth-child(3) { display: none; } }

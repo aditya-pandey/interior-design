@@ -650,14 +650,31 @@ function bindUI() {
     if (e.code === 'F3') { e.preventDefault(); dev.toggleOverlay(); return; }
     if (e.code === 'F4') { e.preventDefault(); const r = dev.toggleRecord(); flash(r ? `Saved the recording (${(r.steps / 240).toFixed(1)} s)` : 'Recording your driving · F4 to stop'); return; }
     if (e.code === 'F6') { e.preventDefault(); if (!dev.replayLast()) flash('No recording yet (F4 to record, or drop a file here)'); return; }
-    if (state.rally && (e.code === 'Space' || e.code === 'Escape')) { e.preventDefault(); if (e.code === 'Space') court.game.swing(); else stopRally(); return; }
+    if (state.rally) {
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); court.game.press({ drop: e.shiftKey }); }
+      else if (e.code === 'Escape' || e.code === 'KeyE') stopRally();
+      else if (e.code === 'KeyR') court.game.start(court.game.mode === 'game' ? 'rally' : 'game');
+      if (e.code.startsWith('Arrow')) e.preventDefault();
+      return;
+    }
     if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
     const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   });
-  renderer.domElement.addEventListener('pointerdown', () => { if (state.rally) court.game.swing(); });
+  // badminton: the pointer aims on the far court; a click (or a tap: there) swings
+  const courtPoint = (e) => {
+    const r = renderer.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
+    ray.setFromCamera({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }, camera);
+    const p = new THREE.Vector3(); return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -court.Y), p) ? p : null;
+  };
+  renderer.domElement.addEventListener('pointermove', (e) => { if (state.rally && e.pointerType === 'mouse') court.game.aimFromScreen(courtPoint(e)); });
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (!state.rally) return;
+    const p = courtPoint(e); court.game.aimFromScreen(p);
+    court.game.press({ drop: e.shiftKey || (e.pointerType !== 'mouse' && p && p.z < 41.7 + 2.2) });
+  });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'KeyH') horn(false); });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; horn(false); });
   // the menu: ☰ (or Tab) opens it; a click outside or Escape closes it
@@ -709,7 +726,7 @@ function bindUI() {
   });
   window.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
-    if (reader?.busy || artView?.active) return;
+    if (reader?.busy || artView?.active || state.rally) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.x = e.clientX; drag.y = e.clientY;
     if (state.mode === 'foot') {                 // look around
@@ -1018,7 +1035,7 @@ function bbOf(poly) {
 function updateFoot(dt) {
   // the walker moves her "head" the way she looks
   head.rotation.set(0, orb.yaw + Math.PI, 0, 'YXZ');
-  if (state.lying || state.overlay) return;
+  if (state.lying || state.overlay || state.rally) return;
   const pad = driver.pad;                      // left stick walks, as well as the on-screen buttons
   walker.stick.y = (touchKeys.gas ? 1 : 0) - (touchKeys.brake ? 1 : 0) + (pad ? -stickCurve(pad.axes[1] || 0) : 0);
   walker.stick.x = pad ? stickCurve(pad.axes[0] || 0) : 0;
@@ -1103,35 +1120,62 @@ function showGoTo() {
   });
 }
 
-// the badminton rally: E at the court's bench; Space or a click swings; Esc (or walking off the court) stops
-function startRally() {
-  state.rally = true; court.game.start();
-  flash('Rally · Space or click to swing · look up to lob · Esc to stop');
+// badminton: E at the court's bench. A game to 11 (R: a relaxed rally); the view moves behind her baseline
+function startRally(mode = 'game') {
+  const veil = document.getElementById('veil');
+  if (!court.game.sfx) { court.game.sfx = courtSound; court.game.onStop = stopRally; }
+  state.rally = true;
+  for (const k in keys) keys[k] = false;
+  for (const k in walker.keys) walker.keys[k] = false;
+  document.body.classList.add('viewing', 'playing');
+  veil?.classList.add('on');
+  if (HEADLESS) { court.game.start(mode); veil?.classList.remove('on'); } else setTimeout(() => { court.game.start(mode); veil?.classList.remove('on'); }, 380);
 }
 function stopRally() {
-  state.rally = false; court.game.stop(); roomNow = null; updateRoomChip();
+  if (!state.rally) return;
+  const veil = document.getElementById('veil');
+  veil?.classList.add('on');
+  const done = () => {
+    state.rally = false; court.game.stop(); roomNow = null; updateRoomChip();
+    document.body.classList.remove('viewing', 'playing');
+    placeHer(127.2, 37.4, Math.PI / 2 - 0.3, court.Y); placeCamera(true, 1 / 60);
+    veil?.classList.remove('on'); hudTimer = 0;
+  };
+  if (HEADLESS) done(); else setTimeout(done, 380);
 }
 function rallyTick(dt) {
-  const ev = court.game.update(dt, head.position, orb.yaw, orb.pitch);
-  for (const e of ev) {
-    if (e === 'hit') thwack();
-    if (e.startsWith('end:')) {
-      const n = court.game.count, why = e.slice(4);
-      flash({ net: 'Into the net', missed: 'Missed it', out: 'Out', out_theirs: 'Theirs went out', winner: 'A winner!' }[why] + ` · rally ${n}`);
-    }
-  }
-  const chip = document.getElementById('room-chip');
-  chip.hidden = false; chip.querySelector('.val').textContent = `Rally ${court.game.count} · Best ${court.game.best}`; roomNow = '__rally';
-  if (Math.hypot(head.position.x - 131, head.position.z - 41.7) > 12 || state.mode !== 'foot') stopRally();
+  court.game.keys = keys;
+  court.game.update(dt, camera);
 }
-function thwack() {
+// the court's sounds: the strings (crisper on a perfect hit), a smash's whoosh, the net, the shuttle landing, a point
+function courtSound(kind, o = {}) {
   const ctx = audio?.ctx; if (!ctx || !state.sound) return;
-  const b = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate), d = b.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.008));
-  const src = ctx.createBufferSource(); src.buffer = b;
-  const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.4;
-  const g = ctx.createGain(); g.gain.value = 0.5;
-  src.connect(f).connect(g).connect(audio.master); src.start();
+  const t = ctx.currentTime, out = audio.master;
+  const noise = (len, decay, f, q, gain, type = 'bandpass') => {
+    const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * decay));
+    const src = ctx.createBufferSource(); src.buffer = b;
+    const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const g = ctx.createGain(); g.gain.value = gain;
+    src.connect(fl).connect(g).connect(out); src.start(t); return { fl, g };
+  };
+  const tone = (f, at, dur, gain, type = 'sine') => {
+    const o2 = ctx.createOscillator(); o2.type = type; o2.frequency.value = f;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t + at); g.gain.linearRampToValueAtTime(gain, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
+    o2.connect(g).connect(out); o2.start(t + at); o2.stop(t + at + dur + 0.05);
+  };
+  if (kind === 'hit') {
+    const p = o.power ?? 0.6;
+    noise(0.07, 0.006 + 0.004 * (1 - p), 2000 + 1800 * p, 1.2, 0.35 + 0.45 * p);
+    tone(o.perfect ? 1180 : 760 + 300 * p, 0, 0.06, 0.05 + 0.06 * p, 'triangle');
+    if (o.perfect) tone(2360, 0.005, 0.12, 0.035);
+  } else if (kind === 'whoosh') {
+    const { fl } = noise(0.35, 0.12, 800, 0.7, 0.35); fl.frequency.setValueAtTime(600, t); fl.frequency.exponentialRampToValueAtTime(3800, t + 0.3);
+  } else if (kind === 'net') { noise(0.25, 0.05, 420, 0.8, 0.5, 'lowpass'); noise(0.18, 0.03, 1600, 3, 0.12); }
+  else if (kind === 'land') noise(0.05, 0.004, 1300, 1.5, 0.3);
+  else if (kind === 'point') { tone(784, 0.05, 0.25, 0.08); tone(1047, 0.16, 0.4, 0.08); }
+  else if (kind === 'lost') tone(392, 0.05, 0.3, 0.06);
+  else if (kind === 'won') [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.05 + i * 0.12, 0.6, 0.08));
 }
 
 // the house's rooms as music zones: a ceiling speaker in each
@@ -1428,7 +1472,7 @@ function frame(dt = 1 / 60, show = true) {
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
-  if (!state.cine && !artView?.update(dt)) placeCamera(false, dt);
+  if (!state.cine && !artView?.update(dt) && !(state.rally && court.game.placeCamera(camera, dt))) placeCamera(false, dt);
   tickClock(dt);
   let focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
   if (state.cine) { focusX = state.cine.tx; focusZ = state.cine.tz; }      // (a film shot: the sun's shadows round what the camera looks at)
@@ -1571,6 +1615,8 @@ window.play = {
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader, artView, studio }),
+  step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
+  court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)
   tick: (seconds) => { for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); },
   pick: (x, y) => { const it = pickAt(x, y); return it && { kind: it.kind, index: it.index, label: it.label }; },

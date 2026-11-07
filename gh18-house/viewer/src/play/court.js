@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { groundHeight } from './beach.js';
 import { fontsReady, SERIF, SANS } from './fonts.js';
+import { Badminton } from './badminton.js';
 
 // A badminton court on the sand west of her studio, and a rally game on it.
 //
@@ -12,14 +13,10 @@ import { fontsReady, SERIF, SANS } from './fonts.js';
 // a planted hedge on the sea (north) and west sides, four floodlights that come on at dusk, a teak bench with
 // rackets, a tube of shuttles, a towel and a water jug, a flip scoreboard. A boardwalk from the studio's deck.
 //
-// The rally: E at the bench. She plays the south half; her partner is a floating racket on the other side. The
-// shuttle flies with a shuttlecock's drag (quick off the strings, then it floats and drops: terminal speed
-// ~6.8 m/s). Space or a click swings when it's in reach; where she looks is where it goes (looking up lobs it,
-// level drives it). The rally count goes up each time it crosses the net; best kept.
+// The game (badminton.js): E at the bench. A game to 11 against a floating racket, or a relaxed rally.
 
 export const COURT = { x: 131, z: 41.7, hw: 3.05, hl: 6.70, sw: 2.59 };   // centre; doubles half-width, half-length; singles half-width
 const SLAB = { x0: 126, x1: 136, z0: 33.0, z1: 50.4 };
-const G = 9.81, K = G / (6.8 * 6.8);                                     // shuttle drag: a = -K |v| v
 
 export function buildCourt() {
   const group = new THREE.Group(); group.name = 'court';
@@ -123,7 +120,7 @@ export function buildCourt() {
   board.position.set(COURT.x + 1.6, Y + 1.7, SLAB.z0 + 0.12);                 // at the south end, facing the court
   box(COURT.x + 1.55, Y, SLAB.z0 + 0.03, COURT.x + 1.65, Y + 1.98, SLAB.z0 + 0.08, M.steel);
   box(COURT.x + 1.0, Y + 1.38, SLAB.z0 + 0.04, COURT.x + 2.2, Y + 2.0, SLAB.z0 + 0.09, M.steel);
-  interact.push({ kind: 'rally', label: 'Pick up a racket and rally', pos: [BX, Y + 0.6, BZ], r: 2.2 });
+  interact.push({ kind: 'rally', label: 'Play a game of badminton', pos: [BX, Y + 0.6, BZ], r: 2.2 });
 
   // ---- the shuttle, her partner's racket, her racket (held in view)
   const shuttle = new THREE.Group();
@@ -134,130 +131,13 @@ export function buildCourt() {
   const glow = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffe9c4, transparent: true, opacity: 0.18, depthWrite: false })); partner.add(glow);
   const mine = racketMesh.clone(); mine.visible = false; group.add(mine);
 
-  const game = new Rally({ Y, shuttle, partner, mine, onScore: (n, best) => drawScore(scoreTex, n, best) });
-  fontsReady.then(() => drawScore(scoreTex, 0, game.best));
+  const game = new Badminton({ C: COURT, Y, group, shuttle, partner, mine, drawScore: (l1, a, l2, b) => drawScore(scoreTex, l1, a, l2, b) });
+  fontsReady.then(() => drawScore(scoreTex, 'DEEPTI', 0, 'PARTNER', 0));
   return {
     group, carColliders, interact, walk: { colliders: walkColliders, surfaces: walkSurfaces }, game, Y,
     setNight(on) { M.lamp.emissiveIntensity = on ? 3 : 0; for (const l of flood) l.intensity = on ? 30 : 0; },
     update(t) { netU.uTime.value = t; },
   };
-}
-
-// ------------------------------------------------------------------ the rally
-class Rally {
-  constructor({ Y, shuttle, partner, mine, onScore }) {
-    Object.assign(this, { Y, shuttle, partner, mine, onScore });
-    this.on = false; this.p = new THREE.Vector3(); this.v = new THREE.Vector3();
-    this.count = 0; this.best = 0; this.swingT = 0; this.events = [];
-    try { this.best = +localStorage.getItem('gh18.rallyBest') || 0; } catch { /* storage off */ }
-    this.pp = new THREE.Vector3(COURT.x, Y + 1.3, COURT.z + 4);           // her partner's racket
-  }
-  start() { this.on = true; this.count = 0; this.partner.visible = true; this.mine.visible = true; this.state = 'wait'; this.timer = 1.2; this.onScore(0, this.best); }
-  stop() { this.on = false; this.shuttle.visible = false; this.partner.visible = false; this.mine.visible = false; }
-  // launch from p0 to land near the target, peaking around `apex` m above the court: searched with the drag on
-  launch(p0, tx, tz, apex) {
-    const d = new THREE.Vector3(tx - p0.x, 0, tz - p0.z), dist = d.length(); d.normalize();
-    let best = null;
-    const tryOne = (vy, vh) => {
-      const land = this.simulate(p0, d.x * vh, vy, d.z * vh);
-      const err = Math.abs(land.d - dist) * 3 + Math.abs(land.peak - (this.Y + apex)) * 0.4;
-      if (!best || err < best.err) best = { err, vh, vy };
-    };
-    for (let vy = 1; vy <= 16; vy += 1.5) for (let vh = 2; vh <= 30; vh += 2) tryOne(vy, vh);      // coarse, then fine round the best
-    const c = { ...best };
-    for (let vy = c.vy - 1.5; vy <= c.vy + 1.5; vy += 0.25) for (let vh = c.vh - 2; vh <= c.vh + 2; vh += 0.25) if (vy > 0 && vh > 0) tryOne(vy, vh);
-    this.p.copy(p0); this.v.set(d.x * best.vh, best.vy, d.z * best.vh);
-  }
-  simulate(p0, vx, vy, vz) {
-    const p = p0.clone(), v = new THREE.Vector3(vx, vy, vz), dt = 1 / 60; let peak = p.y;
-    for (let i = 0; i < 600 && p.y > this.Y; i++) { const s = v.length(); v.x -= K * s * v.x * dt; v.z -= K * s * v.z * dt; v.y -= (G + K * s * v.y) * dt; p.addScaledVector(v, dt); peak = Math.max(peak, p.y); }
-    return { d: Math.hypot(p.x - p0.x, p.z - p0.z), peak };
-  }
-  swing() { if (this.on && this.swingT <= 0) { this.swingT = 0.35; this.wantHit = true; } }
-  // her: head position, view yaw (0 = +z) and pitch (+ = looking down in this game's convention)
-  update(dt, head, yaw, pitch) {
-    this.events.length = 0;
-    if (!this.on) return this.events;
-    const Y = this.Y;
-    this.swingT = Math.max(0, this.swingT - dt);
-    // her racket, in view: lower right, swinging through when she swings
-    const sw = this.swingT > 0 ? Math.sin((1 - this.swingT / 0.35) * Math.PI) : 0;
-    const fx = Math.sin(yaw), fz = Math.cos(yaw), rx = -fz, rz = fx;
-    this.mine.position.set(head.x + fx * 0.55 + rx * (0.32 - sw * 0.5), head.y - 0.32 + sw * 0.35, head.z + fz * 0.55 + rz * (0.32 - sw * 0.5));
-    this.mine.rotation.set(-0.3 - sw * 1.2, yaw + Math.PI, 0.6 - sw * 1.4, 'YXZ');
-    if (this.state === 'wait') {                                        // her partner serves, high and gentle
-      this.timer -= dt;
-      this.pp.lerp(new THREE.Vector3(COURT.x, Y + 1.3, COURT.z + 3.6), 1 - Math.exp(-3 * dt));
-      if (this.timer <= 0) {
-        this.shuttle.visible = true;
-        this.launch(this.pp.clone().add(new THREE.Vector3(0, 0.1, -0.3)), head.x + (Math.random() - 0.5), head.z + 0.6, 4.2);
-        this.state = 'fly'; this.lastSide = 1; this.events.push('hit');
-      }
-    }
-    if (this.state === 'fly') {
-      const steps = Math.ceil(dt / (1 / 120));
-      for (let i = 0; i < steps; i++) {
-        const h = dt / steps, s = this.v.length();
-        this.v.x -= K * s * this.v.x * h; this.v.z -= K * s * this.v.z * h; this.v.y -= (G + K * s * this.v.y) * h;
-        const pz = this.p.z; this.p.addScaledVector(this.v, h);
-        // the net
-        if ((pz - COURT.z) * (this.p.z - COURT.z) <= 0 && Math.abs(this.p.x - COURT.x) < COURT.hw && this.p.y < Y + 1.53) { this.end('net'); return this.events; }
-        if ((pz - COURT.z) * (this.p.z - COURT.z) <= 0) { const side = Math.sign(this.p.z - COURT.z); if (side !== this.lastSide) { this.lastSide = side; this.count++; this.best = Math.max(this.best, this.count); this.onScore(this.count, this.best); } }
-        if (this.p.y <= Y + 0.01) {
-          const inX = Math.abs(this.p.x - COURT.x) <= COURT.sw + 0.02, inZ = Math.abs(this.p.z - COURT.z) <= COURT.hl + 0.02;
-          this.end(this.p.z < COURT.z ? (inX && inZ ? 'missed' : 'out_theirs') : (inX && inZ ? 'winner' : 'out')); return this.events;
-        }
-      }
-      this.shuttle.position.copy(this.p);
-      if (this.v.lengthSq() > 1e-4) this.shuttle.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), this.v.clone().normalize());
-      // her partner moves to where it will come down on their side, and plays it back
-      if (this.v.z > 0 && this.p.z > COURT.z) {
-        const land = this.predict();
-        this.pp.lerp(new THREE.Vector3(land.x, Y + 1.2, land.z + 0.3), 1 - Math.exp(-2.6 * dt));
-        if (this.willMiss == null) this.willMiss = Math.random() < Math.min(0.4, 0.04 + this.count * 0.015 + (this.lastPower || 0) * 0.15);   // decided once per shot
-        if (!this.willMiss && this.p.distanceTo(this.pp) < 0.75 && this.p.y > Y + 0.4) {
-          {
-            const tx = COURT.x + (Math.random() - 0.5) * 2 * (COURT.sw - 0.6), tz = COURT.z - 1.6 - Math.random() * (COURT.hl - 2.4);
-            this.launch(this.p.clone(), tx, tz, 2.4 + Math.random() * 2.6);
-            this.events.push('hit');
-          }
-        }
-        if (this.willMiss) this.pp.y = Math.max(Y + 0.9, this.pp.y - dt * 0.6);       // (a lunge that doesn't reach)
-      } else { this.willMiss = null; this.pp.lerp(new THREE.Vector3(COURT.x, Y + 1.25, COURT.z + 3.4), 1 - Math.exp(-1.5 * dt)); }
-      // her swing: in reach (about a racket's length from her, between knee and well over her head) and on her side
-      if (this.wantHit && this.p.z < COURT.z) {
-        const rp = new THREE.Vector3(head.x + fx * 0.6, head.y - 0.2, head.z + fz * 0.6);
-        const d = this.p.distanceTo(rp);
-        if (d < 1.35 && this.p.y > Y + 0.25 && this.p.y < Y + 3.1) {
-          const look = Math.max(-0.6, Math.min(0.9, -pitch));               // looking up: a high clear; level: a flatter drive
-          const reach = Math.max(4.2, 9 + look * 3);
-          // a little help: aimed inside the lines (but where she looks)
-          const tx = THREE.MathUtils.clamp(head.x + fx * reach, COURT.x - COURT.sw + 0.35, COURT.x + COURT.sw - 0.35), tz = Math.min(head.z + fz * reach, COURT.z + COURT.hl - 0.5);
-          const apex = THREE.MathUtils.clamp(2.2 + look * 4, 1.9, 5.6);
-          this.lastPower = 1 - Math.min(1, d / 1.35);
-          this.launch(this.p.clone(), tx, Math.max(tz, COURT.z + 0.8), apex);
-          this.wantHit = false;
-          this.events.push('hit');
-        }
-      }
-      if (this.swingT <= 0) this.wantHit = false;
-    }
-    if (this.state === 'over') { this.timer -= dt; if (this.timer <= 0) { this.state = 'wait'; this.timer = 0.6; this.count = 0; this.onScore(0, this.best); } }
-    this.partner.position.copy(this.pp);
-    this.partner.rotation.set(-0.2, Math.PI, Math.sin(performance.now() / 600) * 0.15);
-    return this.events;
-  }
-  predict() {
-    const p = this.p.clone(), v = this.v.clone(), dt = 1 / 60;
-    for (let i = 0; i < 300 && p.y > this.Y + 1.2; i++) { const s = v.length(); v.x -= K * s * v.x * dt; v.z -= K * s * v.z * dt; v.y -= (G + K * s * v.y) * dt; p.addScaledVector(v, dt); }
-    return p;
-  }
-  end(why) {
-    this.willMiss = null;
-    this.state = 'over'; this.timer = 1.6; this.result = why;
-    try { localStorage.setItem('gh18.rallyBest', String(this.best)); } catch { /* ignore */ }
-    this.events.push('end:' + why);
-  }
 }
 
 // ------------------------------------------------------------------ textures and small things
@@ -305,12 +185,12 @@ function scoreTexture() {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.userData.c = c;
   return t;
 }
-function drawScore(t, n, best) {
+function drawScore(t, l1, n, l2, best) {
   const c = t.userData.c, g = c.getContext('2d');
   g.fillStyle = '#1f2a24'; g.fillRect(0, 0, 440, 220);
   g.fillStyle = '#d9c9a8'; g.textAlign = 'center';
   g.font = `600 22px ${SANS}`; if ('letterSpacing' in g) g.letterSpacing = '5px';
-  g.fillText('RALLY', 120, 46); g.fillText('BEST', 330, 46);
+  g.fillText(l1, 120, 46); g.fillText(l2, 330, 46);
   if ('letterSpacing' in g) g.letterSpacing = '0px';
   for (const [v, x] of [[n, 120], [best, 330]]) { g.fillStyle = '#f4efe6'; g.fillRect(x - 70, 64, 140, 120); g.fillStyle = '#1f2a24'; g.font = `500 100px ${SERIF}`; g.fillText(String(v), x, 160); }
   t.needsUpdate = true;
