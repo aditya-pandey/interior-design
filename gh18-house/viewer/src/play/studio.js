@@ -1414,12 +1414,17 @@ function drawPoem(c, poem, W, Hh) {
   g.fillStyle = '#3a2c22';
   g.font = hi ? `400 ${size}px ${bodyFace}` : `500 ${Math.round(size * 1.12)}px ${bodyFace}`;
   for (const st of poem.stanzas) {
-    for (const ln of st) { fitText(g, ln, W / 2, y, W - 170); y += size * lh; }
+    for (const ln of st) {
+      const em = /^\*.*\*$/.test(ln.trim()), base = g.font;
+      if (em && !hi) g.font = `italic 400 ${Math.round(size * 1.12)}px ${SERIF}`;
+      fitText(g, em ? ln.trim().slice(1, -1) : ln, W / 2, y, W - 170); y += size * lh;
+      g.font = base;
+    }
     y += size * 0.7;
   }
   g.font = `italic 400 ${Math.round(size * 1.25)}px ${SERIF}`;
   g.fillStyle = '#8a6a48';
-  g.fillText('— Deepti', W / 2, Math.min(Hh - 90, y + size * 0.6));
+  g.fillText('— ' + (poem.author || 'Deepti'), W / 2, Math.min(Hh - 90, y + size * 0.6));
 }
 function fitText(g, s, x, y, maxW) {
   const w = g.measureText(s).width;

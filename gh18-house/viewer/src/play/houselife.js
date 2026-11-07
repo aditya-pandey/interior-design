@@ -75,6 +75,7 @@ export function buildHouseLife({ house, rooms, pack }) {
   for (const r of rooms.filter((q) => /Bed|Guest Room|Kids|Servant/.test(q.name))) {
     const y = r.ffl + 2.95, x = mm(r.at[0]), z = mm(r.at[1]);
     const fan = new THREE.Group(); fan.position.set(x, y, z); group.add(fan);
+    fan.userData.hangsFrom = { GF: 'FF', FF: 'SF', SF: 'ROOF' }[r.floor];      // (hidden with the slab above it in a film's cut-away)
     fan.add(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.25).translate(0, -0.125, 0), white));
     const rot = new THREE.Group(); rot.position.y = -0.3; fan.add(rot);
     rot.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 0.08, 20), white));

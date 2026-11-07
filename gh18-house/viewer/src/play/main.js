@@ -5,7 +5,8 @@ import { createMaterials } from '../materials.js';
 import { buildHouse } from '../build.js';
 import { furnitureCorners, circleHitsPoly, pointInPoly } from '../geom.js';
 import { Walker } from '../walk.js';
-import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence } from './beach.js';
+import { buildBeach, groundHeight, surfaceAt, coastDist, seaFence, ROAD } from './beach.js';
+const ROAD_PTS2 = () => ROAD.map((p) => [+p.x.toFixed(2), +p.z.toFixed(2)]);
 import { buildStudio, DEVANAGARI } from './studio.js';
 import { fontsReady } from './fonts.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
@@ -863,9 +864,10 @@ function showOverlay(html, cls) {
 function closeOverlay() { document.getElementById('overlay').hidden = true; state.overlay = false; album = null; }
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 function showPoem(p) {
-  const body = p.stanzas.map((st) => `<p>${st.map(esc).join('<br>')}</p>`).join('');
+  const line = (ln) => (/^\*.*\*$/.test(ln.trim()) ? `<em>${esc(ln.trim().slice(1, -1))}</em>` : esc(ln));
+  const body = p.stanzas.map((st) => `<p>${st.map(line).join('<br>')}</p>`).join('');
   const hi = DEVANAGARI.test(p.title + p.stanzas.flat().join(''));
-  showOverlay(`<button class="close" aria-label="Close">×</button><article class="poem${hi ? ' hi' : ''}" lang="${hi ? 'hi' : 'en'}"><h2>${esc(p.title)}</h2><i class="rule" aria-hidden="true"></i>${p.date ? `<time>${esc(p.date)}</time>` : ''}${body}<footer>— Deepti</footer></article>`, 'paper');
+  showOverlay(`<button class="close" aria-label="Close">×</button><article class="poem${hi ? ' hi' : ''}" lang="${hi ? 'hi' : 'en'}"><h2>${esc(p.title)}</h2><i class="rule" aria-hidden="true"></i>${p.date ? `<time>${esc(p.date)}</time>` : ''}${body}<footer>— ${esc(p.author || 'Deepti')}</footer></article>`, 'paper');
 }
 function showArt(url) {
   showOverlay(`<button class="close" aria-label="Close">×</button><figure class="art"><img src="${url}" alt="A painting by Deepti"><figcaption>Painted by Deepti</figcaption></figure>`, 'dark');
@@ -1350,9 +1352,10 @@ function frame(dt = 1 / 60, show = true) {
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
-  placeCamera(false, dt);
+  if (!state.cine) placeCamera(false, dt);
   tickClock(dt);
-  const focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
+  let focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
+  if (state.cine) { focusX = state.cine.tx; focusZ = state.cine.tz; }      // (a film shot: the sun's shadows round what the camera looks at)
   const d = sun.userData.dir || new THREE.Vector3(0, 1, 0);
   sun.target.position.set(focusX, 0, focusZ);
   sun.position.set(focusX + d.x * 150, Math.max(10, d.y * 150), focusZ + d.z * 150);
@@ -1455,6 +1458,39 @@ window.play = {
   close: () => { closeOverlay(); album = null; frame(1 / 60); },
   sunset: (seconds) => { for (let t = 0; t < seconds; t += 0.25) frame(0.25, false); hudTimer = 0; frame(1 / 60); return state.time; },
   render: () => { placeCamera(true, 1 / 60); hudTimer = 0; lampTimer = 0; frame(1 / 60); },
+  // the model's own geometry, for the film's shot list (nothing is invented: rooms, doorways, the road, the places)
+  filmInfo: () => {
+    const floors = {}; scene.traverse((o) => { const f = o.userData?.floor; if (f) floors[f] = (floors[f] || 0) + 1; });
+    return {
+      floors, rooms: ROOMS.map((r) => ({ name: r.name, floor: r.floor, ffl: r.ffl, at: [r.at[0] / 1000, r.at[1] / 1000], box: [Math.min(...r.poly.map((q) => q[0])) / 1000, Math.min(...r.poly.map((q) => q[1])) / 1000, Math.max(...r.poly.map((q) => q[0])) / 1000, Math.max(...r.poly.map((q) => q[1])) / 1000] })),
+      doors: DOORWAYS, home: HOME, park: STUDIO_PARK, studio: { ...STUDIO, upper: studio.upper, terraceX: studio.terraceX }, court: { Y: court.Y, x: 131, z: 41.7 },
+      road: ROAD_PTS2(), photos: (pack?.album?.photos || []).map((p) => ({ url: (pack.base || 'play/deepti/') + p.file, w: p.w, h: p.h })),
+    };
+  },
+  // free walking check for a film path: is a point clear for a person at floor y?
+  clear: (x, z, y) => { const h = walker.standAt(x * 1000, z * 1000, y); return h !== null && Math.abs(h - y) < 0.3 && !walker.blocked(x * 1000, z * 1000, h); },
+  // ---- film mode: the camera set exactly (position, target, field of view), no HUD; floors above `level`
+  // hidden for cut-away views of the model; the car placed along a path; one frame drawn, returned as JPEG
+  cine: (c) => {
+    if (!state.cineHud) { state.cineHud = true; for (const id of ['hud', 'prompt', 'toast', 'play-prompt', 'play-seat']) { const el = document.getElementById(id); if (el) el.style.display = 'none'; } }
+    if (c.hour != null && Math.abs(c.hour - state.clock.h) > 1e-4) { state.clock.h = c.hour; state.clock.speed = 0; applyClock(c.regen ?? true); }
+    if (c.car) { pose.x = c.car.x; pose.z = c.car.z; pose.yaw = c.car.yaw; pose.steer = c.car.steer || 0; pose.spin = c.car.spin || 0; pose.roll = 0; pose.pitch = 0; sim.x = c.car.x; sim.z = c.car.z; sim.yaw = c.car.yaw; sim.slipF = sim.slipR = 0; sim.vx = Math.sin(c.car.yaw) * (c.car.speed || 0); sim.vz = Math.cos(c.car.yaw) * (c.car.speed || 0); sim.surface = 'road'; }       // (no skids: the physics isn't running)
+    if (c.beams != null) setBeams(c.beams);
+    const want = c.cut || null;
+    if (want !== state.cineCut) {
+      state.cineCut = want;
+      const order = ['GF', 'FF', 'SF', 'ROOF'], keep = want ? order.indexOf(want) : 99;
+      scene.traverse((o) => { const f = o.userData?.floor || o.userData?.hangsFrom; if (f && f !== 'SITE' && order.includes(f)) o.visible = order.indexOf(f) <= keep; });
+    }
+    state.cine = { tx: c.tx, tz: c.tz };
+    camera.position.set(c.px, c.py, c.pz); camera.up.set(0, 1, 0); camera.lookAt(c.tx, c.ty, c.tz);
+    if (c.roll) camera.rotateZ(c.roll);
+    camera.fov = c.fov || 50; camera.near = c.near || 0.08; camera.updateProjectionMatrix();
+    hudTimer = 1e9; lampTimer = 0; lodTimer = 0; lightPool?.reset();
+    if (c.clock != null) clock = c.clock - (c.dt ?? 1 / 24);       // (the world's clock set exactly: water, flames and stars are the same on a re-render)
+    frame(c.dt ?? 1 / 24);
+    return c.grab === false ? null : renderer.domElement.toDataURL('image/jpeg', c.q || 0.93);
+  },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court }),

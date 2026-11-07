@@ -26,6 +26,7 @@ export function poolLights(scene, n = 8) {
   let timer = 0;
   return {
     count: sources.length,
+    reset() { timer = 0; },            // (re-choose on the next update: the camera jumped)
     update(dt, cam) {
       timer -= dt;
       if (timer <= 0) {
