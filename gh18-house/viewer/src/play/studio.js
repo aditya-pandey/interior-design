@@ -168,6 +168,8 @@ export function buildStudio(M, pack) {
     bloom: new THREE.MeshStandardMaterial({ roughness: 0.8, vertexColors: true, side: THREE.DoubleSide }),
     paper: new THREE.MeshStandardMaterial({ roughness: 0.9, vertexColors: true }),
     ply: new THREE.MeshStandardMaterial({ map: birchTexture(), roughness: 0.5, vertexColors: true }),   // pale birch plywood
+    shelfglow: new THREE.MeshStandardMaterial({ color: 0xf3dfc0, emissive: 0xffa94d, emissiveIntensity: 0, roughness: 0.6, vertexColors: true }),
+    lantern: new THREE.MeshStandardMaterial({ map: lanternTexture(), color: 0xffffff, emissive: 0xffcf96, emissiveMap: lanternTexture(), emissiveIntensity: 0, roughness: 0.9, side: THREE.DoubleSide }),
   };
   mats.ply.normalMap = relief(mats.ply.map, 1.2); mats.ply.normalScale = v2(0.3);
   const anchors = {};                          // where cosy.js puts its candles
@@ -417,6 +419,8 @@ export function buildStudio(M, pack) {
   parts.add('ply', annulus(RN.R - 0.026, RN.R, RN.D), ply);
   parts.add('ply', annulus(rIn, rIn + 0.026, RN.D), ply);
   parts.add('ply', annulus(rIn, RN.R, 0.018), plyEdge);
+  parts.add('shelfglow', annulus(rIn + 0.03, RN.R - 0.03, 0.006, 0.02), 0xffffff);          // the cubbies' backs glow after dark
+  { const halo = new THREE.TorusGeometry(rIn + 0.012, 0.011, 8, 120); parts.add('glow', place(halo.translate(0, 0, RN.D - 0.006)), 0xffffff); }   // a halo round the inner edge
   const NC = 16;
   for (let k = 0; k < NC; k++) {
     const a = (k / NC) * Math.PI * 2 + Math.PI / NC;
@@ -484,6 +488,7 @@ export function buildStudio(M, pack) {
     for (let c = 1; c < cols; c++) parts.box('ply', x0, y0 + 0.08, z0 + c * cw - 0.009, x1, y0 + top, z0 + c * cw + 0.009, ply);
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const cy0 = y0 + 0.1 + r * rh, cz0 = z0 + c * cw + 0.02, cz1 = z0 + (c + 1) * cw - 0.02, roll = sr();
+      if (sr() < 0.82) parts.box('shelfglow', x0 + 0.016, cy0 + 0.01, cz0 - 0.01, x0 + 0.02, cy0 + rh - 0.03, cz1 + 0.01, [0xffffff, 0xffe9cc, 0xffd9a8][Math.floor(sr() * 3)]);
       if (roll < 0.08) {                                   // a vase or a little sculpture instead of books
         parts.cyl('paper', x0 + 0.18, cy0, (cz0 + cz1) / 2, 0.06, 0.045, 0.16 + sr() * 0.08, [0x2f5d50, 0xe8e1d4, 0xa4532e, 0x1f3a5f][Math.floor(sr() * 4)], 14);
         continue;
@@ -501,6 +506,13 @@ export function buildStudio(M, pack) {
   };
   shelfUnit(41.1, 44.7, F, CH - F - 0.12, 61);
   shelfUnit(48.1, 50.6, F, CH - F - 0.12, 62);
+  // a brass rail along the tall shelves and an oak library ladder hooked onto it
+  parts.cyl('brass', X0 + T + 0.5, CH - 0.55, 42.9, 0.014, 0.014, 0.01, 0xb08d57, 8);
+  { const rail = new THREE.CylinderGeometry(0.014, 0.014, 3.7, 10); rail.rotateX(Math.PI / 2); rail.translate(X0 + T + 0.48, CH - 0.55, 42.9); parts.add('brass', rail, 0xb08d57); }
+  { const LX = X0 + T + 0.48, foot = X0 + T + 1.25, top = CH - 0.55, lz = 43.6, ang = Math.atan2(foot - LX, top - F);
+    for (const sz of [-0.22, 0.22]) { const g = new THREE.BoxGeometry(0.05, Math.hypot(foot - LX, top - F), 0.035); g.rotateZ(ang); g.translate((LX + foot) / 2, (top + F) / 2, lz + sz); parts.add('wood', g, 0x8a6240); }
+    for (let k = 1; k < 11; k++) { const t = k / 11, g = new THREE.CylinderGeometry(0.016, 0.016, 0.44, 8); g.rotateX(Math.PI / 2); g.translate(foot + (LX - foot) * t, F + (top - F) * t, lz); parts.add('wood', g, 0xa87b52); }
+    solid(foot - 0.25, lz - 0.28, foot + 0.05, lz + 0.28, F, F + 1.5); }
   // floor lamp, a side table with her chai, a reading chair, a sheepskin rug
   parts.cyl('metal', 99.05, F, 44.95, 0.16, 0.16, 0.03, 0x1d1d1d, 20);
   parts.cyl('brass', 99.05, F, 44.95, 0.012, 0.012, 1.55, 0xb08d57, 8);
@@ -532,7 +544,21 @@ export function buildStudio(M, pack) {
     }
     solid(cx - 0.5, cz - 0.5, cx + 0.5, cz + 0.5, y, y + 1);
   };
-  chair(101.4, 49.4, Math.PI * 0.8, 0xb5653d);
+  // a bentwood rocking chair by the shelves, turned to the sea (E to sit: it rocks; get up and it settles)
+  const RK = { x: 101.3, z: 49.2, rot: 0.35 };
+  const rocker = rockingChair();
+  rocker.group.position.set(RK.x, F, RK.z); rocker.group.rotation.y = RK.rot; group.add(rocker.group);
+  solid(RK.x - 0.45, RK.z - 0.5, RK.x + 0.45, RK.z + 0.5, F, F + 1.1);
+  interact.push({ kind: 'lounger', label: 'Sit in the rocking chair', pos: [RK.x, F + 0.7, RK.z], r: 1.8,
+    seat: { x: RK.x, z: RK.z, y: F, rocker: true, eye: [RK.x - Math.sin(RK.rot) * 0.12, F + 1.12, RK.z - Math.cos(RK.rot) * 0.12], look: [Math.sin(RK.rot), Math.cos(RK.rot)], pitch: 0.06, flash: 'Rock gently · E to get up',
+      stand: [RK.x + Math.sin(RK.rot) * 0.95, RK.z + Math.cos(RK.rot) * 0.95, RK.rot, F] } });
+  // three paper lanterns of different sizes hanging over it, glowing warm after dark
+  for (const [dx, dz, y, rad] of [[0.15, 0.1, 2.45, 0.27], [-0.35, -0.2, 2.85, 0.2], [0.45, -0.3, 3.05, 0.15]]) {
+    const lx = RK.x + dx, lz = RK.z + dz;
+    parts.cyl('metal', lx, F + y + rad * 0.9, lz, 0.003, 0.003, CH - F - y - rad * 0.9, 0x1d1d1d, 4);
+    const globe = new THREE.SphereGeometry(rad, 28, 18); globe.scale(1, 0.92, 1); globe.translate(lx, F + y, lz); parts.add('lantern', globe, 0xffffff);
+  }
+  const nookLight = new THREE.PointLight(0xffb36b, 0, 5, 2); nookLight.position.set(RK.x - 0.6, F + 2.2, RK.z - 1.2); group.add(nookLight);
   parts.cyl('wood', 102.25, F, 50.1, 0.22, 0.22, 0.45, 0x6b4a2f, 18);
   parts.cyl('paper', 102.25, F + 0.45, 50.1, 0.07, 0.05, 0.22, 0x2f5d50, 14);
   solid(102.0, 49.85, 102.5, 50.35, F, F + 0.7);
@@ -945,12 +971,21 @@ export function buildStudio(M, pack) {
     walk: { colliders: walkColliders, surfaces: walkSurfaces },
     setNight(on) {
       mats.glow.emissiveIntensity = on ? 1.6 : 0;
+      mats.shelfglow.emissiveIntensity = on ? 0.9 : 0;
+      mats.lantern.emissiveIntensity = on ? 1.1 : 0;
+      nookLight.intensity = on ? 3.5 : 0;
       mats.fairy.emissiveIntensity = on ? 2.4 : 0;
       for (const l of lights) l.intensity = on ? l.userData.on : 0;
       haloMat.opacity = on ? 0.55 : 0;
     },
     // the record turns at 33⅓ while her music plays; the arm swings over onto it, and back to its rest
+    rocker,
     update(t, playing) {
+      // the rocking chair: rocks while she sits in it; after, it rocks on and slowly settles
+      const rdt = Math.min(0.1, Math.max(0, t - (this.lastRT ?? t))); this.lastRT = t;
+      rocker.amp = rocker.seated ? THREE.MathUtils.damp(rocker.amp || 0, 0.085, 2, rdt) : (rocker.amp || 0) * Math.exp(-0.35 * rdt);
+      rocker.angle = rocker.amp * Math.sin(t * 1.75);
+      rocker.pivot.rotation.x = rocker.angle;
       const dt = Math.min(0.1, Math.max(0, t - (this.lastT ?? t))); this.lastT = t;
       turntable.speed = THREE.MathUtils.damp(turntable.speed || 0, playing ? 3.49 : 0, 2.5, dt);
       turntable.spin.rotation.y -= turntable.speed * dt;
@@ -1086,6 +1121,59 @@ function sleeveTexture() {
   for (let y = 300; y < 500; y += 14) { g.fillStyle = `rgba(251,227,176,${0.5 - (y - 300) / 500})`; g.fillRect(256 - 60 + (y % 28), y, 120 - (y - 300) / 3, 3); }
   g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = `italic 400 44px ${SERIF}`; g.textAlign = 'left'; g.fillText('Her songs', 28, 64);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+
+// a bentwood rocking chair: honey-toned steam-bent frame, curved rockers, a woven cane seat and back, a sage
+// cushion and a throw over one arm. Built round a pivot at the centre of the rockers' arc, so turning the pivot
+// rolls the chair on its rockers.
+function rockingChair() {
+  const group = new THREE.Group(), R = 1.15, pivot = new THREE.Group(); pivot.position.y = R; group.add(pivot);
+  const body = new THREE.Group(); body.position.y = -R; pivot.add(body);
+  const wood = new THREE.MeshPhysicalMaterial({ color: 0x8a5a34, roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.25 });
+  const caneT = caneTexture();
+  const cane = new THREE.MeshStandardMaterial({ map: caneT, alphaMap: caneT, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7, color: 0xffffff });
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; body.add(m); return m; };
+  const bend = (pts, r = 0.016) => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), 40, r, 8), wood);
+  for (const sx of [-0.26, 0.26]) {
+    const arc = []; for (let k = 0; k <= 16; k++) { const a = -0.42 + (k / 16) * 0.84; arc.push([sx, R - Math.cos(a) * R, Math.sin(a) * R]); }
+    bend(arc, 0.017);                                                                               // the rockers
+    bend([[sx, 0.08, 0.3], [sx * 0.98, 0.3, 0.27], [sx * 0.96, 0.44, 0.24]]);                     // front legs
+    bend([[sx, 0.05, -0.3], [sx * 0.98, 0.3, -0.22], [sx * 0.96, 0.46, -0.16], [sx * 0.9, 0.8, -0.27], [sx * 0.8, 1.05, -0.36]]);   // back legs into the back frame
+    bend([[sx * 0.9, 0.75, -0.25], [sx * 1.15, 0.68, -0.05], [sx * 1.18, 0.64, 0.2], [sx * 1.05, 0.5, 0.3], [sx, 0.44, 0.25]], 0.014);   // the scroll arms
+  }
+  bend([[-0.26, 1.05, -0.36], [-0.12, 1.12, -0.38], [0.12, 1.12, -0.38], [0.26, 1.05, -0.36]]);        // the top of the back
+  const seatRing = []; for (let k = 0; k <= 32; k++) { const a = (k / 32) * Math.PI * 2; seatRing.push([Math.cos(a) * 0.25, 0.45, 0.05 + Math.sin(a) * 0.22]); }
+  bend(seatRing, 0.018);
+  const seat = new THREE.Mesh(new THREE.CircleGeometry(1, 40).scale(0.25, 0.22, 1).rotateX(-Math.PI / 2).translate(0, 0.45, 0.05), cane); body.add(seat);
+  const backG = new THREE.PlaneGeometry(0.46, 0.5, 1, 1); backG.rotateX(-0.25); backG.translate(0, 0.8, -0.3);
+  body.add(new THREE.Mesh(backG, cane));
+  const cushion = new THREE.Mesh(new RoundedBoxGeometry(0.44, 0.06, 0.4, 3, 0.025), new THREE.MeshPhysicalMaterial({ color: 0x9dbcad, roughness: 0.9, sheen: 0.8, sheenColor: 0xffffff }));
+  cushion.position.set(0, 0.49, 0.05); cushion.castShadow = true; body.add(cushion);
+  const thr = new THREE.PlaneGeometry(0.3, 0.55, 6, 10), tp = thr.attributes.position;
+  for (let i = 0; i < tp.count; i++) { const y = tp.getY(i); tp.setZ(i, y > 0.1 ? -(y - 0.1) * 0.15 : 0); tp.setY(i, y > 0.1 ? 0.1 - (y - 0.1) * 0.9 : y); }
+  thr.computeVertexNormals(); thr.rotateZ(Math.PI / 2); thr.translate(0.29, 0.62, 0.08);
+  const tm = new THREE.Mesh(thr, new THREE.MeshPhysicalMaterial({ color: 0xc99a2e, roughness: 0.95, sheen: 0.8, sheenColor: 0xffe0a0, side: THREE.DoubleSide })); tm.castShadow = true; body.add(tm);
+  return { group, pivot, amp: 0, angle: 0, seated: false };
+}
+function caneTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, 128, 128);
+  g.strokeStyle = '#e2c48e'; g.lineWidth = 3.2;
+  for (let k = -128; k < 256; k += 16) {
+    for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) { g.beginPath(); if (dx && !dy) { g.moveTo(0, k); g.lineTo(128, k); } else if (dy && !dx) { g.moveTo(k, 0); g.lineTo(k, 128); } else { g.moveTo(k, 0); g.lineTo(k + 128 * dx, 128 * dy || 128); } g.stroke(); }
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 6); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+// rice paper over bamboo ribs: soft horizontal bands, a little uneven
+function lanternTexture() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fbf5ea'; g.fillRect(0, 0, 64, 256);
+  for (let y = 6; y < 256; y += 14) { g.fillStyle = 'rgba(150,120,80,0.35)'; g.fillRect(0, y, 64, 1.6); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 

@@ -845,6 +845,7 @@ function showArt(url) {
 let prevSeatPos = null;
 function lieDown(seat) {
   prevSeatPos = [head.position.x, head.position.z];
+  if (seat.rocker) studio.rocker.seated = true;
   walker.active = false;
   if (seat.eye) {
     // the reading nook: curled up in the ring, looking out across the studio
@@ -888,6 +889,7 @@ function getUp() {
   if (!state.lying) return;
   const { seat } = state.lying;
   state.lying = null;
+  if (seat.rocker) studio.rocker.seated = false;
   if (seat.stand) {
     // in the house: in front of it if that's clear (a coffee table is often there), else where she was
     const base = seat.stand[3];
@@ -948,8 +950,14 @@ function placeFootCamera(dt) {
   camera.near = 0.05;
   let e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
   if (state.lying?.seat.sway) e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(0, Math.sin(clock * 0.9) * 0.02, Math.sin(clock * 0.9) * 0.07));   // the hammock rocks
+  let rockPitch = 0;
+  if (state.lying?.seat.rocker) {                                   // rocking: the head swings back and forth with the chair
+    const a = studio.rocker.angle, lk = state.lying.seat.look;
+    e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(lk[0] * Math.sin(a) * 0.55, -(1 - Math.cos(a)) * 0.5, lk[1] * Math.sin(a) * 0.55));
+    rockPitch = a * 0.8;
+  }
   camera.position.copy(e);
-  camera.rotation.set(-orb.pitch, orb.yaw + Math.PI, 0, 'YXZ');
+  camera.rotation.set(-orb.pitch - rockPitch, orb.yaw + Math.PI, 0, 'YXZ');
   camera.fov = damp(camera.fov, 70, 6, dt);
   camera.updateProjectionMatrix();
 }
