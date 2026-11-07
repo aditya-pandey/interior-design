@@ -22,6 +22,7 @@ import { buildSpray } from './spray.js';
 import { buildDressing, createFootprints } from './dressing.js';
 import { Ambience, measureSfx } from './ambience.js';
 import { buildCosy } from './cosy.js';
+import { buildBillboards } from './billboards.js';
 import { ChaseCam, headMotion } from './chasecam.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
@@ -113,6 +114,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
+let billboards;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -151,6 +153,8 @@ async function init() {
   studio = buildStudio(M, pack);
   scene.add(studio.group);
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
+  billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
+  scene.add(billboards.group);
   scene.add(cosy.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
@@ -176,7 +180,7 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
@@ -456,6 +460,7 @@ function applyTime(t, regen = true) {
   for (const k of ['cove', 'downlight', 'lamp', 'window_lit']) if (M[k]) M[k].emissiveIntensity = t.glow * 1.2;
   beach.materials.lamp.emissiveIntensity = t.lamps;
   studio.setNight(t.glow > 0.3);
+  billboards?.setNight(t.glow > 0.3);
   if (DASH.mat) DASH.mat.emissiveIntensity = t.glow > 0.3 ? 0.9 : 0.12;     // the gauges and screen glow after dark
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
   // the sea's own light: the sky's colour on the water body
