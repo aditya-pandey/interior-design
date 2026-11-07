@@ -26,6 +26,7 @@ import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
 import { buildHouseLife } from './houselife.js';
+import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion } from './chasecam.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
@@ -117,7 +118,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife;
+let billboards, roomAudio, court, houseLife, lightPool;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -252,6 +253,7 @@ async function init() {
   enterCar();
   document.getElementById('hud').hidden = false;
   document.getElementById('play-loading').hidden = true;
+  lightPool = poolLights(scene, LOW ? 5 : 8);          // (all the point lights above, played by a fixed few)
   window.play.ready = true;
   const unlock = () => { audio.start(); audio.setOn(state.sound); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
@@ -829,7 +831,8 @@ function findFocus() {
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
     if (facing < 0.55) continue;
     if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;     // the front of the painting, not its back
-    if (d < bestD) { best = it; bestD = d; }
+    const sc = d + (it.kind === 'lounger' ? 0.6 : 0);               // (a thing to use beats a seat beside it)
+    if (sc < bestD) { best = it; bestD = sc; }
   }
   const dc = Math.hypot(hx - sim.x, hz - sim.z);
   if (!best && dc < 3.4) return { kind: 'car', label: 'Get in the car' };
@@ -1339,6 +1342,7 @@ function frame(dt = 1 / 60, show = true) {
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   court.update(clock);
+  lightPool?.update(dt, camera.position);
   if (houseLife.update(clock, dt, { x: head.position.x, z: head.position.z, foot: walker.foot, room: state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null, night: (state.glow || 0) > 0.3, ctx: audio?.ctx, out: audio?.master, indoors: isIndoors() })) flash('Chai’s ready ☕');
   if (state.rally) rallyTick(dt);
   if (roomAudio) music.setLevel(roomAudio.update(dt, camera, { playing: music.playing, inCar: state.mode === 'drive', foot: walker?.foot ?? 0 }));

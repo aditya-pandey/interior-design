@@ -177,3 +177,18 @@ body.touring #prompt { display: none; }
 
 /* her own files: no video to show, just the controls */
 #music.local .m-video { display: none; }
+
+/* the lift's panel and the go-to list */
+.lift, .goto { padding: 40px 44px 34px; text-align: center; font-family: Inter, sans-serif; color: #2b211a; }
+.lift h3, .goto h3 { font: italic 400 34px 'Cormorant Garamond', Georgia, serif; margin: 0 0 18px; }
+.lift .pad { display: grid; gap: 12px; justify-items: center; }
+.lift button { width: 84px; height: 84px; border-radius: 50%; border: 1px solid rgba(176, 141, 87, 0.7); background: radial-gradient(circle at 35% 30%, #fffaf0, #e9dfcc); font: 500 30px 'Cormorant Garamond', Georgia, serif; color: #2b211a; cursor: pointer; display: grid; place-items: center; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+.lift button small { font: 600 9px Inter, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: #9a7b55; margin-top: -14px; }
+.lift button.here { box-shadow: 0 0 0 3px rgba(224, 163, 90, 0.6); }
+.goto { text-align: left; min-width: min(560px, 86vw); }
+.goto section { margin: 0 0 14px; }
+.goto h4 { font: 600 11px Inter, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: #9a7b55; margin: 0 0 8px; }
+.goto button { font: 500 15px Inter, sans-serif; color: #2b211a; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(176, 141, 87, 0.45); border-radius: 999px; padding: 7px 14px; margin: 0 6px 8px 0; cursor: pointer; }
+.goto button:hover { background: #fff; }
+#veil { position: fixed; inset: 0; z-index: 45; background: #0d0b09; opacity: 0; pointer-events: none; transition: opacity 0.6s ease; }
+#veil.on { opacity: 1; }
