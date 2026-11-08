@@ -28,6 +28,7 @@ import { buildCosy } from './cosy.js';
 import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
+import { buildLighthouse, LIGHTHOUSE } from './lighthouse.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion } from './chasecam.js';
@@ -121,7 +122,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool, reader, artView;
+let billboards, roomAudio, court, houseLife, lightPool, reader, artView, lighthouse, hunt;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -171,6 +172,8 @@ async function init() {
   scene.add(billboards.group);
   court = buildCourt();
   scene.add(court.group);
+  lighthouse = buildLighthouse();
+  scene.add(lighthouse.group);
   houseLife = buildHouseLife({ house, rooms: ROOMS, pack });
   scene.add(houseLife.group);
   scene.add(cosy.group);
@@ -198,18 +201,18 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...court.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...court.carColliders, ...lighthouse.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
   walkData = {
-    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders, ...court.walk.colliders],
-    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces],
+    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders, ...court.walk.colliders, ...lighthouse.walk.colliders],
+    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces, ...lighthouse.walk.surfaces],
     stair: data.stair, levels: data.levels,
   };
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
   walker = new FootWalker(head, renderer.domElement, walkData);
-  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces];
+  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces, ...lighthouse.walk.surfaces];
   for (const c of walkData.colliders) c.bb = c.bb || bbOf(c.poly);
   // sitting and lying down in the house
   seatSpots = houseSeats(house).map((s) => {
@@ -490,6 +493,7 @@ function applyTime(t, regen = true) {
   studio.setNight(t.glow > 0.3);
   billboards?.setNight(t.glow > 0.3);
   court?.setNight(t.glow > 0.3);
+  lighthouse?.setNight(t.glow > 0.3);
   if (DASH.mat) DASH.mat.emissiveIntensity = t.glow > 0.3 ? 0.9 : 0.12;     // the gauges and screen glow after dark
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
   // the sea's own light: the sky's colour on the water body
@@ -874,7 +878,7 @@ function findFocus() {
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...seatSpots] : seatSpots) {
+  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -897,6 +901,8 @@ function interact(it = focus || findFocus()) {
   if (it.kind === 'reader') return reader.open({ source: it.device });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
+  if (it.kind === 'climb') return climbLighthouse(true);
+  if (it.kind === 'descend') return climbLighthouse(false);
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
   if (it.kind === 'chai') { houseLife.makeChai(); flash('Putting the chai on…'); return; }
   if (it.kind === 'lift') return showLift(it.floor);
@@ -910,7 +916,7 @@ function pickAt(cx, cy) {
   const r = renderer.domElement.getBoundingClientRect(), nx = ((cx - r.left) / r.width) * 2 - 1, ny = -((cy - r.top) / r.height) * 2 + 1;
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = 0.16;
-  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact]) {
+  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact]) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r * 1.6 || Math.abs(it.pos[1] - hy) > 2.2) continue;
     if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;
@@ -1095,6 +1101,19 @@ function showLift(from) {
   showOverlay(`<button class="close" aria-label="Close">×</button><div class="lift"><h3>Lift</h3><div class="pad">${btns}</div></div>`, 'paper');
   for (const b of document.querySelectorAll('#overlay .lift button')) b.addEventListener('click', () => rideLift(from, b.dataset.f));
 }
+// the lighthouse: up the 122 steps to the gallery (a fade), and back down to the door
+function climbLighthouse(up) {
+  const veil = document.getElementById('veil');
+  veil?.classList.add('on');
+  const go = () => {
+    const p = up ? lighthouse.top : lighthouse.door;
+    placeHer(p.x, p.z, up ? Math.PI / 2 : Math.atan2(Math.cos(p.yaw), Math.sin(p.yaw)), p.y);      // (up top: facing west, over the sea; below: facing out from the door)
+    veil?.classList.remove('on');
+    flash(up ? 'The top of the lighthouse · 24 m above the sea' : 'Back at the foot of the lighthouse');
+    hunt?.onPlace?.(up ? 'lighthouse-top' : 'lighthouse');
+  };
+  if (HEADLESS) go(); else setTimeout(go, 1500);
+}
 function rideLift(from, to) {
   closeOverlay();
   const d = houseLife.liftDoors.find((q) => q.floor === to);
@@ -1110,13 +1129,14 @@ function rideLift(from, to) {
 // go to: any room of the house, the studio, the court
 function showGoTo() {
   const fl = ['GF', 'FF', 'SF'].map((f) => `<section><h4>${FLOORS.find((q) => q.id === f).name}</h4>${ROOMS.filter((r) => r.floor === f && !/Toilet|Washroom|Store|Storage|Utility|Lobby/.test(r.name)).map((r) => `<button data-room="${esc(r.id || r.name)}">${esc(r.name)}</button>`).join('')}</section>`).join('');
-  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto"><h3>Go to</h3>${fl}<section><h4>Outside</h4><button data-place="studio">Deepti's Studio</button><button data-place="court">The court</button><button data-place="home">The gate</button></section></div>`, 'paper');
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto"><h3>Go to</h3>${fl}<section><h4>Outside</h4><button data-place="studio">Deepti's Studio</button><button data-place="court">The court</button><button data-place="lighthouse">The lighthouse</button><button data-place="home">The gate</button></section></div>`, 'paper');
   for (const b of document.querySelectorAll('#overlay .goto button')) b.addEventListener('click', () => {
     closeOverlay();
     if (state.mode === 'drive') { exitCar(); if (state.mode === 'drive') return; }
     getUp();
     if (b.dataset.place === 'studio') return placeHer(studio.entry.x, studio.entry.z, 0, 0.12);
     if (b.dataset.place === 'court') return placeHer(124.6, 39.6, Math.PI / 2, court.Y);
+    if (b.dataset.place === 'lighthouse') return placeHer(lighthouse.park.x + 4, lighthouse.park.z + 4.5, Math.atan2(LIGHTHOUSE.x - lighthouse.park.x, LIGHTHOUSE.z - lighthouse.park.z));
     if (b.dataset.place === 'home') return placeHer(4.6, 23.6, Math.PI);
     const r = ROOMS.find((q) => (q.id || q.name) === b.dataset.room);
     if (r) { placeHer(r.at[0] / 1000, r.at[1] / 1000, 0, r.ffl); flash(r.name); }
@@ -1371,6 +1391,9 @@ function buildMap() {
   g.font = 'bold 11px sans-serif'; g.fillStyle = '#4a2e14';
   g.fillText('Home', U(9.381) - 2, V(22.276) + 34);
   g.fillText('Studio', U(112) - 4, V(51) - 6);
+  g.fillStyle = '#b23a2e'; g.beginPath(); g.arc(U(LIGHTHOUSE.x), V(LIGHTHOUSE.z), 6, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#f2efe8'; g.beginPath(); g.arc(U(LIGHTHOUSE.x), V(LIGHTHOUSE.z), 2.5, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#4a2e14'; g.fillText('Lighthouse', U(LIGHTHOUSE.x) - 30, V(LIGHTHOUSE.z) - 10);
   mapBase = c;
 }
 function drawMap() {
@@ -1467,6 +1490,7 @@ function frame(dt = 1 / 60, show = true) {
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   court.update(clock);
+  lighthouse.update(clock, dt, state.glow || 0);
   lightPool?.update(dt, camera.position);
   if (houseLife.update(clock, dt, { x: head.position.x, z: head.position.z, foot: walker.foot, room: state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null, night: (state.glow || 0) > 0.3, ctx: audio?.ctx, out: audio?.master, indoors: isIndoors() })) flash('Chai’s ready ☕');
   if (state.rally) rallyTick(dt);
