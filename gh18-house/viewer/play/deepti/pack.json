@@ -11,6 +11,16 @@
    "url": "https://www.youtube.com/watch?v=o-7b6ctrQX0"
   }
  ],
+ "tracks": [
+  {
+   "file": "music/nawazish.mp3",
+   "title": "Nawazish — Papon"
+  },
+  {
+   "file": "music/kali-kali-zulfon-ke.webm",
+   "title": "Kali Kali Zulfon Ke — Madhur Sharma"
+  }
+ ],
  "poems": [
   {
    "title": "Wat should I do",

@@ -243,7 +243,9 @@ async function init() {
   ambience = new Ambience(audio);
   footprints.onStep = () => ambience.footstep(groundUnderfoot());
   // her songs: her own files when the pack has them (played at the speakers of the room), else YouTube
-  const files = (pack?.tracks || []).map((t) => ({ title: t.title, url: (pack.base || 'play/deepti/') + t.file }));
+  // (only the files that are actually there: the songs aren't in the repository, they're copied in by hand)
+  const listed = (pack?.tracks || []).map((t) => ({ title: t.title, url: (pack.base || 'play/deepti/') + t.file }));
+  const files = (await Promise.all(listed.map((f) => fetch(f.url, { method: 'HEAD' }).then((r) => (r.ok && !/text\/html/.test(r.headers.get('content-type') || '') ? f : null)).catch(() => null)))).filter(Boolean);
   music = new Music(pack?.music, document.getElementById('ytplayer'), files);
   roomAudio = new RoomAudio([...studio.audioZones, ...houseZones()]);
   music.onNeedAudio = () => { audio.start(); audio.setOn(state.sound); music.connect(audio.ctx, roomAudio, audio.master); };
