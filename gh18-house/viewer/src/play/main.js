@@ -10,6 +10,7 @@ const ROAD_PTS2 = () => ROAD.map((p) => [+p.x.toFixed(2), +p.z.toFixed(2)]);
 import { buildStudio, DEVANAGARI } from './studio.js';
 import { createEReader } from './ereader.js';
 import { createArtView } from './artview.js';
+import { buildBookCart } from './bookcart.js';
 import { fontsReady } from './fonts.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
 import { CollisionWorld } from './collide.js';
@@ -165,7 +166,14 @@ async function init() {
   // her e-reader (poems) and the paintings seen up close, both in the studio itself
   const quiet = () => { state.overlay = true; for (const k in keys) keys[k] = false; for (const k in walker?.keys || {}) walker.keys[k] = false; document.body.classList.add('viewing'); };
   const awake = () => { state.overlay = false; hudTimer = 0; document.body.classList.remove('viewing'); };
-  reader = createEReader({ pack, camera, scene, clockLabel: () => fmtClock(state.clock.h), onOpen: quiet, onClose: awake });
+  // her books: the PDFs listed in the pack that are actually there (they're copied in by hand, not in the repository)
+  const listedBooks = (pack?.books || []).map((b) => ({ ...b, url: (pack.base || 'play/deepti/') + b.file }));
+  const books = (await Promise.all(listedBooks.map((b) => fetch(b.url, { method: 'HEAD' }).then((r) => (r.ok && !/text\/html/.test(r.headers.get('content-type') || '') ? b : null)).catch(() => null)))).filter(Boolean);
+  reader = createEReader({ pack, books, camera, scene, clockLabel: () => fmtClock(state.clock.h), onOpen: quiet, onClose: awake });
+  if (books.length) {
+    const cart = buildBookCart(books, { x: 102.7, y: STUDIO.floor, z: 46.4, rot: -Math.PI / 2 });
+    scene.add(cart.group); studio.interact.push(...cart.interact); studio.walk.colliders.push(cart.collider);
+  }
   const artworks = studio.interact.filter((it) => it.kind === 'art' && it.size && it.index >= 0);
   artView = createArtView({ camera, canvas: renderer.domElement, scene, artworks, meta: pack?.art || [], total: pack?.art?.length || artworks.length, veil: document.getElementById('veil'), onStart: quiet, onEnd: awake,
     onSlideshow: (on) => { if (on && music && !music.playing) { music.play(); updateMusicUI(); } } });
@@ -928,6 +936,7 @@ function interact(it = focus || findFocus()) {
   if (it.kind === 'poem') return reader.open({ index: it.index });
   if (it.kind === 'art') return it.size ? artView.start(it.index) : showArt(it.url);
   if (it.kind === 'reader') return reader.open({ source: it.device });
+  if (it.kind === 'book') return reader.open({ book: it.index });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
   if (it.kind === 'letter') { const r = hunt.open(it.id, it.env); if (r?.locked) flash(`Not yet — find the other ${r.locked} letter${r.locked > 1 ? 's' : ''} first`); return; }

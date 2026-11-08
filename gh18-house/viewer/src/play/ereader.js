@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { SERIF, SANS, DEVA } from './fonts.js';
 import { DEVANAGARI } from './studio.js';
+import { loadBook, bookText, renderPage } from './books.js';
 
 // Her e-reader. A slim e-ink reader she picks up (from the desk, the window bed or the nook, or when she goes to
 // read a poem on the wall): it comes up into her hands in front of the camera, the studio still there behind it,
@@ -21,11 +22,11 @@ const SIZE = [0.86, 1, 1.16];
 const BW = 0.1255, BH = 0.1745, BD = 0.0082, SW = 0.1056, SH = 0.1408, SY = 0.0055;
 const INK = '#0d0c0b', GREY = '#5c5852', PAPER = '#e9e6de';
 
-export function createEReader({ pack, camera, scene, clockLabel = () => '', onOpen = () => {}, onClose = () => {} }) {
+export function createEReader({ pack, books = [], camera, scene, clockLabel = () => '', onOpen = () => {}, onClose = () => {} }) {
   const poems = pack?.poems || [];
   const hindi = (p) => DEVANAGARI.test(p.title + p.stanzas.flat().join(''));
   const hers = (p) => !p.author || /deepti/i.test(p.author);
-  let prefs = { poem: 0, size: 1 };
+  let prefs = { poem: 0, size: 1, marks: {} };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem('deepti-ereader') || '{}')); } catch { /* */ }
   const save = () => { try { localStorage.setItem('deepti-ereader', JSON.stringify(prefs)); } catch { /* */ } };
 
@@ -170,33 +171,128 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
     }
     chrome({ text: p.title, hi: hindi(p) }, pages.length > 1 ? `Page ${view.page + 1} of ${pages.length}` : `${prefs.poem + 1} of ${poems.length}`, (view.page + 1) / pages.length);
   }
-  let rows = [];
+  // the library: her books first (if there are any), then her poems and those for her; a long list scrolls
+  let rows = [], libTop = 0;
+  const poemOrder = () => [...poems.map((p, i) => i).filter((i) => hers(poems[i])), ...poems.map((p, i) => i).filter((i) => !hers(poems[i]))];
+  const items = () => [...books.map((b, bi) => ({ kind: 'book', bi, sec: 'HER BOOKS' })), ...poemOrder().map((i) => ({ kind: 'poem', i, sec: hers(poems[i]) ? 'HER POEMS' : 'FOR HER' }))];
   function drawLibrary() {
     g.drawImage(grain, 0, 0);
     g.fillStyle = INK; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
     g.font = `italic 400 76px ${SERIF}`; g.fillText('Library', M.x0, 238);
-    g.fillStyle = GREY; g.font = `500 22px ${SANS}`; g.fillText(`${poems.length} poems`, M.x0 + 4, 284);
-    const order = [...poems.map((p, i) => i).filter((i) => hers(poems[i])), ...poems.map((p, i) => i).filter((i) => !hers(poems[i]))];
-    rows = [];
-    let y = 330, section = null;
-    const RH = Math.min(104, (M.bottom - 330 - 2 * 74) / Math.max(1, poems.length));
-    for (const i of order) {
-      const p = poems[i], sec = hers(p) ? 'HER POEMS' : 'FOR HER';
-      if (sec !== section) { section = sec; y += 26; g.fillStyle = GREY; g.font = `600 20px ${SANS}`; spacedText(sec, M.x0, y + 20, 5, 'left'); y += 48; }
-      const on = i === view.sel;
-      if (on) { g.fillStyle = INK; g.fillRect(M.x0 - 22, y, M.x1 - M.x0 + 44, RH - 8); }
+    g.fillStyle = GREY; g.font = `500 22px ${SANS}`; g.fillText([books.length ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : '', `${poems.length} poems`].filter(Boolean).join('  ·  '), M.x0 + 4, 284);
+    const list = items(), RH = 96, HEAD = 74, top = 320, bottom = M.bottom - 10;
+    // the rows' heights, section headings included, then scroll so the chosen one is in view
+    const ys = []; let y = 0, sec = null;
+    for (const it of list) { if (it.sec !== sec) { sec = it.sec; y += HEAD; } ys.push(y); y += RH; }
+    const selY = ys[view.sel] ?? 0;
+    if (selY - libTop < 0) libTop = Math.max(0, selY - HEAD); else if (selY + RH - libTop > bottom - top) libTop = selY + RH - (bottom - top);
+    g.save(); g.beginPath(); g.rect(0, top, CW, bottom - top); g.clip();
+    rows = []; sec = null;
+    list.forEach((it, k) => {
+      const ry = top + ys[k] - libTop;
+      if (it.sec !== sec) { sec = it.sec; g.fillStyle = GREY; g.font = `600 20px ${SANS}`; spacedText(sec, M.x0, ry - HEAD + 50, 5, 'left'); }
+      if (ry + RH < top || ry > bottom) return;
+      const on = k === view.sel;
+      if (on) { g.fillStyle = INK; g.fillRect(M.x0 - 22, ry, M.x1 - M.x0 + 44, RH - 8); }
+      let title, sub, right, hi = false;
+      if (it.kind === 'book') { const b = books[it.bi]; title = b.title; sub = b.author || ''; const m = prefs.marks[b.url]; right = m ? `${Math.round((m.frac || 0) * 100)}%` : 'new'; }
+      else { const p = poems[it.i]; title = p.title; hi = hindi(p); sub = (!hers(p) || p.date) ? [p.author, p.date].filter(Boolean).join('  ·  ') : ''; const n = typeset(it.i).length; right = `${n} ${n === 1 ? 'page' : 'pages'}`; }
       g.fillStyle = on ? PAPER : INK; g.textAlign = 'left';
-      g.font = hindi(p) ? `400 ${Math.round(RH * 0.36)}px ${DEVA}` : `italic 400 ${Math.round(RH * 0.44)}px ${SERIF}`;
-      let title = p.title; while (g.measureText(title).width > M.x1 - M.x0 - 200 && title.length > 4) title = title.slice(0, -2);
-      g.fillText(title === p.title ? title : title + '…', M.x0, y + RH * 0.56);
-      g.fillStyle = on ? '#cfcac0' : GREY; g.font = `500 20px ${SANS}`; g.textAlign = 'right';
-      const n = typeset(i).length;
-      g.fillText(`${n} ${n === 1 ? 'page' : 'pages'}`, M.x1, y + RH * 0.56);
-      if (!hers(p) || p.date) { g.textAlign = 'left'; g.font = `500 19px ${DEVANAGARI.test(p.author || '') ? DEVA : SANS}`; g.fillText([p.author, p.date].filter(Boolean).join('  ·  '), M.x0, y + RH * 0.84); }
-      rows.push({ i, y0: y, y1: y + RH - 8 });
-      y += RH;
+      g.font = hi ? `400 35px ${DEVA}` : `italic 400 42px ${SERIF}`;
+      let t = title; while (g.measureText(t).width > M.x1 - M.x0 - 200 && t.length > 4) t = t.slice(0, -2);
+      g.fillText(t === title ? t : t + '…', M.x0, ry + RH * 0.52);
+      g.fillStyle = on ? '#cfcac0' : GREY; g.font = `500 20px ${SANS}`; g.textAlign = 'right'; g.fillText(right, M.x1, ry + RH * 0.52);
+      if (sub) { g.textAlign = 'left'; g.font = `500 19px ${DEVANAGARI.test(sub) ? DEVA : SANS}`; g.fillText(sub, M.x0, ry + RH * 0.82); }
+      rows.push({ k, y0: ry, y1: ry + RH - 8 });
+    });
+    g.restore();
+    chrome({ text: books.length ? 'Choose a book or a poem' : 'Choose a poem', hi: false }, '↑ ↓  ·  Enter', null);
+  }
+  const choose = (k) => { const it = items()[k]; if (!it) return; if (it.kind === 'book') openBook(it.bi); else goPoem(it.i); };
+
+  // ---------------------------------------------------------------- a book: set again at her size, or its own pages
+  const bookData = new Map();
+  const BOOK_SIZE = [0.86, 1, 1.16];
+  function layBook(paras, si) {
+    const s = BOOK_SIZE[si], width = M.x1 - M.x0, avail = M.bottom - M.top;
+    const pages = [[]]; let y = 0, at = 0;
+    const put = (o) => { if (y + o.h > avail && pages[pages.length - 1].length) { pages.push([]); y = 0; } pages[pages.length - 1].push({ ...o, y, at }); y += o.h; };
+    let afterHead = true;
+    paras.forEach((p, pi) => {
+      at = pi;
+      const hi = DEVANAGARI.test(p.text);
+      if (p.kind === 'h') {
+        if (y > avail * 0.35) { pages.push([]); y = 0; }                     // (a new chapter starts a new page)
+        const font = hi ? `400 ${Math.round(52 * s)}px ${DEVA}` : `italic 400 ${Math.round(66 * s)}px ${SERIF}`, lh = Math.round((hi ? 52 : 66) * s * 1.3);
+        put({ kind: 'gap', h: y ? lh * 0.6 : lh * 1.2 });
+        for (const t of wrap(p.text, font, width * 0.86)) put({ kind: 'h', text: t, font, h: lh });
+        put({ kind: 'gap', h: lh * 0.7 }); afterHead = true; return;
+      }
+      const font = hi ? `400 ${Math.round(38 * s)}px ${DEVA}` : `500 ${Math.round(45 * s)}px ${SERIF}`, lh = Math.round((hi ? 38 * 1.95 : 45 * 1.42) * s), indent = afterHead ? 0 : Math.round(45 * s * 1.3);
+      g.font = font;
+      const words = p.text.split(/\s+/).filter(Boolean); let line = [], w = indent; const space = g.measureText(' ').width;
+      const flushLine = (last) => { put({ kind: 'line', words: line, font, h: lh, indent: line.first ? indent : 0, justify: !last, width }); };
+      let first = true;
+      for (const word of words) {
+        const ww = g.measureText(word).width;
+        if (line.length && w + space + ww > width) { line.first = first; flushLine(false); first = false; line = []; w = 0; }
+        line.push({ t: word, w: ww }); w += (line.length > 1 ? space : 0) + ww;
+      }
+      if (line.length) { line.first = first; flushLine(true); }
+      afterHead = false;
+    });
+    return pages;
+  }
+  function drawBook() {
+    const bk = view.book, b = books[bk.bi], d = bookData.get(bk.bi);
+    g.drawImage(grain, 0, 0);
+    g.textBaseline = 'alphabetic';
+    const msg = (t) => { g.fillStyle = GREY; g.font = `italic 400 44px ${SERIF}`; g.textAlign = 'center'; g.fillText(t, CW / 2, CH / 2); };
+    if (!d || d.loading) { msg(`Opening “${b.title}”…`); chrome({ text: b.title }, '', null); return; }
+    if (d.error) { msg('This book could not be opened.'); chrome({ text: b.title }, '', null); return; }
+    if (bk.original) {
+      const n = d.book.pages, img = d.imgs.get(bk.page);
+      if (img) { g.save(); g.filter = 'grayscale(1) contrast(1.15)'; g.drawImage(img, (CW - img.width) / 2, M.top - 40 + (M.bottom - M.top + 40 - img.height) / 2); g.restore(); }
+      else { msg('…'); pageImage(bk.bi, bk.page); }
+      chrome({ text: b.title }, `Page ${bk.page + 1} of ${n}  ·  original`, (bk.page + 1) / n);
+      return;
     }
-    chrome({ text: 'Choose a poem', hi: false }, '↑ ↓  ·  Enter', null);
+    const pages = d.laid.get(prefs.size) || d.laid.set(prefs.size, layBook(d.paras, prefs.size)).get(prefs.size);
+    if (!pages.length || !d.paras.length) { msg('No text in this PDF: O for its own pages'); chrome({ text: b.title }, '', null); return; }
+    const pg = pages[Math.min(bk.page, pages.length - 1)];
+    for (const l of pg) {
+      const y = M.top + l.y;
+      if (l.kind === 'gap') continue;
+      g.fillStyle = INK; g.font = l.font;
+      if (l.kind === 'h') { g.textAlign = 'center'; g.fillText(l.text, CW / 2, y + l.h * 0.72); continue; }
+      // a line of the text, justified (the last line of a paragraph is not)
+      const x0 = M.x0 + (l.indent || 0), total = l.words.reduce((a, q) => a + q.w, 0), gaps = l.words.length - 1;
+      const sp = l.justify && gaps > 0 ? (l.width - (l.indent || 0) - total) / gaps : g.measureText(' ').width;
+      let x = x0; g.textAlign = 'left';
+      for (const q of l.words) { g.fillText(q.t, x, y + l.h * 0.72); x += q.w + sp; }
+    }
+    const frac = (bk.page + 1) / pages.length;
+    chrome({ text: b.title, hi: DEVANAGARI.test(b.title) }, `Page ${bk.page + 1} of ${pages.length}  ·  ${Math.round(frac * 100)}%`, frac);
+  }
+  function pageImage(bi, n) {
+    const d = bookData.get(bi); if (!d || d.pending.has(n)) return;
+    d.pending.add(n);
+    renderPage(d.book, n + 1, M.x1 - M.x0 + 120, M.bottom - M.top + 40).then((c) => { d.imgs.set(n, c); d.pending.delete(n); if (view.mode === 'book' && view.book.bi === bi && view.book.page === n) render(); }).catch(() => d.pending.delete(n));
+  }
+  function bookPages(bi) { const d = bookData.get(bi); if (!d || d.loading || d.error) return 1; if (view.book.original) return d.book.pages; return (d.laid.get(prefs.size) || d.laid.set(prefs.size, layBook(d.paras, prefs.size)).get(prefs.size)).length || 1; }
+  function mark() { const bk = view.book, b = books[bk.bi]; prefs.marks[b.url] = { frac: bk.page / Math.max(1, bookPages(bk.bi)), orig: bk.original }; save(); }
+  function openBook(bi) {
+    const b = books[bi]; if (!b) return;
+    const m = prefs.marks[b.url] || {};
+    view.mode = 'book'; view.book = { bi, page: 0, original: !!m.orig };
+    let d = bookData.get(bi);
+    if (!d) {
+      d = { loading: true, imgs: new Map(), pending: new Set(), laid: new Map() }; bookData.set(bi, d);
+      loadBook(b.url).then(async (book) => { d.book = book; d.paras = await bookText(book); d.loading = false; })
+        .catch((e) => { console.warn('book', b.url, e?.name, e?.message || e); d.error = true; d.loading = false; })
+        .then(() => { if (view.mode === 'book' && view.book.bi === bi) { view.book.page = Math.min(bookPages(bi) - 1, Math.floor((m.frac || 0) * bookPages(bi))); render(true); } });
+    } else if (!d.loading) view.book.page = Math.min(bookPages(bi) - 1, Math.floor((m.frac || 0) * bookPages(bi)));
+    render(true);
   }
   // the e-ink refresh: a black flash, then the page (with a faint ghost of the last one, gone a moment later)
   let flashT = 0, prevImage = null;
@@ -207,32 +303,43 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
       g.fillStyle = '#121110'; g.fillRect(0, 0, CW, CH); tex.needsUpdate = true;
       flashT = 0.07; return;
     }
-    if (view.mode === 'library') drawLibrary(); else drawPage();
+    if (view.mode === 'library') drawLibrary(); else if (view.mode === 'book') drawBook(); else drawPage();
     tex.needsUpdate = true;
   }
   function finishRefresh() {
-    if (view.mode === 'library') drawLibrary(); else drawPage();
+    if (view.mode === 'library') drawLibrary(); else if (view.mode === 'book') drawBook(); else drawPage();
     if (prevImage) { g.globalAlpha = 0.07; g.drawImage(prevImage, 0, 0); g.globalAlpha = 1; ghostT = 0.45; }
     tex.needsUpdate = true;
   }
   let ghostT = 0;
 
   // ---------------------------------------------------------------- reading
-  const view = { mode: 'page', page: 0, sel: 0 };
+  const view = { mode: 'page', page: 0, sel: 0, book: null };
+  const selOfPoem = (i) => Math.max(0, items().findIndex((it) => it.kind === 'poem' && it.i === i));
   function goPoem(i, page = 0) {
     prefs.poem = THREE.MathUtils.clamp(i, 0, poems.length - 1); save();
     view.mode = 'page'; view.page = page === 'last' ? typeset(prefs.poem).length - 1 : page;
     render(true);
   }
   function turn(k) {
-    if (view.mode === 'library') { view.sel = (view.sel + k + poems.length) % poems.length; render(); return; }
+    if (view.mode === 'library') { const n = items().length; view.sel = (view.sel + k + n) % n; render(); return; }
+    if (view.mode === 'book') {
+      const n = bookPages(view.book.bi);
+      if (view.book.page + k >= 0 && view.book.page + k < n) { view.book.page += k; mark(); render(true); }
+      return;
+    }
     const n = typeset(prefs.poem).length;
     if (view.page + k >= 0 && view.page + k < n) { view.page += k; render(true); return; }
     if (k > 0 && prefs.poem < poems.length - 1) return goPoem(prefs.poem + 1);
     if (k < 0 && prefs.poem > 0) return goPoem(prefs.poem - 1, 'last');
   }
-  function library() { view.mode = 'library'; view.sel = prefs.poem; render(true); }
+  function library() { if (view.mode === 'book') { mark(); view.sel = view.book.bi; } else view.sel = selOfPoem(prefs.poem); view.mode = 'library'; libTop = 0; render(true); }
   function setSize(k) {
+    if (view.mode === 'book') {
+      const frac = view.book.page / Math.max(1, bookPages(view.book.bi));
+      prefs.size = THREE.MathUtils.clamp(prefs.size + k, 0, SIZE.length - 1); save();
+      view.book.page = Math.min(bookPages(view.book.bi) - 1, Math.floor(frac * bookPages(view.book.bi))); mark(); render(true); return;
+    }
     const frac = view.page / Math.max(1, typeset(prefs.poem).length);
     prefs.size = THREE.MathUtils.clamp(prefs.size + k, 0, SIZE.length - 1); save();
     view.page = Math.min(typeset(prefs.poem).length - 1, Math.floor(frac * typeset(prefs.poem).length));
@@ -250,11 +357,11 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
     holdPos.set(Math.sin(sway * 0.7) * 0.0009, -0.003 + Math.sin(sway * 1.1) * 0.0006, -d);
     holdQuat.setFromEuler(e1.set(-0.07 + Math.sin(sway * 0.9) * 0.004, Math.sin(sway * 0.6) * 0.006, 0));
   };
-  function open({ index = null, source = null } = {}) {
-    if (!poems.length) return;
-    if (index != null) { prefs.poem = index; view.mode = 'page'; view.page = 0; save(); }
-    else { view.mode = 'library'; view.sel = prefs.poem; }
-    render(false);
+  function open({ index = null, book = null, source = null } = {}) {
+    if (!poems.length && !books.length) return;
+    if (book != null) openBook(book);
+    else if (index != null) { prefs.poem = index; view.mode = 'page'; view.page = 0; save(); render(false); }
+    else { view.mode = 'library'; view.sel = view.book ? view.book.bi : selOfPoem(prefs.poem); libTop = 0; render(false); }
     camera.updateMatrixWorld(true);
     invCam.copy(camera.matrixWorld).invert();
     if (source) {                                            // up from where it lay
@@ -304,7 +411,7 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
     if (view.mode === 'library') {
       if (!hit) return;
       const cy = (1 - hit.uv.y) * CH, row = rows.find((r) => cy >= r.y0 && cy <= r.y1);
-      if (row) goPoem(row.i);
+      if (row) choose(row.k);
       return;
     }
     const u = hit ? hit.uv.x : (nx + 1) / 2;
@@ -317,7 +424,16 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
     if (view.mode === 'library') {
       if (c === 'ArrowDown' || c === 'ArrowRight') { e.preventDefault(); turn(1); }
       else if (c === 'ArrowUp' || c === 'ArrowLeft') { e.preventDefault(); turn(-1); }
-      else if (c === 'Enter' || c === 'Space') { e.preventDefault(); goPoem(view.sel); }
+      else if (c === 'Enter' || c === 'Space') { e.preventDefault(); choose(view.sel); }
+      return;
+    }
+    if (view.mode === 'book') {
+      if (c === 'ArrowRight' || c === 'PageDown' || c === 'ArrowDown' || (c === 'Space' && !e.shiftKey)) { e.preventDefault(); turn(1); }
+      else if (c === 'ArrowLeft' || c === 'PageUp' || c === 'ArrowUp' || (c === 'Space' && e.shiftKey)) { e.preventDefault(); turn(-1); }
+      else if (c === 'KeyO') { const frac = view.book.page / Math.max(1, bookPages(view.book.bi)); view.book.original = !view.book.original; view.book.page = Math.min(bookPages(view.book.bi) - 1, Math.floor(frac * bookPages(view.book.bi))); mark(); render(true); }
+      else if (c === 'KeyL' || c === 'Home') library();
+      else if (c === 'Equal' || c === 'NumpadAdd') setSize(1);
+      else if (c === 'Minus' || c === 'NumpadSubtract') setSize(-1);
       return;
     }
     if (c === 'ArrowRight' || c === 'PageDown' || (c === 'Space' && !e.shiftKey)) { e.preventDefault(); turn(1); }
@@ -332,6 +448,7 @@ export function createEReader({ pack, camera, scene, clockLabel = () => '', onOp
     open, close, update, click, key, turn, setLight, library,
     get isOpen() { return anim.open; },
     get busy() { return device.visible; },
-    state: () => ({ open: anim.open, mode: view.mode, poem: prefs.poem, page: view.page, pages: typeset(prefs.poem).length, size: prefs.size }),
+    state: () => ({ open: anim.open, mode: view.mode, poem: prefs.poem, page: view.mode === 'book' ? view.book.page : view.page, pages: view.mode === 'book' ? bookPages(view.book.bi) : typeset(prefs.poem).length, size: prefs.size, book: view.book && { ...view.book, loading: bookData.get(view.book.bi)?.loading, paras: bookData.get(view.book.bi)?.paras?.length } }),
+    openBook, books,
   };
 }

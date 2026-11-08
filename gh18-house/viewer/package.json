@@ -15,10 +15,11 @@
     "drive:test": "node scripts/drive_harness.mjs --compare"
   },
   "dependencies": {
+    "pdfjs-dist": "4.10.38",
     "three": "0.170.0"
   },
   "devDependencies": {
-    "vite": "5.4.11",
-    "playwright": "1.48.2"
+    "playwright": "1.48.2",
+    "vite": "5.4.11"
   }
 }

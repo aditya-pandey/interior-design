@@ -43,6 +43,8 @@ const playPage = {
     if (fs.existsSync(mdl)) fs.cpSync(mdl, path.resolve(__dirname, 'dist/play/models'), { recursive: true });
     const fnt = path.resolve(__dirname, 'play/fonts');            // Noto Serif Devanagari for her Hindi poems (SIL OFL 1.1, OFL.txt alongside)
     if (fs.existsSync(fnt)) fs.cpSync(fnt, path.resolve(__dirname, 'dist/play/fonts'), { recursive: true });
+    // pdf.js's standard fonts and character maps, for her books (Apache-2.0, from node_modules/pdfjs-dist)
+    for (const d of ['standard_fonts', 'cmaps']) { const src = path.resolve(__dirname, 'node_modules/pdfjs-dist', d); if (fs.existsSync(src)) fs.cpSync(src, path.resolve(__dirname, 'dist/play/pdfjs', d), { recursive: true }); }
     const out = path.resolve(__dirname, 'dist/play/deepti');
     fs.rmSync(out, { recursive: true, force: true });
     if (PERSONAL) fs.cpSync(path.resolve(__dirname, 'play/deepti'), out, { recursive: true });
