@@ -256,3 +256,28 @@ body.looking::after { opacity: 1; }
 .bm-stop { position: absolute; right: max(16px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); pointer-events: auto; font: 600 13px Inter, sans-serif; color: #f7f1e6;
   background: rgba(16, 14, 12, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px; padding: 8px 16px; cursor: pointer; backdrop-filter: blur(8px); }
 @media (max-width: 600px) { .bm-call { font-size: 34px; } .bm-call.big { font-size: 38px; } .bm-help p:nth-child(3) { display: none; } }
+
+/* ---------------------------------------------------------------- his letters (hunt.js) */
+#letters-chip { cursor: pointer; }
+#letterhint { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 16; transform: translate(-50%, 6px); display: flex; gap: 20px; align-items: center;
+  font: 500 12px Inter, sans-serif; color: rgba(246, 239, 227, 0.85); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; white-space: nowrap; }
+#letterhint[hidden] { display: none; }
+#letterhint.in { opacity: 1; transform: translate(-50%, 0); }
+#letterhint kbd { display: inline-block; min-width: 20px; padding: 1px 5px; margin-right: 3px; border: 1px solid rgba(246, 239, 227, 0.35); border-radius: 5px; font: 600 11px Inter, sans-serif; text-align: center; }
+#letterhint .voice { color: #f0cf8e; }
+#letterhint button { display: none; font: 600 13px Inter, sans-serif; color: #f6efe3; background: rgba(20, 16, 12, 0.5); border: 1px solid rgba(246, 239, 227, 0.3); border-radius: 999px; padding: 8px 16px; }
+@media (hover: none) { #letterhint span:not(.voice) { display: none; } #letterhint button { display: inline-block; } }
+.goto.letters .sub { margin: -4px 0 14px; font: 500 12px Inter, sans-serif; color: #8a7458; }
+.goto.letters section { display: grid; gap: 4px; }
+.goto.letters button, .goto.letters .locked { display: flex; gap: 12px; align-items: baseline; text-align: left; font: italic 400 19px 'Cormorant Garamond', Georgia, serif; }
+.goto.letters .locked { padding: 7px 12px; color: #b3a48c; }
+.goto.letters .n { font: 600 11px Inter, sans-serif; letter-spacing: 0.1em; color: #b08d57; font-style: normal; }
+#finale { position: fixed; inset: 0; z-index: 17; display: grid; place-content: center; text-align: center; pointer-events: none; color: #fbf3e4; opacity: 0; transition: opacity 2.4s ease;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55); }
+#finale[hidden] { display: none; }
+#finale.show { opacity: 1; }
+#finale p { margin: 0; }
+#finale .a { font: italic 400 clamp(36px, 6vw, 72px)/1.05 'Cormorant Garamond', Georgia, serif; }
+#finale .b { font: italic 400 clamp(52px, 9vw, 110px)/1.05 'Cormorant Garamond', Georgia, serif; }
+#finale i { display: block; width: 90px; height: 2px; margin: 22px auto 16px; background: #e3c48f; }
+#finale .c { font: 600 13px Inter, sans-serif; letter-spacing: 0.35em; text-transform: uppercase; color: #f0dcb8; }

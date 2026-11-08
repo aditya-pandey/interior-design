@@ -179,10 +179,11 @@ export function buildLighthouse() {
     top: { x: LX + 2.4, z: LZ + 0.9, y: TOP, yaw: Math.PI / 2 },           // (on the gallery, facing west: the sunset)
     TOP, park: P,
     setNight(on) { nightK = on ? 1 : 0; M.lamp.emissiveIntensity = on ? 2.2 : 0; M.win.emissiveIntensity = on ? 0.9 : 0; lampLight.intensity = on ? 6 : 0; },
-    update(t, dt, glow = 0) {
+    update(t, dt, glow = 0, eye = null) {
       const k = THREE.MathUtils.clamp((glow - 0.15) / 0.5, 0, 1);
       beams.rotation.y = -t * (Math.PI * 2 / 12);
-      beamMat.opacity = 0.15 * k;
+      const close = eye ? THREE.MathUtils.clamp((eye.distanceTo(beams.position) - 3) / 10, 0.12, 1) : 1;      // (up on the gallery: barely there)
+      beamMat.opacity = 0.15 * k * close;
       M.lens.emissiveIntensity = 0.2 + 3.2 * k;
       beams.visible = k > 0.01;
     },
@@ -216,7 +217,7 @@ function beamTexture() {
   // along the beam: bright at the lamp (the cone's narrow end, the bottom of its texture), fading out over the sea
   const c = document.createElement('canvas'); c.width = 4; c.height = 256;
   const g = c.getContext('2d');
-  for (let y = 0; y < 256; y++) { const near = Math.pow(y / 255, 2.2); g.fillStyle = `rgba(255,236,190,${near})`; g.fillRect(0, y, 4, 1); }
+  for (let y = 0; y < 256; y++) { const v = y / 255, near = Math.pow(v, 2.2) * Math.min(1, (1 - v) / 0.06); g.fillStyle = `rgba(255,236,190,${near})`; g.fillRect(0, y, 4, 1); }      // (and soft where it leaves the lamp)
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }

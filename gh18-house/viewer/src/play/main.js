@@ -29,6 +29,8 @@ import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
 import { buildLighthouse, LIGHTHOUSE } from './lighthouse.js';
+import { createHunt, skyLanterns } from './hunt.js';
+import { FIRE } from './cosy.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion } from './chasecam.js';
@@ -122,7 +124,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool, reader, artView, lighthouse, hunt;
+let billboards, roomAudio, court, houseLife, lightPool, reader, artView, lighthouse, hunt, lanterns;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -176,6 +178,27 @@ async function init() {
   scene.add(lighthouse.group);
   houseLife = buildHouseLife({ house, rooms: ROOMS, pack });
   scene.add(houseLife.group);
+  // the treasure hunt: his letters, hidden round the world (positions of the places, a little above where she'd look)
+  {
+    const hl = (k) => houseLife.interact.find((i) => i.kind === k)?.pos;
+    const sp = (label) => studio.interact.find((i) => i.label === label)?.pos;
+    const up = (p, dy, dx = 0, dz = 0) => p && [p[0] + dx, p[1] + dy, p[2] + dz];
+    const spots = {
+      mandir: up(hl('diya'), 0.45), kitchen: up(hl('chai'), 0.55), master: [6.15, 3.75 + 1.3, 8.17], 'house-terrace': [4.69, 7.05 + 1.25, 18.26],
+      nook: up(sp('Curl up with a book'), 0.15), record: up(sp('Play a record'), 0.45, 0, 0.25), gallery: up(sp('Sit and look at her paintings'), 0.45),
+      desk: [104.6, 4.5 + 1.15, 50.3], terrace: up(sp('Sit on the floor cushions'), 0.6), court: up(court.interact[0].pos, 0.7),
+      fire: [FIRE.x + 1.3, groundHeight(FIRE.x + 1.3, FIRE.z) + 1.2, FIRE.z], 'lighthouse-top': [LIGHTHOUSE.x + 2.35, lighthouse.TOP + 1.05, LIGHTHOUSE.z - 0.4],
+    };
+    hunt = createHunt({
+      pack, base: pack?.base || 'play/deepti/', scene, camera, spots,
+      onOpen: () => { state.overlay = true; for (const k in keys) keys[k] = false; for (const k in walker?.keys || {}) walker.keys[k] = false; document.body.classList.add('viewing'); },
+      onClose: () => { state.overlay = false; hudTimer = 0; document.body.classList.remove('viewing'); },
+      onVoice: (on) => { if (!music) return; if (on) { state.musicVol = music.volume; music.setVolume(Math.min(music.volume, 12)); } else if (state.musicVol != null) { music.setVolume(state.musicVol); state.musicVol = null; } },
+      onFound: (n, total) => { updateLettersChip(); if (n < total) setTimeout(() => flash(`Letter ${n} of ${total}`), 1200); },
+      onFinale: () => finale(),
+    });
+    lanterns = skyLanterns(scene, { x0: LIGHTHOUSE.x - 30, x1: LIGHTHOUSE.x + 20, z0: LIGHTHOUSE.z + 6, z1: LIGHTHOUSE.z + 50 });
+  }
   scene.add(cosy.group);
   const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
@@ -647,6 +670,7 @@ function bindUI() {
     keys[e.code] = true;
     if (e.repeat || !state.started) return;
     if (reader?.busy) { if (reader.isOpen) reader.key(e); return; }
+    if (hunt?.busy) { if (hunt.isOpen) hunt.key(e); return; }
     if (artView?.active) { artView.key(e); return; }
     if (state.overlay) {
       if (album && (e.code === 'ArrowRight' || e.code === 'ArrowLeft')) { turnAlbum(e.code === 'ArrowRight' ? 1 : -1); return; }
@@ -709,7 +733,8 @@ function bindUI() {
     b.addEventListener('pointerdown', on);
     for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, off);
   }
-  document.getElementById('prompt').addEventListener('click', interact);
+  document.getElementById('prompt').addEventListener('click', () => interact());
+  document.getElementById('letters-chip')?.addEventListener('click', (e) => { e.stopPropagation(); if (!state.overlay) showLetters(); });
   document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay' || e.target.classList.contains('close')) closeOverlay(); });
   // music panel
   document.getElementById('m-play').addEventListener('click', () => music.toggle());
@@ -725,6 +750,7 @@ function bindUI() {
   // a click (not a drag) on something she can read, look at or use: that thing
   el.addEventListener('pointerup', (e) => {
     const p = press; press = null;
+    if (p && hunt?.isOpen && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) { const r = el.getBoundingClientRect(); hunt.click(((e.clientX - r.left) / r.width) * 2 - 1); return; }
     if (p && reader?.isOpen && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) { const r = el.getBoundingClientRect(); reader.click(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); return; }
     if (p && reader?.isOpen && Math.abs(e.clientX - p.x) > 50) { reader.turn(e.clientX < p.x ? 1 : -1); return; }       // (a swipe)
     if (!p || state.overlay || state.rally || state.mode !== 'foot' || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 6 || performance.now() - p.t > 500) return;
@@ -733,7 +759,7 @@ function bindUI() {
   });
   window.addEventListener('pointermove', (e) => {
     if (!drag || e.pointerId !== drag.id) return;
-    if (reader?.busy || artView?.active || state.rally) return;
+    if (reader?.busy || artView?.active || state.rally || hunt?.busy) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.x = e.clientX; drag.y = e.clientY;
     if (state.mode === 'foot') {                 // look around
@@ -834,6 +860,8 @@ function startExplore() {
     requestAnimationFrame(() => bd.classList.add('show'));
     setTimeout(() => { bd.classList.remove('show'); setTimeout(() => (bd.hidden = true), 1200); }, Math.max(6, dur) * 1000);
   } else flash('Take her for a drive along the coast');
+  updateLettersChip();
+  if (hunt?.carPending()) setTimeout(() => { if (state.mode === 'drive') flash('There’s a letter for you on the passenger seat · E'); }, state.birthday ? 9000 : 3500);
 }
 // a recording from the owner, played once when she reaches the studio (pack.studioMessage)
 function playMessage() {
@@ -873,12 +901,13 @@ function flash(msg) {
 let focus = null;
 const fwdV = new THREE.Vector3();
 function findFocus() {
+  if (state.mode === 'drive' && hunt?.carPending() && !state.overlay && Math.abs(sim.speed) < 1) return { kind: 'letter', id: 'car', label: 'Read the letter on the passenger seat' };
   if (state.mode !== 'foot' || state.overlay) return null;
   if (state.lying) return { kind: 'getup', label: 'Get up' };
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...seatSpots] : seatSpots) {
+  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...hunt.interact.filter((i) => i.env.g.visible), ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -901,6 +930,7 @@ function interact(it = focus || findFocus()) {
   if (it.kind === 'reader') return reader.open({ source: it.device });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
+  if (it.kind === 'letter') { const r = hunt.open(it.id, it.env); if (r?.locked) flash(`Not yet — find the other ${r.locked} letter${r.locked > 1 ? 's' : ''} first`); return; }
   if (it.kind === 'climb') return climbLighthouse(true);
   if (it.kind === 'descend') return climbLighthouse(false);
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
@@ -916,7 +946,7 @@ function pickAt(cx, cy) {
   const r = renderer.domElement.getBoundingClientRect(), nx = ((cx - r.left) / r.width) * 2 - 1, ny = -((cy - r.top) / r.height) * 2 + 1;
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = 0.16;
-  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact]) {
+  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...hunt.interact.filter((i) => i.env.g.visible)]) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r * 1.6 || Math.abs(it.pos[1] - hy) > 2.2) continue;
     if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;
@@ -1100,6 +1130,27 @@ function showLift(from) {
   const btns = ['SF', 'FF', 'GF'].map((f) => `<button data-f="${f}"${f === from ? ' class="here"' : ''}>${{ GF: 'G', FF: '1', SF: '2' }[f]}<small>${FLOOR_NAME[f]}</small></button>`).join('');
   showOverlay(`<button class="close" aria-label="Close">×</button><div class="lift"><h3>Lift</h3><div class="pad">${btns}</div></div>`, 'paper');
   for (const b of document.querySelectorAll('#overlay .lift button')) b.addEventListener('click', () => rideLift(from, b.dataset.f));
+}
+// the treasure hunt's end: the sun goes down (if it's still up), lanterns rise from the beach, her music
+function finale() {
+  const c = state.clock, ev = sunEvents(c.date);
+  if (c.h > ev.rise && c.h < ev.set) { c.h = Math.max(c.h, ev.set - 0.3); applyClock(true); c.boost = 70; }
+  lanterns.start();
+  if (music && !music.playing) { music.play(); updateMusicUI(); }
+  const f = document.getElementById('finale');
+  f.hidden = false; requestAnimationFrame(() => f.classList.add('show'));
+  setTimeout(() => { f.classList.remove('show'); setTimeout(() => (f.hidden = true), 2500); }, 14000);
+}
+function updateLettersChip() {
+  const chip = document.getElementById('letters-chip');
+  if (!chip || !hunt?.total) return;
+  chip.hidden = !state.explore; chip.querySelector('.val').textContent = `${hunt.count()} / ${hunt.total}`;
+}
+function showLetters() {
+  const found = hunt.found();
+  const rows = hunt.letters.map((l, i) => found.includes(l.id) ? `<button data-id="${esc(l.id)}"><span class="n">${String(i + 1).padStart(2, '0')}</span>${esc(hunt.PLACES[l.place] || l.place)}</button>` : `<span class="locked"><span class="n">${String(i + 1).padStart(2, '0')}</span>Not found yet</span>`).join('');
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto letters"><h3>His letters</h3><p class="sub">${found.length} of ${hunt.total} found</p><section>${rows}</section></div>`, 'paper');
+  for (const b of document.querySelectorAll('#overlay .letters button[data-id]')) b.addEventListener('click', () => { closeOverlay(); hunt.open(b.dataset.id); });
 }
 // the lighthouse: up the 122 steps to the gallery (a fade), and back down to the door
 function climbLighthouse(up) {
@@ -1415,6 +1466,16 @@ function drawMap() {
   g.fillStyle = state.mode === 'foot' ? '#ffd9a0' : '#ffffff'; g.strokeStyle = '#1b1b1b'; g.lineWidth = 2;
   g.beginPath(); g.moveTo(0, -9); g.lineTo(6, 7); g.lineTo(0, 3); g.lineTo(-6, 7); g.closePath(); g.fill(); g.stroke();
   g.restore();
+  if (hunt) {                                       // (rings, not dots: roughly where a letter is waiting)
+    g.save(); g.beginPath(); g.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2); g.clip();
+    g.strokeStyle = 'rgba(214,168,74,0.9)'; g.lineWidth = 2; g.setLineDash([4, 3]);
+    for (const it of hunt.interact) {
+      if (!it.env.g.visible) continue;
+      const o = (it.id.charCodeAt(0) % 7) - 3, mx = S / 2 + ((MAP.x1 - it.pos[0] + o) - u) * k, my = S / 2 + ((MAP.z1 - it.pos[2] - o) - v) * k;
+      g.beginPath(); g.arc(mx, my, 9 * k, 0, Math.PI * 2); g.stroke();
+    }
+    g.restore();
+  }
   g.fillStyle = '#1b1b1b'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center';
   g.fillText('N', S / 2, 14);
 }
@@ -1490,7 +1551,7 @@ function frame(dt = 1 / 60, show = true) {
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   court.update(clock);
-  lighthouse.update(clock, dt, state.glow || 0);
+  lighthouse.update(clock, dt, state.glow || 0, camera.position);
   lightPool?.update(dt, camera.position);
   if (houseLife.update(clock, dt, { x: head.position.x, z: head.position.z, foot: walker.foot, room: state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null, night: (state.glow || 0) > 0.3, ctx: audio?.ctx, out: audio?.master, indoors: isIndoors() })) flash('Chai’s ready ☕');
   if (state.rally) rallyTick(dt);
@@ -1549,6 +1610,8 @@ function frame(dt = 1 / 60, show = true) {
     drawMap();
   }
   if (reader) { reader.setLight(state.glow || 0); reader.update(dt); }
+  if (hunt) hunt.update(clock, dt, camera.position);
+  if (lanterns?.running) lanterns.update(dt, camera);
   dev.frame();
   if (show) draw();
 }
@@ -1641,7 +1704,7 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader, artView, studio }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse }),
   step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
   court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)
