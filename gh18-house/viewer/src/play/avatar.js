@@ -129,12 +129,13 @@ export async function loadAvatar(url, height = 1.62) {
   let phase = 0;
   const w = { ...W, idle: 1 };
   let modeNow = 'idle';
-  function update(dt, { mode = 'idle', speed = 0, crank = 0, rig = null, enter = null } = {}) {
+  function update(dt, { mode = 'idle', speed = 0, crank = 0, rig = null, enter = null, jumpT = 1.8 } = {}) {
     modeNow = enter ? 'enter' : mode;
     if (enter) {
       // getting into a car: the clip at time enter.t (mirrored for a right-hand drive), nothing else
       for (const m in w) w[m] = 0;
       for (const act of Object.values(clips)) act.setEffectiveWeight(0);
+      once.jump?.setEffectiveWeight(0);
       const a = enter.mirror ? once.enterM : once.enter;
       (enter.mirror ? once.enter : once.enterM).setEffectiveWeight(0);
       a.setEffectiveWeight(1); a.time = Math.min(enter.t, a.getClip().duration - 1e-3);
@@ -149,6 +150,7 @@ export async function loadAvatar(url, height = 1.62) {
     // a Mixamo clip, if there is one for this move, plays at its weight (the made move then stands aside)
     for (const [m, act] of Object.entries(clips)) { act.setEffectiveWeight(w[m]); if (m === 'walk' || m === 'run') act.setEffectiveTimeScale(Math.max(0.4, speed / (m === 'run' ? 3.6 : 1.4))); }
     let cw = 0; for (const m in clips) cw += w[m];
+    if (once.jump) { once.jump.setEffectiveWeight(w.jump); once.jump.time = jumpT; cw += w.jump; }
     if (idle) idle.setEffectiveWeight(Math.max(0.001, 1 - cw));          // (the mixer averages by weight: the idle steps aside)
     for (const [b, q] of rest) b.quaternion.copy(q);
     mixer.update(dt);
@@ -172,7 +174,7 @@ export async function loadAvatar(url, height = 1.62) {
       B.Hips.position.y = hipsRest.y - (Math.abs(c) * 0.025 * amp + 0.07 * runW) / k;
     } else B.Hips.position.y = hipsRest.y;
     // in the air: knees drawn up, arms forward for balance; climbing: arms reaching up over the ledge, a knee up
-    const wj = clips.jump ? 0 : w.jump, wc = clips.climb ? 0 : w.climb;
+    const wj = clips.jump || once.jump ? 0 : w.jump, wc = clips.climb ? 0 : w.climb;
     if (wj > 0.01) {
       turn(B.LeftUpLeg, L, -0.75 * wj); turn(B.RightUpLeg, L, -0.3 * wj); turn(B.LeftLeg, L, 1.15 * wj); turn(B.RightLeg, L, 0.55 * wj);
       turn(B.LeftArm, L, -0.8 * wj); turn(B.RightArm, L, -0.5 * wj); turn(B.LeftForeArm, L, -0.4 * wj); turn(B.RightForeArm, L, -0.5 * wj);
@@ -257,6 +259,7 @@ export async function loadAvatar(url, height = 1.62) {
   const once = {};
   function addClip(move, clip) {
     if (move === 'enter') return addOnce(clip);
+    if (move === 'jump') return addJump(clip);
     clip.tracks = clip.tracks.filter((t) => {
       const [node, prop] = t.name.split('.');
       const b = bones[strip(node)];
@@ -295,6 +298,20 @@ export async function loadAvatar(url, height = 1.62) {
       const a = mixer.clipAction(c); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.setEffectiveWeight(0); a.play(); a.paused = true;
       once[k] = a;
     }
+  }
+  // Mixamo's Jumping (a hop, three times over): one hop (1.2 s crouch → 1.8 s top → 2.1 s landing) shown at the
+  // point her own flight has reached (update's jumpT), her hips held at their height (the game moves her up and down)
+  function addJump(clip) {
+    clip.tracks = clip.tracks.filter((t) => {
+      const [node, prop] = t.name.split('.');
+      const b = bones[strip(node)];
+      if (!b) return false;
+      if (prop === 'position') { if (strip(node) !== 'Hips') return false; for (let i = 0; i < t.values.length; i += 3) { t.values[i] = hipsRest.x; t.values[i + 1] = hipsRest.y; t.values[i + 2] = hipsRest.z; } }
+      t.name = b.name + '.' + prop;
+      return true;
+    });
+    const a = mixer.clipAction(clip); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.setEffectiveWeight(0); a.play(); a.paused = true;
+    once.jump = a;
   }
   // where her hips are at the end of getting in (her root at the origin, facing +Z), to line it up with a seat
   const hv2 = new THREE.Vector3();
