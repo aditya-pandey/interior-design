@@ -54,7 +54,20 @@ export async function loadAvatar(url, height = 1.62) {
   const rest = Object.values(bones).map((b) => [b, b.quaternion.clone()]);
   const wp1 = new THREE.Vector3(), wp2 = new THREE.Vector3(), len = (a, b) => (bones[a] && bones[b] ? bones[a].getWorldPosition(wp1).distanceTo(bones[b].getWorldPosition(wp2)) : 0);
   const palmLen = len('LeftHand', 'LeftHandMiddle1') || 0.09, footLen = len('LeftFoot', 'LeftToeBase') || 0.1;
-  const armLen = len('LeftArm', 'LeftForeArm') + len('LeftForeArm', 'LeftHand');     // (the made moves turn bones the clips may not touch)
+  const armLen = len('LeftArm', 'LeftForeArm') + len('LeftForeArm', 'LeftHand');
+  // first person on a two-wheeler: her eyes (between the eyeballs, in the head's own frame) and the parts of her
+  // that would be in front of them (head, hair, eyes, sunglasses) hidden; her body, arms and hands stay
+  const headParts = [], eyes = [];
+  model.traverse((o) => {
+    const n = o.material?.name || '';
+    if (!o.isMesh) return;
+    if (/AvatarHead|haircut|Cornea|Eyeball|glasses|Eyelashes|Teeth/.test(n)) headParts.push(o);
+    if (/Eyeball/.test(n)) eyes.push(new THREE.Box3().setFromObject(o, true).getCenter(new THREE.Vector3()));
+  });
+  const eyeLocal = eyes.length ? bones.Head.worldToLocal(eyes.reduce((a, b) => a.add(b), new THREE.Vector3()).multiplyScalar(1 / eyes.length)) : null;
+  let fp = false;
+  const firstPerson = (on) => { if (on === fp) return; fp = on; for (const o of headParts) o.visible = !on; };
+  const eyeWorld = (out) => (eyeLocal ? bones.Head.localToWorld(out.copy(eyeLocal)) : bones.Head.getWorldPosition(out));     // (the made moves turn bones the clips may not touch)
 
   // ---- the moves made here: rotations about her own axes, applied after the idle
   const L = new THREE.Vector3(), F = new THREE.Vector3(), U = new THREE.Vector3(), tq = new THREE.Quaternion(), pq = new THREE.Quaternion(), ax = new THREE.Vector3();
@@ -287,5 +300,5 @@ export async function loadAvatar(url, height = 1.62) {
     Object.assign(w, keep); phase = ph; root.position.copy(rp); root.quaternion.copy(rq); root.updateMatrixWorld(true);
     return out;
   }
-  return { root, model, bones, update, addClip, headIn, enterEnd, snap, get canEnter() { return !!once.enter; }, get enterDur() { return once.enter?.getClip().duration || 0; }, get mode() { return modeNow; }, height };
+  return { root, model, bones, update, addClip, headIn, enterEnd, snap, firstPerson, eyeWorld, get canEnter() { return !!once.enter; }, get enterDur() { return once.enter?.getClip().duration || 0; }, get mode() { return modeNow; }, height };
 }

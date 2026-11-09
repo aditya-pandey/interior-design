@@ -1477,6 +1477,7 @@ function seatMode(v) { return v.kind === 'car' ? 'drive' : v.kind === 'bicycle' 
 function updateHer(dt) {
   if (!her) return;
   const r = her.root;
+  her.firstPerson(state.mode === 'drive' && !!cur?.rig && state.cam === 'driver');
   if (state.mode === 'drive' && cur?.rig) {
     // on a two-wheeler: placed with its body; her hips, hands and feet put on it (avatar.js) from where its saddle,
     // grips (on the handlebar: they turn with it) and pedals (round with the crank) are this frame. Stopped, she
@@ -1655,10 +1656,11 @@ function placeCamera(snap, dt) {
     const hm = headMotion(head2, dt || 1 / 60, { ax: sim.axT ?? sim.ax, ay: sim.ayT ?? sim.ay, steer: pose.steer, r: sim.r, speed: sim.speed, lookBack: lookingBack() });
     const lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw);                       // the car's left
     if (state.cam === 'hood') camPos.set(0, 1.08, 1.05).applyMatrix4(car.body.matrixWorld);
+    else if (cur?.rig && her) her.eyeWorld(camPos).addScaledVector(tmpV.set(Math.sin(pose.yaw), 0, Math.cos(pose.yaw)), 0.03);   // (on a two-wheeler: her own eyes, leaning with her)
     else car.eye.getWorldPosition(camPos);
     const k = state.cam === 'hood' ? 0.4 : 1;
     camPos.x += (fx * hm.back + lx * hm.side) * k; camPos.z += (fz * hm.back + lz * hm.side) * k;
-    const yaw = pose.yaw + look.yaw * 1.4 + hm.yaw * (state.cam === 'hood' ? 0.6 : 1), pitch = -0.07 - look.pitch * 0.6 + body.pitch * 0.5 + hm.pitch;
+    const yaw = pose.yaw + look.yaw * 1.4 + hm.yaw * (state.cam === 'hood' ? 0.6 : 1), pitch = (cur?.rig && state.cam === 'driver' ? -0.3 : -0.07) - look.pitch * 0.6 + body.pitch * 0.5 + hm.pitch;   // (on a two-wheeler: a look down the road over her hands)
     camLook.set(camPos.x + Math.sin(yaw) * 10, camPos.y + Math.sin(pitch) * 10, camPos.z + Math.cos(yaw) * 10);
     camera.near = state.cam === 'hood' ? 0.1 : 0.03;
     // a natural field of view from the seat (wider ones stretch the dashboard and the wheel)
