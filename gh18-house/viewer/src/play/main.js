@@ -358,6 +358,26 @@ async function init() {
 }
 
 // the tour's walker, on this coast: sand heights, no wading out to sea, and the parked car is solid
+// The real top of something solid, for landing a jump or climbing up: a collider's own height is only how far up it
+// blocks walking (the furniture's are 2 m), so the model itself is measured once, straight down at its middle,
+// against the meshes whose bounds are over that spot
+let staticBoxes = null;
+const topRay = new THREE.Raycaster(), topHits = [];
+function topOf(c) {
+  if (c.top !== undefined) return c.top;
+  if (!staticBoxes) {
+    staticBoxes = [];
+    scene.updateMatrixWorld(true);
+    scene.traverse((o) => { if (o.isMesh && !o.isSkinnedMesh && !o.isInstancedMesh && o.visible && o.geometry?.attributes.position) { const bx = new THREE.Box3().setFromObject(o); if (bx.max.y - bx.min.y < 40) staticBoxes.push([o, bx]); } });
+  }
+  const x = (c.bb[0] + c.bb[2]) / 2000, z = (c.bb[1] + c.bb[3]) / 2000;
+  topRay.set(new THREE.Vector3(x, Math.min(c.y1, c.y0 + 2.5) + 0.3, z), new THREE.Vector3(0, -1, 0)); topRay.far = Math.min(c.y1, c.y0 + 2.5) + 0.3 - c.y0 + 0.02;
+  topHits.length = 0;
+  for (const [o, bx] of staticBoxes) if (x >= bx.min.x && x <= bx.max.x && z >= bx.min.z && z <= bx.max.z && bx.max.y >= c.y0 && bx.min.y <= c.y1 + 0.3) o.raycast(topRay, topHits);
+  const hit = topHits.filter((h) => h.point.y > c.y0 + 0.08).sort((a, b) => b.point.y - a.point.y)[0];
+  c.top = hit ? hit.point.y : null;                      // (nothing there to stand on: not a top)
+  return c.top;
+}
 class FootWalker extends Walker {
   // tops: also the tops of solid things (walls, benches, tables, the court's windbreak): somewhere to land a jump
   // or climb up to, never stepped onto just by walking
@@ -371,7 +391,8 @@ class FootWalker extends Walker {
       if (c.y1 > 7 || c.noTop) continue;
       const b = c.bb;
       if (x < b[0] || x > b[2] || y < b[1] || y > b[3] || !pointInPoly(x, y, c.poly)) continue;
-      out.push(c.y1);
+      const top = topOf(c);
+      if (top != null) out.push(top);
     }
     return out;
   }
@@ -382,8 +403,8 @@ class FootWalker extends Walker {
     const p = this.camera.position, ry = this.camera.rotation.y, fx = -Math.sin(ry), fz = -Math.cos(ry);
     for (const dist of [0.45, 0.65]) {
       const x = (p.x + fx * dist) * 1000, y = (p.z + fz * dist) * 1000;
-      const up = this.heights(x, y, true).filter((h) => h > this.foot + 0.42 && h <= this.foot + 1.8).sort((a, b) => a - b)[0];
-      if (up != null && !this.blocked(x, y, up)) {
+      const up = this.heights(x, y, true).filter((h) => h > this.foot + 0.42 && h <= this.foot + 1.8).sort((a, b) => a - b).find((h) => !this.blocked(x, y, h));
+      if (up != null) {
         this.climb = { t: 0, dur: up - this.foot > 0.95 ? 0.95 : 0.55, x0: p.x, z0: p.z, y0: this.foot, x1: x / 1000, z1: y / 1000, y1: up };
         this.mv = { x: 0, z: 0 };
         return 'climb';
