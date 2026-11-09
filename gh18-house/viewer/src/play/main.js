@@ -30,6 +30,7 @@ import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
 import { buildStuntPark, STUNT } from './stuntpark.js';
+import { airStep } from './airborne.js';
 import { createHunt, skyLanterns } from './hunt.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
@@ -1709,44 +1710,14 @@ async function loadMoves() {
 function groundAt(x, z) { const h = stunt?.heightAt(x, z); return h ?? groundHeight(x, z); }
 // what the tyres are on: nothing at all in the air; the pad and its ramps are like the road
 function surfAt(x, z) { return cur?.air?.flying ? 'air' : stunt?.inPad(x, z) ? 'road' : surfaceAt(x, z); }
-// A vehicle's height, step by step: on the ground it follows the surface (a ramp lifts it, and its rate of climb
-// is remembered); where the surface drops away faster than it would fall (a ramp's lip, the crest of a roller)
-// it flies: no grip, gravity, the speed it had. It lands where the surface comes back up to it: a thud, and the
-// jump measured (distance, time in the air, height) for the scoreboard. Driving into a ramp's side or tall end
-// (a step up of more than 30 cm) is a crash: stopped and bounced back
-function vertStep(v, dt) {
-  const s = v.sim, h = groundAt(s.x, s.z);
-  let A = v.air;
-  if (!A || Math.hypot(s.x - A.sx, s.z - A.sz) > 2) A = v.air = { y: h, vy: 0, flying: false, sx: s.x, sz: s.z };   // (placed somewhere new)
-  if (!A.flying) {
-    if (h - A.y > 0.3) return crashInto(v, A);
-    const yPred = A.y + A.vy * dt - 4.905 * dt * dt;
-    if (stunt?.inPad(s.x, s.z) && A.vy > 0.8 && h < yPred - 0.01 && Math.abs(s.speed) > 3) {
-      Object.assign(A, { flying: true, y: yPred, t: 0, x0: s.x, z0: s.z, y0: yPred, top: yPred }); A.vy -= 9.81 * dt;
-    } else { A.vy = THREE.MathUtils.clamp((h - A.y) / dt, -6, 10); A.y = h; }
-  } else {
-    A.t += dt; A.vy -= 9.81 * dt; A.y += A.vy * dt; A.top = Math.max(A.top, A.y);
-    if (A.y <= h) {
-      if (h - A.y > 0.3) return crashInto(v, A);                       // (came down into a ramp's face, not onto it)
-      landed(v, A, h);
-    }
-  }
-  A.sx = s.x; A.sz = s.z;
-}
-function crashInto(v, A) {
-  const s = v.sim, sp = Math.hypot(s.vx, s.vz);
-  s.x = s.px = A.sx; s.z = s.pz = A.sz; s.vx *= -0.25; s.vz *= -0.25;
-  s.impact = Math.max(s.impact, sp);
-  if (A.flying) { A.flying = false; A.vy = 0; A.y = groundAt(s.x, s.z); }
-}
-function landed(v, A, h) {
-  const hard = -A.vy;
-  A.flying = false; A.y = h; A.vy = 0;
+// A vehicle's height, step by step (airborne.js): ramps, flights, landings, crashes into a ramp's side. A landing
+// is felt (a thud, the springs) and a real jump scored for the stunt park's scoreboard
+function vertStep(v, dt) { airStep(v, dt, { ground: groundAt, launchAt: (x, z) => !!stunt?.inPad(x, z), onLand: landed }); }
+function landed(v, A, h, hard) {
   v.sim.impact = Math.max(v.sim.impact, Math.min(12, hard * 0.9));
   body.vp -= Math.min(2.5, hard * 0.35);                                // (the springs take it)
   if (A.t < 0.35) return;
-  const j = { dist: Math.hypot(v.sim.x - A.x0, v.sim.z - A.z0), air: A.t, height: A.top - A.y0 + (A.y0 - h > 0 ? 0 : 0), by: v.name.replace(/^the /, '').replace(/^her /, '') };
-  j.height = Math.max(0, A.top - Math.min(A.y0, h));
+  const j = { dist: Math.hypot(v.sim.x - A.x0, v.sim.z - A.z0), air: A.t, height: Math.max(0, A.top - Math.min(A.y0, h)), by: v.name.replace(/^the /, '').replace(/^her /, '') };
   const best = stunt.scoreJump(j);
   flash(`${best ? 'New best! ' : ''}${j.dist.toFixed(1)} m · ${j.air.toFixed(1)} s in the air · ${j.height.toFixed(1)} m high`);
 }
@@ -1928,7 +1899,7 @@ function buildMap() {
   g.fillText('Home', U(9.381) - 2, V(22.276) + 34);
   g.fillText('Studio', U(112) - 4, V(51) - 6);
   g.fillStyle = '#b9b4ab'; g.fillRect(U(STUNT.x1), V(STUNT.z1), STUNT.x1 - STUNT.x0, STUNT.z1 - STUNT.z0);    // the stunt park's pad
-  g.fillStyle = '#c99b62'; for (const [x0, x1, z] of [[195, 198.5, 0], [211, 225, 0], [196, 202, 11], [211, 221, 11]]) g.fillRect(U(x1), V(z + 2.5), x1 - x0, 5);
+  g.fillStyle = '#c99b62'; for (const [x0, x1, z] of [[197, 203, -1], [212, 222, -1], [196, 199.5, 11.5], [211, 225, 11.5]]) g.fillRect(U(x1), V(z + 2.5), x1 - x0, 5);
   g.fillStyle = '#4a2e14'; g.fillText('Stunt park', U(STUNT.x0) - 4, V(STUNT.z1) - 6);
   mapBase = c;
 }

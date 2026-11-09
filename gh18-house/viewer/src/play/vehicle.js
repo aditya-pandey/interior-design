@@ -259,6 +259,8 @@ export class VehicleSim {
     this.pitchRate += pitchAcc * dt; this.pitch += this.pitchRate * dt;
 
     this.yaw += this.r * dt;
+    // a two-wheeler at a standstill: its rider walks it round (s.pivot: rad/s at full steering)
+    if (s.pivot && Math.abs(u) < 0.6 && input.steer) this.yaw += input.steer * s.pivot * (1 - Math.abs(u) / 0.6) * dt;
     const [nfx, nfz] = this.forward, [nlx, nlz] = this.left;
     this.vx = nfx * u + nlx * v;
     this.vz = nfz * u + nlz * v;

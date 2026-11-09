@@ -47,7 +47,7 @@ export const FLEET = [
       rwd: true,
       mass: 210, wheelbase: 1.34, cgFront: 0.72, cgHeight: 0.6, length: 1.86, width: 0.72, inertia: 55, wheelRadius: 0.27,
       maxSteer: 0.55, lockFreeSpeed: 2, lockSpeedFalloff: 9, steerRate: 3.2, steerRateFalloff: 8,
-      power: 6200, maxAccelForce: 900, gears: [3.0, 2.1, 1.55, 1.15, 0.9], final: 7.5, reverseRatio: 1, maxReverse: 0.01,
+      power: 6200, maxAccelForce: 900, gears: [3.0, 2.1, 1.55, 1.15, 0.9], final: 7.5, reverseRatio: 1, maxReverse: 1.3, pivot: 0.9,   // (backing up: she walks it back with her feet)
       idle: 1800, redline: 8500, shiftUpRpm: 7400, shiftDownRpm: 5600, shiftTime: 0.02,
       brakeForce: 2300, rollResist: 40, drag: 0.26,
       mu: 1.0, muRear: 1.05, track: 0.6, rollStiff: 30000, rollDamp: 1500, rollInertia: 12, pitchStiff: 30000, pitchDamp: 2400, pitchInertia: 40,
@@ -75,7 +75,7 @@ export const FLEET = [
       rwd: true,
       mass: 85, wheelbase: 1.12, cgFront: 0.62, cgHeight: 0.85, length: 1.85, width: 0.6, inertia: 22, wheelRadius: 0.335,
       maxSteer: 0.5, lockFreeSpeed: 2, lockSpeedFalloff: 6, steerRate: 2.6, steerRateFalloff: 6,
-      power: 230, maxAccelForce: 230, gears: [1], final: 1, reverseRatio: 1, maxReverse: 0.01,
+      power: 230, maxAccelForce: 230, gears: [1], final: 1, reverseRatio: 1, maxReverse: 1.2, pivot: 1.1,   // (walked back)
       idle: 0, redline: 400, shiftUpRpm: 1e9, shiftDownRpm: -1, shiftTime: 0,
       brakeForce: 700, rollResist: 12, drag: 0.3,
       mu: 0.95, muRear: 1.0, track: 0.5, rollStiff: 12000, rollDamp: 700, rollInertia: 6, pitchStiff: 12000, pitchDamp: 900, pitchInertia: 15,

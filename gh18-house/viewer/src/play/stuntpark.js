@@ -3,8 +3,9 @@ import { groundHeight } from './beach.js';
 
 // The stunt park, on the headland where the coast turns south (where the lighthouse stood): a concrete pad with
 // two lanes of ramps for the bicycle, the Vespa and the cars, and rollers between them.
-//   lane 1 (z 0)   a kicker, then a tabletop (up, a flat top, down)
-//   lane 2 (z 11)  the big gap: a launch ramp to 1.5 m, an 8 m gap, a landing ramp
+//   lane 1 (z −1)  the big gap: a launch ramp to 1.5 m, an 8 m gap, a landing ramp (in line with the way in from
+//                  the road: a long run-up)
+//   lane 2 (z 11.5) a kicker, then a tabletop (up, a flat top, down)
 //   between        rollers
 // Tyre walls round it, an arch over the way in from the coast road, flags, a scoreboard (last jump, best jump),
 // two floodlights for the evening.
@@ -13,18 +14,18 @@ import { groundHeight } from './beach.js';
 // physics (main.js) and her walking use it. faces(x, z): true where a ramp's side or tall end stands (driving into
 // it is a crash, not a climb).
 
-export const STUNT = { x0: 188, x1: 234, z0: -6, z1: 17, Y: 0.14 };
+export const STUNT = { x0: 188, x1: 234, z0: -9, z1: 17, Y: 0.14 };
 const { x0: PX0, x1: PX1, z0: PZ0, z1: PZ1, Y: PY } = STUNT;
-const ACCESS = { x0: 172, x1: PX0, z0: -7.5, z1: -0.5 };      // the way in from the coast road
+const ACCESS = { x0: 172, x1: PX0, z0: -5, z1: 2.5 };          // the way in from the coast road, in line with the big gap
 
 // the ramps: along +x, centred on zc, w wide; h(s) the height s metres in
 const curve = (H, L, p) => (s) => H * Math.pow(Math.min(1, Math.max(0, s / L)), p);
 export const RAMPS = [
-  { id: 'kicker', x0: 195, x1: 198.5, zc: 0, w: 4, h: curve(0.7, 3.5, 1.7), back: true },
-  { id: 'table', x0: 211, x1: 225, zc: 0, w: 4.6, h: (s) => (s < 5 ? 1.0 * Math.pow(s / 5, 1.3) : s < 9 ? 1.0 : 1.0 * (1 - (s - 9) / 5)) },
-  { id: 'launch', x0: 196, x1: 202, zc: 11, w: 5, h: curve(1.5, 6, 1.6), back: true },
-  { id: 'landing', x0: 211, x1: 221, zc: 11, w: 6, h: (s) => (s < 1 ? 1.5 : 1.5 * (1 - (s - 1) / 9)), front: true },
-  { id: 'rollers', x0: 201, x1: 227, zc: 5.6, w: 3, h: (s) => 0.32 * Math.sin((Math.PI * s) / 4) ** 2 },
+  { id: 'launch', x0: 197, x1: 203, zc: -1, w: 5, h: curve(1.5, 6, 1.6), back: true },
+  { id: 'landing', x0: 212, x1: 222, zc: -1, w: 6, h: (s) => (s < 1 ? 1.5 : 1.5 * (1 - (s - 1) / 9)), front: true },
+  { id: 'kicker', x0: 196, x1: 199.5, zc: 11.5, w: 4, h: curve(0.7, 3.5, 1.7), back: true },
+  { id: 'table', x0: 211, x1: 225, zc: 11.5, w: 4.6, h: (s) => (s < 5 ? 1.0 * Math.pow(s / 5, 1.3) : s < 9 ? 1.0 : 1.0 * (1 - (s - 9) / 5)) },
+  { id: 'rollers', x0: 201, x1: 227, zc: 5.6, w: 3, h: (s) => 0.25 * Math.sin((Math.PI * s) / 4) ** 2 },   // (under the 0.3 m that counts as a wall: ridable from the side too)
 ];
 const rampAt = (x, z) => {
   let best = 0;
@@ -102,8 +103,8 @@ export function buildStuntPark() {
     mesh(g, M.asphalt, false);
   }
   // painted lines: the lanes, start marks
-  for (const [x0, x1, z] of [[190, 232, 3.2], [190, 232, 8.0], [190, 232, 14.8], [190, 232, -3.5]]) mesh(new THREE.BoxGeometry(x1 - x0, 0.01, 0.12).translate((x0 + x1) / 2, PY + 0.006, z), M.paint, false);
-  for (const z of [0, 11]) mesh(new THREE.BoxGeometry(0.4, 0.01, 4).translate(191, PY + 0.006, z), M.chevron, false);
+  for (const [x0, x1, z] of [[190, 232, 3.3], [190, 232, 7.9], [190, 232, 14.6]]) mesh(new THREE.BoxGeometry(x1 - x0, 0.01, 0.12).translate((x0 + x1) / 2, PY + 0.006, z), M.paint, false);
+  for (const z of [-1, 11.5]) mesh(new THREE.BoxGeometry(0.4, 0.01, 4).translate(191, PY + 0.006, z), M.chevron, false);
 
   // the ramps: a top sampled along its profile, the sides, a face where it ends tall, steel legs under it
   for (const r of RAMPS) {
@@ -137,11 +138,11 @@ export function buildStuntPark() {
     if (r.id !== 'rollers') for (let s = 1; s < L; s += 2) { const h = r.h(s); if (h < 0.5) continue; for (const zs of [-hw + 0.25, hw - 0.25]) mesh(new THREE.CylinderGeometry(0.04, 0.04, h, 6).translate(r.x0 + s, PY + h / 2, r.zc + zs), M.steel); }
   }
   // the gap between launch and landing: sand with a few cones to aim between
-  for (const [x, z] of [[205, 8.2], [205, 13.8], [208, 8.2], [208, 13.8]]) mesh(new THREE.ConeGeometry(0.18, 0.5, 12).translate(x, PY + 0.25, z), new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.6 }));
+  for (const [x, z] of [[206, -3.8], [206, 1.8], [209, -3.8], [209, 1.8]]) mesh(new THREE.ConeGeometry(0.18, 0.5, 12).translate(x, PY + 0.25, z), new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.6 }));
 
   // tyre walls round the park (a gap for the way in), solid to cars and to her
   const tyreGeo = new THREE.TorusGeometry(0.36, 0.14, 8, 16).rotateX(Math.PI / 2);
-  const walls = [[[PX0, 0.6], [PX0, PZ1]], [[PX0, PZ1], [PX1, PZ1]], [[PX1, PZ1], [PX1, PZ0]], [[PX1, PZ0], [PX0, PZ0]], [[PX0, PZ0], [PX0, -6.2]]];
+  const walls = [[[PX0, 3.2], [PX0, PZ1]], [[PX0, PZ1], [PX1, PZ1]], [[PX1, PZ1], [PX1, PZ0]], [[PX1, PZ0], [PX0, PZ0]], [[PX0, PZ0], [PX0, -6.2]]];
   const tyres = [];
   for (const [[ax, az], [bx, bz]] of walls) {
     const len = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.floor(len / 0.78));
@@ -162,9 +163,9 @@ export function buildStuntPark() {
     g.fillStyle = '#f2c230'; g.fillRect(0, 0, w, 14); g.fillRect(0, h - 14, w, 14);
     g.fillStyle = '#ffffff'; g.font = 'bold 96px Inter, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('STUNT PARK', w / 2, h / 2 + 4);
   });
-  for (const z of [-7.2, -0.8]) mesh(new THREE.CylinderGeometry(0.12, 0.14, 4.4, 12).translate(186.2, PY + 2.2, z), M.steel);
-  const bm = new THREE.MeshStandardMaterial({ map: banner, roughness: 0.7, side: THREE.DoubleSide });
-  mesh(new THREE.PlaneGeometry(6.4, 1.2).rotateY(Math.PI / 2).translate(186.2, PY + 3.7, -4), bm);
+  for (const z of [-5.6, 2.9]) mesh(new THREE.CylinderGeometry(0.12, 0.14, 4.4, 12).translate(186.2, PY + 2.2, z), M.steel);
+  const bm = new THREE.MeshStandardMaterial({ map: banner, roughness: 0.7 });
+  for (const [rot, dx] of [[-Math.PI / 2, -0.02], [Math.PI / 2, 0.02]]) mesh(new THREE.PlaneGeometry(8.4, 1.2).rotateY(rot).translate(186.2 + dx, PY + 3.7, -1.35), bm);   // (readable from the road and from inside)
 
   // flags on the far wall
   const flagCols = [0xd94a3d, 0xf2c230, 0x2f7fc1, 0x3aa35b, 0xf2efe6];
@@ -192,17 +193,17 @@ export function buildStuntPark() {
     if (best) g.fillText(`${best.air.toFixed(1)} s · ${best.by}`, 360, 435);
     scTex.needsUpdate = true;
   };
-  for (const z of [17.2, 21.0]) mesh(new THREE.BoxGeometry(0.15, 3.4, 0.15).translate(217, PY + 1.7, z - 0.1 + 0.1), M.steel);
-  mesh(new THREE.BoxGeometry(0.12, 2.2, 4.2).translate(217, PY + 3.0, 19.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-  const board = mesh(new THREE.PlaneGeometry(4.0, 2.0).rotateY(-Math.PI / 2).translate(216.93, PY + 3.0, 19.1), new THREE.MeshBasicMaterial({ map: scTex, toneMapped: false }), false);
+  for (const z of [-10.4, -14.2]) mesh(new THREE.BoxGeometry(0.15, 3.4, 0.15).translate(217, PY + 1.7, z), M.steel);
+  mesh(new THREE.BoxGeometry(0.12, 2.2, 4.2).translate(217, PY + 3.0, -12.3), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+  const board = mesh(new THREE.PlaneGeometry(4.0, 2.0).rotateY(-Math.PI / 2).translate(216.93, PY + 3.0, -12.3), new THREE.MeshBasicMaterial({ map: scTex, toneMapped: false }), false);
   board.material.side = THREE.FrontSide;
 
   // floodlights (pooled point lights) on two masts
   const lights = [];
-  for (const [x, z] of [[200, -5.2], [222, -5.2]]) {
+  for (const [x, z] of [[199.5, PZ1 + 0.8], [219.5, PZ1 + 0.8]]) {
     mesh(new THREE.CylinderGeometry(0.1, 0.14, 8, 10).translate(x, PY + 4, z), M.steel);
-    mesh(new THREE.BoxGeometry(0.9, 0.35, 0.5).translate(x, PY + 8.1, z + 0.2), M.lamp);
-    const pl = new THREE.PointLight(0xffe7c2, 0, 34, 1.6); pl.position.set(x, PY + 7.6, z + 1.2); group.add(pl); lights.push(pl);
+    mesh(new THREE.BoxGeometry(0.9, 0.35, 0.5).translate(x, PY + 8.1, z - 0.2), M.lamp);
+    const pl = new THREE.PointLight(0xffe7c2, 0, 34, 1.6); pl.position.set(x, PY + 7.6, z - 1.2); group.add(pl); lights.push(pl);
   }
 
   // the best jump, remembered (per browser)
@@ -225,6 +226,6 @@ export function buildStuntPark() {
     group, carColliders, interact, walk: { colliders: walkColliders, surfaces: [] },
     heightAt, inPad, scoreJump, setNight, update,
     top: [launch.x1 - 0.6, PY + launch.h(launch.x1 - launch.x0 - 0.6) + 1.15, launch.zc],
-    entry: { x: 189.5, z: -3, yaw: Math.PI / 2 }, park: { x: 190.5, z: 0, yaw: Math.PI / 2 },
+    entry: { x: 190, z: 5.5, yaw: Math.PI / 2 }, park: { x: 178, z: -1.2, yaw: Math.PI / 2 },   // (parked on the way in: the run-up ahead)
   };
 }
