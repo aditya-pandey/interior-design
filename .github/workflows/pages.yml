@@ -34,6 +34,7 @@ jobs:
       - run: npm run build
         env:
           PUBLIC_BUILD: '1'      # strips client name and address from house.json
+          PLAY_PERSONAL: '1'     # /play/ includes Deepti's pack (paintings, poems, photos, song list): the owner's choice, 9 Nov 2026
           SITE_URL: https://aditya-pandey.github.io/interior-design/   # absolute link-preview URLs
       - uses: actions/upload-pages-artifact@v3
         with:

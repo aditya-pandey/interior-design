@@ -7,3 +7,4 @@
 [build.environment]
   NODE_VERSION = "20"
   PUBLIC_BUILD = "1"   # strips client name / address from house.json in the published site
+  PLAY_PERSONAL = "1"  # /play/ includes Deepti's pack (the owner's choice, 9 Nov 2026)
