@@ -51,10 +51,37 @@ export async function loadAvatar(url, height = 1.62) {
     bone.quaternion.premultiply(tq.setFromAxisAngle(ax, a));
     bone.updateMatrixWorld(true);
   };
+  // aim a bone so that a point now at `from` (world; on a child) lies on the line to `to`
+  const bp = new THREE.Vector3(), va = new THREE.Vector3(), vb = new THREE.Vector3(), qd = new THREE.Quaternion(), qw = new THREE.Quaternion();
+  const aim = (bone, from, to) => {
+    bone.getWorldPosition(bp);
+    va.subVectors(from, bp).normalize(); vb.subVectors(to, bp).normalize();
+    qd.setFromUnitVectors(va, vb);
+    bone.getWorldQuaternion(qw); qw.premultiply(qd);
+    bone.parent.getWorldQuaternion(pq);
+    bone.quaternion.copy(pq.invert().multiply(qw));
+    bone.updateMatrixWorld(true);
+  };
+  // two-bone IK: upper → mid → end reaches `target` (world), the bend towards `pole` (a world direction)
+  const A = new THREE.Vector3(), Bm = new THREE.Vector3(), C = new THREE.Vector3(), T = new THREE.Vector3(), Kn = new THREE.Vector3(), D = new THREE.Vector3(), Pp = new THREE.Vector3();
+  const ik = (upper, mid, end, target, pole) => {
+    upper.getWorldPosition(A); mid.getWorldPosition(Bm); end.getWorldPosition(C);
+    const l1 = A.distanceTo(Bm), l2 = Bm.distanceTo(C);
+    T.copy(target); D.subVectors(T, A);
+    const dist = THREE.MathUtils.clamp(D.length(), Math.abs(l1 - l2) + 1e-3, l1 + l2 - 1e-3);
+    D.normalize(); T.copy(A).addScaledVector(D, dist);
+    const cosA = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist), sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA));
+    Pp.copy(pole).addScaledVector(D, -pole.dot(D)).normalize();
+    Kn.copy(A).addScaledVector(D, cosA * l1).addScaledVector(Pp, sinA * l1);
+    aim(upper, Bm, Kn);
+    end.getWorldPosition(C);
+    aim(mid, C, T);
+  };
+  const tgt = new THREE.Vector3(), pole = new THREE.Vector3(), sh = new THREE.Vector3(), gr = new THREE.Vector3(), sp0 = new THREE.Vector3();
   let phase = 0;
   const w = { ...W, idle: 1 };
   let modeNow = 'idle';
-  function update(dt, { mode = 'idle', speed = 0, crank = 0 } = {}) {
+  function update(dt, { mode = 'idle', speed = 0, crank = 0, rig = null } = {}) {
     modeNow = mode;
     for (const m in w) w[m] += ((m === mode ? 1 : 0) - w[m]) * (1 - Math.exp(-8 * dt));
     // a Mixamo clip, if there is one for this move, plays at its weight (the made move then stands aside)
@@ -97,6 +124,31 @@ export async function loadAvatar(url, height = 1.62) {
       turn(B.LeftForeArm, L, -reach * 0.45); turn(B.RightForeArm, L, -reach * 0.45);
       turn(B.Spine, L, 0.06 * w.pedal + 0.03 * w.ride);
       B.Hips.position.y = hipsRest.y - 0.02 * sit / k;
+    }
+    // on a two-wheeler: her hips on the saddle, leaning to the handlebar, hands on the grips, feet on the pedals
+    // (or the floorboard; one foot down when stopped). rig: points in root's frame (the vehicle's body frame)
+    if (rig) {
+      root.localToWorld(tgt.set(...rig.hip));
+      B.Hips.position.copy(B.Hips.parent.worldToLocal(tgt.clone()));
+      B.Hips.updateMatrixWorld(true);
+      // lean the spine forward until the shoulders are within reach of the grips
+      root.localToWorld(gr.set((rig.hands[0][0] + rig.hands[1][0]) / 2, (rig.hands[0][1] + rig.hands[1][1]) / 2, (rig.hands[0][2] + rig.hands[1][2]) / 2));
+      const reach = (B.LeftArm.getWorldPosition(sh).distanceTo(B.LeftForeArm.getWorldPosition(sp0)) + sp0.distanceTo(B.LeftHand.getWorldPosition(tgt))) * 0.86;
+      for (let i = 0; i < 14; i++) {
+        B.LeftArm.getWorldPosition(sh); B.RightArm.getWorldPosition(sp0); sh.add(sp0).multiplyScalar(0.5);
+        if (sh.distanceTo(gr) - 0.12 <= reach) break;
+        turn(B.Spine, L, 0.05); turn(B.Spine1, L, 0.02);
+      }
+      turn(B.Neck, L, -0.15); turn(B.Head, L, -0.1);                 // (eyes up the road)
+      for (const [side, i] of [['Left', 0], ['Right', 1]]) {
+        const s = i ? -1 : 1;
+        root.localToWorld(tgt.set(...rig.feet[i]));
+        pole.copy(F).addScaledVector(L, s * 0.15).addScaledVector(U, 0.3);
+        ik(B[side + 'UpLeg'], B[side + 'Leg'], B[side + 'Foot'], tgt, pole);
+        root.localToWorld(tgt.set(...rig.hands[i]));
+        pole.copy(L).multiplyScalar(s * 0.7).addScaledVector(U, -1).addScaledVector(F, -0.3);
+        ik(B[side + 'Arm'], B[side + 'ForeArm'], B[side + 'Hand'], tgt, pole);
+      }
     }
   }
   // a Mixamo clip for a move (play/models/anims/<move>.fbx): its tracks renamed to her bones; in place

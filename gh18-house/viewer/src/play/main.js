@@ -1398,6 +1398,18 @@ function seatMode(v) { return v.kind === 'car' ? 'drive' : v.kind === 'bicycle' 
 function updateHer(dt) {
   if (!her) return;
   const r = her.root;
+  if (state.mode === 'drive' && cur?.rig) {
+    // on a two-wheeler: placed with its body, her hips, hands and feet put on it (avatar.js), pedalling with the
+    // crank; stopped, her left foot comes down
+    r.visible = true;
+    car.body.getWorldPosition(r.position); car.body.getWorldQuaternion(r.quaternion);
+    const g = cur.rig, cr = car.crank, a = cr ? cr.rotation.x : 0, ca = Math.cos(a), sa = Math.sin(a);
+    const feet = g.pedals ? g.pedals.map(([x, y, z]) => [x, cr.position.y + y * ca - z * sa + 0.075, cr.position.z + y * sa + z * ca - 0.05]) : g.feet.map((f) => f.slice());
+    const down = THREE.MathUtils.clamp(1 - Math.abs(sim.speed) / 1.2, 0, 1);
+    for (let i = 0; i < 3; i++) feet[0][i] += (g.down[i] - feet[0][i]) * down;
+    her.update(dt, { mode: seatMode(cur), crank: a, rig: { hip: g.hip, hands: g.hands, feet } });
+    return;
+  }
   if (state.mode === 'drive' && cur?.seat) {
     r.visible = state.cam !== 'driver' && state.cam !== 'hood';
     her.update(dt, { mode: seatMode(cur), crank: cur.crankA || 0 });
