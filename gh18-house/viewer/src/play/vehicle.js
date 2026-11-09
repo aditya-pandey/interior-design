@@ -30,6 +30,7 @@ function magic(alpha, s, peak = s.peakSlip, C = s.shape) {
   return Math.sin(C * Math.atan(x - E * (x - Math.atan(x))));
 }
 
+const AIR = [0.015, 0];
 export class VehicleSim {
   constructor(spec = SPEC) {
     this.s = spec;
@@ -83,7 +84,7 @@ export class VehicleSim {
     const s = this.s;
     this.savePrev();
     this.surface = surfaceAt ? surfaceAt(this.x, this.z) : 'road';
-    const SURF = s.surfaces[this.surface] || s.surfaces.road;
+    const SURF = this.surface === 'air' ? AIR : s.surfaces[this.surface] || s.surfaces.road;      // (in the air: no grip, nothing to roll on)
     const [fx, fz] = this.forward, [lx, lz] = this.left;
     let u = this.vx * fx + this.vz * fz;            // forward speed
     let v = this.vx * lx + this.vz * lz;            // leftward speed

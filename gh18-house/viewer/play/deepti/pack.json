@@ -572,13 +572,13 @@
    "place": "fire",
    "title": "My dear Deepti,",
    "text": "",
-   "hint": "The last one: climb the lighthouse, and be there for the sunset."
+   "hint": "The last one: up on the big ramp at the stunt park, at sunset."
   },
   {
-   "place": "lighthouse-top",
+   "place": "stunt-top",
    "title": "My dear Deepti,",
    "text": ""
   }
  ],
- "lettersNote": "The treasure hunt: one letter per place, found in this order (any order works; the last opens only after all the others). Write each in \"text\" (a blank line starts a new paragraph). Optional: \"photo\": \"photos/photo_01.jpg\", \"audio\": \"letters/voice_01.mp3\" (his voice; put audio in play/deepti/letters/), \"sign\": \"— Aditya\". Places: car, mandir, kitchen, master, house-terrace, nook, record, gallery, desk, terrace, court, fire, lighthouse-top."
+ "lettersNote": "The treasure hunt: one letter per place, found in this order (any order works; the last opens only after all the others). Write each in \"text\" (a blank line starts a new paragraph). Optional: \"photo\": \"photos/photo_01.jpg\", \"audio\": \"letters/voice_01.mp3\" (his voice; put audio in play/deepti/letters/), \"sign\": \"— Aditya\". Places: car, mandir, kitchen, master, house-terrace, nook, record, gallery, desk, terrace, court, fire, stunt-top."
 }

@@ -18,7 +18,7 @@ const clear = (x, z) => {
   if (x > STUDIO.x0 - 4 && x < STUDIO.x0 + STUDIO.w + 4 && z > STUDIO.z0 - 4 && z < STUDIO.z0 + STUDIO.d + 6) return false;
   if (x > STUDIO_PARK.x - 6 && x < STUDIO_PARK.x + 14 && z > 26 && z < STUDIO_PARK.z + 6) return false;
   if (x > 119 && x < 139 && z > 30.5 && z < 53) return false;
-  if (x > 178 && x < 232 && z > -12 && z < 45) return false;                                 // the lighthouse, its path and lay-by                                 // the badminton court, its boardwalk and bench
+  if (x > 178 && x < 232 && z > -12 && z < 45) return false;                                 // the stunt park and its way in (where the lighthouse stood)                                 // the badminton court, its boardwalk and bench
   return true;
 };
 

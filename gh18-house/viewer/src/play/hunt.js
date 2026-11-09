@@ -5,7 +5,7 @@ import { SERIF, SANS, DEVA } from './fonts.js';
 //
 // pack.letters: [{ place, title?, text, photo?, audio?, hint?, sign? }] in the order they're meant to be found.
 // Each place is one of the spots below (main.js gives their positions). The first (place "car") is waiting on
-// the passenger seat when she starts the drive; the last (place "lighthouse-top") only opens once she has found
+// the passenger seat when she starts the drive; the last (place "stunt-top") only opens once she has found
 // all the others, and then the sun goes down and sky lanterns rise past her from the beach.
 //
 // An envelope (cream, a red wax seal; gold for the last) floats and turns slowly where it's hidden, glowing
@@ -18,7 +18,7 @@ import { SERIF, SANS, DEVA } from './fonts.js';
 export const PLACES = {
   car: 'On the passenger seat', mandir: 'The mandir', kitchen: 'The kitchen', master: 'The master bedroom', 'house-terrace': 'The front terrace',
   nook: 'The reading nook', record: 'The record player', gallery: 'The gallery bench', desk: 'Her writing desk', terrace: "The studio's roof terrace",
-  court: 'The court', fire: 'The fire on the beach', 'lighthouse-top': 'The top of the lighthouse',
+  court: 'The court', fire: 'The fire on the beach', 'stunt-top': 'The top of the big ramp',
 };
 const PW = 0.148, PH = 0.21;                 // a sheet: A5
 const CW = 1240, CH = 1760;

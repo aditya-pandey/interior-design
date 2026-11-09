@@ -29,7 +29,7 @@ import { buildCosy } from './cosy.js';
 import { buildBillboards } from './billboards.js';
 import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
-import { buildLighthouse, LIGHTHOUSE } from './lighthouse.js';
+import { buildStuntPark, STUNT } from './stuntpark.js';
 import { createHunt, skyLanterns } from './hunt.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
@@ -132,7 +132,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool, reader, artView, lighthouse, hunt, lanterns;
+let billboards, roomAudio, court, houseLife, lightPool, reader, artView, hunt, lanterns;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -209,8 +209,8 @@ async function init() {
   scene.add(billboards.group);
   court = buildCourt();
   scene.add(court.group);
-  lighthouse = buildLighthouse();
-  scene.add(lighthouse.group);
+  stunt = buildStuntPark();                            // (on the headland, where the lighthouse stood)
+  scene.add(stunt.group);
   houseLife = buildHouseLife({ house, rooms: ROOMS, pack });
   scene.add(houseLife.group);
   // the treasure hunt: his letters, hidden round the world (positions of the places, a little above where she'd look)
@@ -222,7 +222,7 @@ async function init() {
       mandir: up(hl('diya'), 0.45), kitchen: up(hl('chai'), 0.55), master: [6.15, 3.75 + 1.3, 8.17], 'house-terrace': [4.69, 7.05 + 1.25, 18.26],
       nook: up(sp('Curl up with a book'), 0.15), record: up(sp('Play a record'), 0.45, 0, 0.25), gallery: up(sp('Sit and look at her paintings'), 0.45),
       desk: [104.6, 4.5 + 1.15, 50.3], terrace: up(sp('Sit on the floor cushions'), 0.6), court: up(court.interact[0].pos, 0.7),
-      fire: [FIRE.x + 1.3, groundHeight(FIRE.x + 1.3, FIRE.z) + 1.2, FIRE.z], 'lighthouse-top': [LIGHTHOUSE.x + 2.35, lighthouse.TOP + 1.05, LIGHTHOUSE.z - 0.4],
+      fire: [FIRE.x + 1.3, groundAt(FIRE.x + 1.3, FIRE.z) + 1.2, FIRE.z], 'stunt-top': stunt.top,
     };
     hunt = createHunt({
       pack, base: pack?.base || 'play/deepti/', scene, camera, spots,
@@ -232,7 +232,7 @@ async function init() {
       onFound: (n, total) => { updateLettersChip(); if (n < total) setTimeout(() => flash(`Letter ${n} of ${total}`), 1200); },
       onFinale: () => finale(),
     });
-    lanterns = skyLanterns(scene, { x0: LIGHTHOUSE.x - 30, x1: LIGHTHOUSE.x + 20, z0: LIGHTHOUSE.z + 6, z1: LIGHTHOUSE.z + 50 });
+    lanterns = skyLanterns(scene, { x0: 182, x1: 232, z0: 29, z1: 73 });   // (from the beach by the stunt park, out over the sea)
   }
   scene.add(cosy.group);
   mark('books');
@@ -262,18 +262,18 @@ async function init() {
     if (c.y0 > 1.3 || c.y1 < 0.15) continue;
     houseItems.push({ poly: c.poly.map(([x, y]) => [x / 1000, y / 1000]) });
   }
-  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...court.carColliders, ...lighthouse.carColliders, ...houseItems, seaFence]);
+  collide = new CollisionWorld([...beach.colliders, ...dressing.colliders, ...studio.carColliders, ...cosy.carColliders, ...billboards.carColliders, ...court.carColliders, ...stunt.carColliders, ...houseItems, seaFence]);
   camBlock = new CollisionWorld([...studio.carColliders, ...houseItems]);
 
   // walking: the house's floors, stairs and walls, the studio's, and the ground of the coast
   walkData = {
-    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders, ...court.walk.colliders, ...lighthouse.walk.colliders],
-    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces, ...lighthouse.walk.surfaces],
+    colliders: [...houseWalk, ...studio.walk.colliders, ...cosy.walk.colliders, ...court.walk.colliders, ...stunt.walk.colliders],
+    surfaces: [...data.surfaces, ...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces],
     stair: data.stair, levels: data.levels,
   };
   head = new THREE.PerspectiveCamera();          // the walker moves this "head"; her figure and the camera follow it
   walker = new FootWalker(head, renderer.domElement, walkData);
-  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces, ...lighthouse.walk.surfaces];
+  walker.raised = [...studio.walk.surfaces, ...cosy.walk.surfaces, ...court.walk.surfaces];
   for (const c of walkData.colliders) c.bb = c.bb || bbOf(c.poly);
   // sitting and lying down in the house
   seatSpots = houseSeats(house).map((s) => {
@@ -344,7 +344,7 @@ async function init() {
   // the map (M) with its places, to go to any of them; photo mode (V)
   worldMap = createWorldMap({ base: mapBase, MAP, places: PLACES(), where: () => ({ x: state.mode === 'foot' ? head.position.x : pose.x, z: state.mode === 'foot' ? head.position.z : pose.z, yaw: state.mode === 'foot' ? orb.yaw : pose.yaw }), onTravel: travelTo });
   photo = createPhotoMode({ camera, canvas: renderer.domElement, draw,
-    subject: () => ({ pos: state.mode === 'foot' ? new THREE.Vector3(head.position.x, (walker.eye ?? walker.foot) + 1.0, head.position.z) : new THREE.Vector3(pose.x, groundHeight(pose.x, pose.z) + 0.9, pose.z) }),
+    subject: () => ({ pos: state.mode === 'foot' ? new THREE.Vector3(head.position.x, (walker.eye ?? walker.foot) + 1.0, head.position.z) : new THREE.Vector3(pose.x, groundAt(pose.x, pose.z) + 0.9, pose.z) }),
     onEnter: () => { state.photoClock = state.clock.speed; state.clock.speed = 0; for (const k in keys) keys[k] = false; for (const k in walker.keys) walker.keys[k] = false; },
     onExit: () => { state.clock.speed = state.photoClock ?? state.clock.speed; placeCamera(true, 1 / 60); } });
   bindUI();
@@ -394,7 +394,7 @@ class FootWalker extends Walker {
   // or climb up to, never stepped onto just by walking
   heights(x, y, tops = false) {
     const out = super.heights(x, y);
-    out[0] = groundHeight(x / 1000, y / 1000);
+    out[0] = groundAt(x / 1000, y / 1000);
     // the studio's and the garden's built floors (plinth, deck, steps, boardwalk) stand on the sand: where one
     // is, the sand under it is not a floor, or she would stay on the sand and walk through them
     for (const s of this.raised || []) if (x >= s.bb[0] && x <= s.bb[2] && y >= s.bb[1] && y <= s.bb[3] && pointInPoly(x, y, s.poly)) { out.shift(); break; }
@@ -667,7 +667,7 @@ function applyTime(t, regen = true) {
   studio.setNight(t.glow > 0.3);
   billboards?.setNight(t.glow > 0.3);
   court?.setNight(t.glow > 0.3);
-  lighthouse?.setNight(t.glow > 0.3);
+  stunt?.setNight(t.glow > 0.3);
   if (DASH.mat) DASH.mat.emissiveIntensity = t.glow > 0.3 ? 0.9 : 0.12;     // the gauges and screen glow after dark
   for (const pl of lampLights) pl.intensity = t.lamps > 0.5 ? 18 : 0;
   // the sea's own light: the sky's colour on the water body
@@ -998,7 +998,7 @@ function useVehicle(v) {
 }
 // a parked one, drawn where it stands (and a two-wheeler on its stand, leaning a little)
 function parkPose(v) {
-  const m = v.model, s = v.sim, y = groundHeight(s.x, s.z);
+  const m = v.model, s = v.sim, y = groundAt(s.x, s.z);
   m.root.position.set(s.x, y, s.z); m.root.rotation.y = s.yaw;
   if (v.kind !== 'car') { v.lean = 0.13; m.body.rotation.set(0, 0, -0.13); if (m.steerRot) m.steerRot.rotation.y = 0.35; }
   m.root.updateMatrixWorld(true);
@@ -1012,7 +1012,7 @@ function exitCar() {
     const x = sim.x + rx * side * w + fx * along, z = sim.z + rz * side * w + fz * along;
     if (walker.blocked(x * 1000, z * 1000, 0.3)) continue;
     state.mode = 'foot';
-    placeHer(x, z, sim.yaw + face, groundHeight(x, z));
+    placeHer(x, z, sim.yaw + face, groundAt(x, z));
     state.engineOff = 2.5;
     if (cur?.kind === 'car') audio.door();
     if (cur && cur.kind !== 'car') parkPose(cur);
@@ -1045,7 +1045,7 @@ function startEntering() {
 // front, or from above; the first with a clear line to the door. [across (out from the door side), along, up]
 const enterRay = new THREE.Raycaster();
 function enterView(sd) {
-  const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw), gy = groundHeight(pose.x, pose.z);
+  const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw), gy = groundAt(pose.x, pose.z);
   const door = new THREE.Vector3(pose.x + lx * sd * 1.1 - fx * 0.2, gy + 0.95, pose.z + lz * sd * 1.1 - fz * 0.2);
   const hide = [car.root, her?.root].filter(Boolean), was = hide.map((o) => o.visible);
   hide.forEach((o) => (o.visible = false));
@@ -1090,7 +1090,7 @@ function playMessage() {
   a.play().catch(() => { card.querySelector('span').textContent = 'A message for you · tap to play'; card.onclick = () => a.play(); });
 }
 function placeHer(x, z, yaw, foot = null) {
-  walker.place(x * 1000, z * 1000, foot ?? groundHeight(x, z), yaw + Math.PI, 0);
+  walker.place(x * 1000, z * 1000, foot ?? groundAt(x, z), yaw + Math.PI, 0);
   walker.active = true;
   orb.yaw = yaw; orb.pitch = 0;
   herYaw = yaw; view.d = view.dc = 0;
@@ -1121,7 +1121,7 @@ function findFocus() {
   camera.getWorldDirection(fwdV);
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = Infinity;
-  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...hunt.interact.filter((i) => i.env.g.visible), ...seatSpots] : seatSpots) {
+  for (const it of state.explore ? [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...hunt.interact.filter((i) => i.env.g.visible), ...seatSpots] : seatSpots) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r || Math.abs(it.pos[1] - hy) > 1.8) continue;
     const facing = (dx * fwdV.x + dz * fwdV.z) / (d || 1);
@@ -1150,8 +1150,6 @@ function interact(it = focus || findFocus()) {
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
   if (it.kind === 'letter') { const r = hunt.open(it.id, it.env); if (r?.locked) flash(`Not yet — find the other ${r.locked} letter${r.locked > 1 ? 's' : ''} first`); return; }
-  if (it.kind === 'climb') return climbLighthouse(true);
-  if (it.kind === 'descend') return climbLighthouse(false);
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
   if (it.kind === 'chai') { houseLife.makeChai(); flash('Putting the chai on…'); return; }
   if (it.kind === 'lift') return showLift(it.floor);
@@ -1165,7 +1163,7 @@ function pickAt(cx, cy) {
   const r = renderer.domElement.getBoundingClientRect(), nx = ((cx - r.left) / r.width) * 2 - 1, ny = -((cy - r.top) / r.height) * 2 + 1;
   const hx = head.position.x, hy = head.position.y, hz = head.position.z;
   let best = null, bestD = 0.16;
-  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...lighthouse.interact, ...hunt.interact.filter((i) => i.env.g.visible)]) {
+  for (const it of [...studio.interact, ...cosy.interact, ...court.interact, ...houseLife.interact, ...hunt.interact.filter((i) => i.env.g.visible)]) {
     const dx = it.pos[0] - hx, dz = it.pos[2] - hz, d = Math.hypot(dx, dz);
     if (d > it.r * 1.6 || Math.abs(it.pos[1] - hy) > 2.2) continue;
     if (it.normal && dx * it.normal[0] + dz * it.normal[1] > 0) continue;
@@ -1343,7 +1341,7 @@ function placeFootCamera(dt, snap = false) {
     }
     view.dc = snap ? room : Math.min(room, damp(view.dc, room, 3, dt));
     const d = Math.min(view.d, view.dc);
-    camera.position.set(px - sy * cp * d, Math.max(py + sp * d, groundHeight(px - sy * cp * d, pz - cy * cp * d) + 0.35), pz - cy * cp * d);
+    camera.position.set(px - sy * cp * d, Math.max(py + sp * d, groundAt(px - sy * cp * d, pz - cy * cp * d) + 0.35), pz - cy * cp * d);
   } else camera.position.copy(e);
   camera.fov = damp(camera.fov, view.d > 1 ? 64 : 70, 6, dt);
   camera.updateProjectionMatrix();
@@ -1402,19 +1400,6 @@ function showLetters() {
   showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto letters"><h3>His letters</h3><p class="sub">${found.length} of ${hunt.total} found</p><section>${rows}</section></div>`, 'paper');
   for (const b of document.querySelectorAll('#overlay .letters button[data-id]')) b.addEventListener('click', () => { closeOverlay(); hunt.open(b.dataset.id); });
 }
-// the lighthouse: up the 122 steps to the gallery (a fade), and back down to the door
-function climbLighthouse(up) {
-  const veil = document.getElementById('veil');
-  veil?.classList.add('on');
-  const go = () => {
-    const p = up ? lighthouse.top : lighthouse.door;
-    placeHer(p.x, p.z, up ? Math.PI / 2 : Math.atan2(Math.cos(p.yaw), Math.sin(p.yaw)), p.y);      // (up top: facing west, over the sea; below: facing out from the door)
-    veil?.classList.remove('on');
-    flash(up ? 'The top of the lighthouse · 24 m above the sea' : 'Back at the foot of the lighthouse');
-    hunt?.onPlace?.(up ? 'lighthouse-top' : 'lighthouse');
-  };
-  if (HEADLESS) go(); else setTimeout(go, 1500);
-}
 function rideLift(from, to) {
   closeOverlay();
   const d = houseLife.liftDoors.find((q) => q.floor === to);
@@ -1456,7 +1441,7 @@ function travelTo(x, z, place) {
       sim.reset(px, pz, yaw); pose.copyFrom(sim); state.driven = true; look.yaw = 0; chase.init = false; placeCamera(true, 1 / 60);
     } else {
       getUp();
-      const g = place?.foot ?? groundHeight(x, z), ok = coastDist(x, z) < 0.4 && !walker.blocked(x * 1000, z * 1000, g);
+      const g = place?.foot ?? groundAt(x, z), ok = coastDist(x, z) < 0.4 && !walker.blocked(x * 1000, z * 1000, g);
       if (ok) placeHer(x, z, place?.yaw ?? orb.yaw, place?.foot);
       else { const r = roadNear(x, z); placeHer(r.x + r.tz * 4.5, r.z - r.tx * 4.5, Math.atan2(r.tx, r.tz)); }
       for (let i = 0; i < 3; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, i === 0); }
@@ -1468,14 +1453,14 @@ function travelTo(x, z, place) {
 // go to: any room of the house, the studio, the court
 function showGoTo() {
   const fl = ['GF', 'FF', 'SF'].map((f) => `<section><h4>${FLOORS.find((q) => q.id === f).name}</h4>${ROOMS.filter((r) => r.floor === f && !/Toilet|Washroom|Store|Storage|Utility|Lobby/.test(r.name)).map((r) => `<button data-room="${esc(r.id || r.name)}">${esc(r.name)}</button>`).join('')}</section>`).join('');
-  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto"><h3>Go to</h3>${fl}<section><h4>Outside</h4><button data-place="studio">Deepti's Studio</button><button data-place="court">The court</button><button data-place="lighthouse">The lighthouse</button><button data-place="home">The gate</button></section></div>`, 'paper');
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="goto"><h3>Go to</h3>${fl}<section><h4>Outside</h4><button data-place="studio">Deepti's Studio</button><button data-place="court">The court</button><button data-place="stunt">The stunt park</button><button data-place="home">The gate</button></section></div>`, 'paper');
   for (const b of document.querySelectorAll('#overlay .goto button')) b.addEventListener('click', () => {
     closeOverlay();
     if (state.mode === 'drive') { exitCar(); if (state.mode === 'drive') return; }
     getUp();
     if (b.dataset.place === 'studio') return placeHer(studio.entry.x, studio.entry.z, 0, 0.12);
     if (b.dataset.place === 'court') return placeHer(124.6, 39.6, Math.PI / 2, court.Y);
-    if (b.dataset.place === 'lighthouse') return placeHer(lighthouse.park.x + 4, lighthouse.park.z + 4.5, Math.atan2(LIGHTHOUSE.x - lighthouse.park.x, LIGHTHOUSE.z - lighthouse.park.z));
+    if (b.dataset.place === 'stunt') return placeHer(stunt.entry.x, stunt.entry.z, stunt.entry.yaw);
     if (b.dataset.place === 'home') return placeHer(4.6, 23.6, Math.PI);
     const r = ROOMS.find((q) => (q.id || q.name) === b.dataset.room);
     if (r) { placeHer(r.at[0] / 1000, r.at[1] / 1000, 0, r.ffl); flash(r.name); }
@@ -1572,11 +1557,15 @@ function updateMusicUI() {
 // (as a rider balances: tan(lean) = speed × yaw rate / g), steers about its raked axis, the wheels and the
 // pedals turn; stopped, it settles upright (she has a foot down)
 function updateRide(dt) {
-  const v = cur, m = car;
-  m.root.position.set(pose.x, groundHeight(pose.x, pose.z), pose.z); m.root.rotation.y = pose.yaw;
+  const v = cur, m = car, fly = v.air?.flying ? v.air : null;
+  m.root.position.set(pose.x, fly ? fly.y : groundAt(pose.x, pose.z), pose.z); m.root.rotation.y = pose.yaw;
+  // its pitch: the ramp under its wheels, or the arc it's flying
+  const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), hb = m.wheelbase / 2;
+  const pitch = fly ? -Math.atan2(fly.vy, Math.max(3, Math.abs(sim.speed))) * 0.7 : -Math.atan2(groundAt(pose.x + fx * hb, pose.z + fz * hb) - groundAt(pose.x - fx * hb, pose.z - fz * hb), m.wheelbase);
+  v.pitch = THREE.MathUtils.damp(v.pitch || 0, pitch, 10, dt);
   const target = THREE.MathUtils.clamp(Math.atan(sim.speed * sim.r / 9.81), -0.7, 0.7) * Math.min(1, Math.abs(sim.speed) / 2.5);
   v.lean += (target - v.lean) * (1 - Math.exp(-7 * dt));
-  m.body.rotation.set(-0.012 * (sim.axT ?? 0), 0, -v.lean);
+  m.body.rotation.set(v.pitch - 0.012 * (sim.axT ?? 0), 0, -v.lean);
   if (m.steerRot) m.steerRot.rotation.y = pose.steer * 0.9;
   for (const w of m.wheels) w.spin.rotation.x = pose.spin * (sim.s.wheelRadius / w.radius);
   if (m.crank) { const pedal = state.mode === 'drive' && lastInput.throttle > 0.05; if (pedal) v.crankA += dt * Math.max(2.5, Math.abs(sim.speed) / sim.s.wheelRadius / 2.4); m.crank.rotation.x = v.crankA; }
@@ -1665,7 +1654,7 @@ function updateHer(dt) {
     const psi = pose.yaw + (E.mirror ? Math.PI / 2 : -Math.PI / 2);
     r.quaternion.setFromAxisAngle(UP, psi);
     const endW = her.enterEnds[E.mirror ? 1 : 0].clone().applyQuaternion(r.quaternion);
-    const sitting = THREE.MathUtils.smoothstep(E.t, 2.55, 3.05), gy = groundHeight(seatHips.x - endW.x, seatHips.z - endW.z);
+    const sitting = THREE.MathUtils.smoothstep(E.t, 2.55, 3.05), gy = groundAt(seatHips.x - endW.x, seatHips.z - endW.z);
     r.position.set(seatHips.x - endW.x, gy + (seatHips.y - endW.y - gy) * sitting, seatHips.z - endW.z);
     her.update(dt, { enter: { t: E.t, mirror: E.mirror } });
     if (E.t >= Math.min(ENTER_TO, her.enterDur)) endEntering();
@@ -1715,6 +1704,52 @@ async function loadMoves() {
   her.sitHead = her.headIn('sit');
   if (her.canEnter) { her.enterEnds = [her.enterEnd(false), her.enterEnd(true)]; }
 }
+// ------------------------------------------------------------------ the ground, and leaving it
+// the ground's height: the sand and the road, or the stunt park's pad and ramps
+function groundAt(x, z) { const h = stunt?.heightAt(x, z); return h ?? groundHeight(x, z); }
+// what the tyres are on: nothing at all in the air; the pad and its ramps are like the road
+function surfAt(x, z) { return cur?.air?.flying ? 'air' : stunt?.inPad(x, z) ? 'road' : surfaceAt(x, z); }
+// A vehicle's height, step by step: on the ground it follows the surface (a ramp lifts it, and its rate of climb
+// is remembered); where the surface drops away faster than it would fall (a ramp's lip, the crest of a roller)
+// it flies: no grip, gravity, the speed it had. It lands where the surface comes back up to it: a thud, and the
+// jump measured (distance, time in the air, height) for the scoreboard. Driving into a ramp's side or tall end
+// (a step up of more than 30 cm) is a crash: stopped and bounced back
+function vertStep(v, dt) {
+  const s = v.sim, h = groundAt(s.x, s.z);
+  let A = v.air;
+  if (!A || Math.hypot(s.x - A.sx, s.z - A.sz) > 2) A = v.air = { y: h, vy: 0, flying: false, sx: s.x, sz: s.z };   // (placed somewhere new)
+  if (!A.flying) {
+    if (h - A.y > 0.3) return crashInto(v, A);
+    const yPred = A.y + A.vy * dt - 4.905 * dt * dt;
+    if (stunt?.inPad(s.x, s.z) && A.vy > 0.8 && h < yPred - 0.01 && Math.abs(s.speed) > 3) {
+      Object.assign(A, { flying: true, y: yPred, t: 0, x0: s.x, z0: s.z, y0: yPred, top: yPred }); A.vy -= 9.81 * dt;
+    } else { A.vy = THREE.MathUtils.clamp((h - A.y) / dt, -6, 10); A.y = h; }
+  } else {
+    A.t += dt; A.vy -= 9.81 * dt; A.y += A.vy * dt; A.top = Math.max(A.top, A.y);
+    if (A.y <= h) {
+      if (h - A.y > 0.3) return crashInto(v, A);                       // (came down into a ramp's face, not onto it)
+      landed(v, A, h);
+    }
+  }
+  A.sx = s.x; A.sz = s.z;
+}
+function crashInto(v, A) {
+  const s = v.sim, sp = Math.hypot(s.vx, s.vz);
+  s.x = s.px = A.sx; s.z = s.pz = A.sz; s.vx *= -0.25; s.vz *= -0.25;
+  s.impact = Math.max(s.impact, sp);
+  if (A.flying) { A.flying = false; A.vy = 0; A.y = groundAt(s.x, s.z); }
+}
+function landed(v, A, h) {
+  const hard = -A.vy;
+  A.flying = false; A.y = h; A.vy = 0;
+  v.sim.impact = Math.max(v.sim.impact, Math.min(12, hard * 0.9));
+  body.vp -= Math.min(2.5, hard * 0.35);                                // (the springs take it)
+  if (A.t < 0.35) return;
+  const j = { dist: Math.hypot(v.sim.x - A.x0, v.sim.z - A.z0), air: A.t, height: A.top - A.y0 + (A.y0 - h > 0 ? 0 : 0), by: v.name.replace(/^the /, '').replace(/^her /, '') };
+  j.height = Math.max(0, A.top - Math.min(A.y0, h));
+  const best = stunt.scoreJump(j);
+  flash(`${best ? 'New best! ' : ''}${j.dist.toFixed(1)} m · ${j.air.toFixed(1)} s in the air · ${j.height.toFixed(1)} m high`);
+}
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {
   x: 0, z: 0, yaw: 0, steer: 0, spin: 0, roll: 0, pitch: 0,
@@ -1735,12 +1770,14 @@ function updateCar(dt) {
   const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), rx = -fz, rz = fx;
   for (const w of car.wheels) {
     const lx = w.rest.x, lz = w.rest.z;
-    H[w.q] = groundHeight(pose.x - rx * lx + fx * lz, pose.z - rz * lx + fz * lz);
+    H[w.q] = groundAt(pose.x - rx * lx + fx * lz, pose.z - rz * lx + fz * lz);
   }
   const front = (H.FL + H.FR) / 2, rear = (H.RL + H.RR) / 2, left = (H.FL + H.RL) / 2, right = (H.FR + H.RR) / 2;
-  const gy = (front + rear) / 2;
+  const fly = cur?.air?.flying ? cur.air : null;
+  let gy = (front + rear) / 2;
+  if (fly) gy = fly.y;
   // body on springs: a damped spring towards the pitch / roll the accelerations and the ground ask for
-  const tp = -Math.atan2(front - rear, car.wheelbase);           // the ground's slope; roll and pitch from the
+  const tp = fly ? -Math.atan2(fly.vy, Math.max(4, Math.abs(sim.speed))) * 0.7 : -Math.atan2(front - rear, car.wheelbase);   // the ground's slope (in the air: the arc); roll and pitch from the
   const tr = Math.atan2(left - right, car.track);                 // springs come from the simulation
   const K = sim.s.bodySpring, C = sim.s.bodyDamp;
   body.vp += ((tp - body.pitch) * K - body.vp * C) * dt; body.pitch += body.vp * dt;
@@ -1802,7 +1839,7 @@ function placeCamera(snap, dt) {
   if (state.entering && her) {
     // from the driver's side, a little ahead: her walking up, the door, the seat
     const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw), sd = state.entering.mirror ? -1 : 1;
-    const gy = groundHeight(pose.x, pose.z), [va, vb, vh] = state.entering.cam;
+    const gy = groundAt(pose.x, pose.z), [va, vb, vh] = state.entering.cam;
     camPos.set(pose.x + lx * sd * va + fx * vb, gy + vh, pose.z + lz * sd * va + fz * vb);
     camLook.set(pose.x + lx * sd * 1.1 - fx * 0.2, gy + 0.95, pose.z + lz * sd * 1.1 - fz * 0.2);
     if (snap) camera.position.copy(camPos); else camera.position.lerp(camPos, 1 - Math.exp(-3 * dt));
@@ -1855,7 +1892,7 @@ function placeCamera(snap, dt) {
   // chase / high: chasecam.js (leads into corners, follows slides, springs with speed and braking, smooths
   // bumps, looks back on B)
   if (snap) chase.init = false;
-  const v = chase.update(dt || 1 / 60, { x: pose.x, z: pose.z, y: groundHeight(pose.x, pose.z), yaw: pose.yaw, vx: sim.vx, vz: sim.vz, speed: sim.speed, r: sim.r, ax: sim.axT ?? sim.ax },
+  const v = chase.update(dt || 1 / 60, { x: pose.x, z: pose.z, y: groundAt(pose.x, pose.z), yaw: pose.yaw, vx: sim.vx, vz: sim.vz, speed: sim.speed, r: sim.r, ax: sim.axT ?? sim.ax },
     { mode: state.cam === 'high' ? 'high' : 'chase', lookYaw: look.yaw, lookPitch: look.pitch, zoom: look.zoom, lookBack: lookingBack(), blocked: blockedAt, impact: sim.impact });
   camPos.set(v.x, v.y, v.z); camLook.set(v.lx, v.ly, v.lz);
   cam.fov = camera.fov = v.fov;
@@ -1890,9 +1927,9 @@ function buildMap() {
   g.font = 'bold 11px sans-serif'; g.fillStyle = '#4a2e14';
   g.fillText('Home', U(9.381) - 2, V(22.276) + 34);
   g.fillText('Studio', U(112) - 4, V(51) - 6);
-  g.fillStyle = '#b23a2e'; g.beginPath(); g.arc(U(LIGHTHOUSE.x), V(LIGHTHOUSE.z), 6, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#f2efe8'; g.beginPath(); g.arc(U(LIGHTHOUSE.x), V(LIGHTHOUSE.z), 2.5, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#4a2e14'; g.fillText('Lighthouse', U(LIGHTHOUSE.x) - 30, V(LIGHTHOUSE.z) - 10);
+  g.fillStyle = '#b9b4ab'; g.fillRect(U(STUNT.x1), V(STUNT.z1), STUNT.x1 - STUNT.x0, STUNT.z1 - STUNT.z0);    // the stunt park's pad
+  g.fillStyle = '#c99b62'; for (const [x0, x1, z] of [[195, 198.5, 0], [211, 225, 0], [196, 202, 11], [211, 221, 11]]) g.fillRect(U(x1), V(z + 2.5), x1 - x0, 5);
+  g.fillStyle = '#4a2e14'; g.fillText('Stunt park', U(STUNT.x0) - 4, V(STUNT.z1) - 6);
   mapBase = c;
 }
 function drawMap() {
@@ -1958,7 +1995,7 @@ const STEP = 1 / 240;                  // physics steps: the tyre model is stiff
 let acc = 0, last = performance.now(), lampTimer = 0, hudTimer = 0, prevImpact = 0, clock = 0, envTimer = 0;
 function stepSim(dt, input) {
   acc += Math.min(dt, 0.1);
-  while (acc >= STEP) { sim.step(STEP, dev.stepInput(input), collide, surfaceAt); acc -= STEP; }
+  while (acc >= STEP) { sim.step(STEP, dev.stepInput(input), collide, surfAt); if (cur) vertStep(cur, STEP); acc -= STEP; }
   pose.blend(sim, acc / STEP);
 }
 
@@ -2001,7 +2038,7 @@ function frame(dt = 1 / 60, show = true) {
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));
   court.update(clock);
-  lighthouse.update(clock, dt, state.glow || 0, camera.position);
+  stunt.update(clock);
   lightPool?.update(dt, camera.position);
   if (houseLife.update(clock, dt, { x: head.position.x, z: head.position.z, foot: walker.foot, room: state.mode === 'foot' ? roomAt(head.position.x, head.position.z, walker.foot) : null, night: (state.glow || 0) > 0.3, ctx: audio?.ctx, out: audio?.master, indoors: isIndoors() })) flash('Chai’s ready ☕');
   if (state.rally) rallyTick(dt);
@@ -2092,7 +2129,7 @@ window.play = {
     lastInput = inp;
     const n = Math.round(seconds / STEP), per = Math.round(1 / 60 / STEP);
     for (let i = 0; i < n; i++) {
-      sim.step(STEP, dev.stepInput(inp), collide, surfaceAt);
+      sim.step(STEP, dev.stepInput(inp), collide, surfAt); if (cur) vertStep(cur, STEP);
       if (i % per === per - 1) { pose.copyFrom(sim); clock += 1 / 60; updateCar(1 / 60); }       // (skid marks, suspension, wheel effects)
     }
     pose.copyFrom(sim);
@@ -2156,7 +2193,7 @@ window.play = {
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
   timings: () => timings,
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse, her, view }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, stunt, her, view }),
   step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
   court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)
