@@ -410,7 +410,16 @@ class FootWalker extends Walker {
   }
   // ---- jumping, falling, climbing (heights in metres; this.air: { y, vy } while off the ground)
   jump() {
-    if (this.air || this.climb || !this.active) return;
+    if (this.climb || !this.active) return;
+    // in the air, once: the super jump: ~6 m up and a push the way she's going (or looking)
+    if (this.air) {
+      if (this.air.super) return;
+      const ry = this.camera.rotation.y, mv = this.mv || { x: 0, z: 0 }, sp = Math.hypot(mv.x, mv.z);
+      const dx = sp > 0.4 ? mv.x / sp : -Math.sin(ry), dz = sp > 0.4 ? mv.z / sp : -Math.cos(ry);
+      this.air.vy = 11; this.air.super = true;
+      this.mv = { x: mv.x + dx * 4.5, z: mv.z + dz * 4.5 };
+      return 'super';
+    }
     // a ledge just ahead, within reach: climb up onto it
     const p = this.camera.position, ry = this.camera.rotation.y, fx = -Math.sin(ry), fz = -Math.cos(ry);
     for (const dist of [0.45, 0.65]) {
@@ -423,7 +432,7 @@ class FootWalker extends Walker {
       }
     }
     const sp = Math.hypot(this.mv?.x || 0, this.mv?.z || 0);
-    this.air = { y: this.foot, vy: 3.5 + Math.min(0.5, sp * 0.12) };       // ~0.65 m up; a little more at a run
+    this.air = { y: this.foot, vy: 3.5 + Math.min(0.5, sp * 0.12), peak: this.foot };       // ~0.65 m up; a little more at a run
     return 'jump';
   }
   // after a horizontal step: falling or landing (returns true while she's off the ground)
@@ -440,10 +449,20 @@ class FootWalker extends Walker {
     if (!this.air) return false;
     const a = this.air;
     a.vy -= 9.81 * dt; a.y += a.vy * dt;
+    // a ceiling (the floor above, indoors): her head stops at it
+    const over = this.heights(x, y, true).filter((h) => h > this.foot + 0.5 && h > a.y - 0.05);
+    const ceil = over.length ? Math.min(...over) : Infinity;
+    if (a.y + 1.75 > ceil && a.vy > 0) { a.y = ceil - 1.75; a.vy = 0; }
+    a.peak = Math.max(a.peak ?? a.y, a.y);
     // the surface under her: the highest one at or below her feet
     const below = this.heights(x, y, true).filter((h) => h <= Math.max(a.y, this.foot) + 0.05);
     const ground = below.length ? Math.max(...below) : this.foot;
-    if (a.vy <= 0 && a.y <= ground) { this.foot = ground; this.air = null; this.landed = Math.min(1, -a.vy / 6); return false; }
+    if (a.vy <= 0 && a.y <= ground) {
+      // down, from any height, unhurt: a crouch to take it if it was a long way
+      this.foot = ground; this.air = null; this.landed = Math.min(1, -a.vy / 6);
+      this.drop = (a.peak ?? a.y) - ground; if (this.drop > 1.4) this.landT = 0.35;
+      return false;
+    }
     this.foot = Math.max(ground, Math.min(this.foot, a.y));          // (for what's underfoot; she's at a.y)
     return true;
   }
@@ -510,8 +529,9 @@ class FootWalker extends Walker {
         break;
       }
     }
+    if (this.air && mag <= 0.08) { wx = this.mv?.x || 0; wz = this.mv?.z || 0; }   // (no keys in the air: keep going)
     const v = this.mv ||= { x: 0, z: 0 };
-    const rate = mag > 0.08 ? 7 : 11;                          // speeding up, slowing down (1/s)
+    const rate = this.air ? (mag > 0.08 ? 1.6 : 0.25) : mag > 0.08 ? 7 : 11;   // speeding up, slowing down (1/s); in the air, momentum (a little steering)
     v.x += (wx - v.x) * (1 - Math.exp(-rate * dt)); v.z += (wz - v.z) * (1 - Math.exp(-rate * dt));
     const sp = Math.hypot(v.x, v.z);
     const p = this.camera.position;
@@ -1300,7 +1320,16 @@ function updateFoot(dt) {
   const turn = (touchKeys.left ? 1 : 0) - (touchKeys.right ? 1 : 0);
   if (turn) orb.yaw += turn * 1.6 * dt;
   walker.update(dt);
-  if (walker.landed) { ambience?.footstep(groundUnderfoot()); walker.landed = 0; }
+  if (walker.landed) {
+    ambience?.footstep(groundUnderfoot());
+    if (walker.drop > 1.4) {                                          // a big landing: both feet, and a puff of sand or dust
+      setTimeout(() => ambience?.footstep(groundUnderfoot()), 70);
+      const x = head.position.x, z = head.position.z, y = walker.foot, sand = surfaceAt(x, z) === 'sand';
+      for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; wheelFx.emit('land' + i, sand ? 'sand' : 'dust', 900 * Math.min(1, walker.drop / 6), 1 / 60, clock, x, y + 0.05, z, Math.cos(a) * 1.6, 0.9, Math.sin(a) * 1.6, 0.6, sand ? 0.25 : 0.5); }
+    }
+    walker.landed = 0;
+  }
+  if (walker.landT > 0) walker.landT -= dt;
   footprints.step(head.position.x, head.position.z, orb.yaw, surfaceAt(head.position.x, head.position.z) === 'sand');
 }
 // where her eyes are, seated (the hammock sways, the rocking chair rocks)
@@ -1324,7 +1353,7 @@ function placeFootCamera(dt, snap = false) {
   // behind her, over her right shoulder: outdoors and in the studio (closer there), and when she sits down in it.
   // Through her eyes in the house, lying on a lounger, or with C. The camera comes in where a wall or a tree is
   // between, and eases back out
-  const inHouseNow = inHouse(head.position.x, head.position.z) && walker.foot > 0.3;
+  const inHouseNow = inHouse(head.position.x, head.position.z) && walker.foot > 0.3 && !walker.air;
   const close = (inStudio(head.position.x, head.position.z) && walker.foot > 0.4) || sittingAsHer();
   const far = her && view.third && (!state.lying || sittingAsHer()) && !inHouseNow ? (close ? 2.1 : 2.7) : 0;
   view.d = snap ? far : damp(view.d, far, far > view.d ? 2.5 : 7, dt);
@@ -1685,7 +1714,7 @@ function updateHer(dt) {
   if (walker.climb) { const c = walker.climb; herYaw = Math.atan2(c.x1 - c.x0, c.z1 - c.z0); }       // (facing the ledge)
   r.quaternion.setFromAxisAngle(UP, herYaw);
   r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !reader?.busy && !hunt?.busy;
-  const move = walker.climb ? 'climb' : walker.air ? 'jump' : sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle';
+  const move = walker.climb ? 'climb' : walker.air ? 'jump' : walker.landT > 0 ? 'land' : sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle';
   if (r.visible) her.update(dt, { mode: move, speed: sp });   // (through her eyes: no work)
 }
 // Mixamo's motion-captured moves, if they've been downloaded into play/models/anims/ (see README): each one found
