@@ -31,13 +31,15 @@ import { RoomAudio } from './roomaudio.js';
 import { buildCourt } from './court.js';
 import { buildLighthouse, LIGHTHOUSE } from './lighthouse.js';
 import { createHunt, skyLanterns } from './hunt.js';
-import { FIRE } from './cosy.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion, CAM } from './chasecam.js';
 import { FLEET } from './vehicles.js';
 import { loadCar, loadTwoWheeler } from './vehiclemodels.js';
 import { loadAvatar, AVATAR_LAYER } from './avatar.js';
+import { createPhotoMode } from './photo.js';
+import { createWorldMap } from './worldmap.js';
+import { FIRE } from './cosy.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -136,7 +138,7 @@ const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color()
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
 let fleet = [], cur = null;
-let her = null;                     // her figure (avatar.js): seen from behind outdoors, through her eyes indoors
+let her = null, photo = null, worldMap = null, stunt = null;                     // her figure (avatar.js): seen from behind outdoors, through her eyes indoors
 const view = { third: true, d: 0, dc: 0 };   // on foot: behind her (C switches); d: the camera's distance now, dc: as far as walls let it          // the garage (vehicles.js), and the one she's in or last drove
 const skyHDR = {};
 let seatSpots = [];                 // GH-18's sofas, chairs and beds, as things to interact with on foot                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
@@ -233,7 +235,9 @@ async function init() {
     lanterns = skyLanterns(scene, { x0: LIGHTHOUSE.x - 30, x1: LIGHTHOUSE.x + 20, z0: LIGHTHOUSE.z + 6, z1: LIGHTHOUSE.z + 50 });
   }
   scene.add(cosy.group);
+  mark('books');
   const waterNormals = await waterP;
+  mark('water');
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
   scene.add(sea.mesh);
   night = buildNightSky();
@@ -245,6 +249,7 @@ async function init() {
   scene.add(spray.points);
   if (!LOW) post = createPost(renderer, scene, camera, { low: LOW });
   scans = await loadScans();
+  mark('scans');
   if (scans) applyScans();
 
   // car collisions: the coast's palms and lamps, the studio, the house's ground floor, the sea fence
@@ -336,6 +341,12 @@ async function init() {
 
   if (params.get('clock')) { state.clock.h = +params.get('clock'); applyClock(true); } else setTime(params.get('time') || 'evening');
   buildMap();
+  // the map (M) with its places, to go to any of them; photo mode (V)
+  worldMap = createWorldMap({ base: mapBase, MAP, places: PLACES(), where: () => ({ x: state.mode === 'foot' ? head.position.x : pose.x, z: state.mode === 'foot' ? head.position.z : pose.z, yaw: state.mode === 'foot' ? orb.yaw : pose.yaw }), onTravel: travelTo });
+  photo = createPhotoMode({ camera, canvas: renderer.domElement, draw,
+    subject: () => ({ pos: state.mode === 'foot' ? new THREE.Vector3(head.position.x, (walker.eye ?? walker.foot) + 1.0, head.position.z) : new THREE.Vector3(pose.x, groundHeight(pose.x, pose.z) + 0.9, pose.z) }),
+    onEnter: () => { state.photoClock = state.clock.speed; state.clock.speed = 0; for (const k in keys) keys[k] = false; for (const k in walker.keys) walker.keys[k] = false; },
+    onExit: () => { state.clock.speed = state.photoClock ?? state.clock.speed; placeCamera(true, 1 / 60); } });
   bindUI();
   pose.copyFrom(sim);
   state.started = true;
@@ -807,6 +818,8 @@ function cycleAids() {
 function bindUI() {
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
+    if (photo?.active) { photo.key(e); return; }
+    if (worldMap?.open) { if (e.code === 'KeyM' || e.code === 'Escape') worldMap.hide(); return; }
     keys[e.code] = true;
     if (e.repeat || !state.started) return;
     if (reader?.busy) { if (reader.isOpen) reader.key(e); return; }
@@ -830,7 +843,8 @@ function bindUI() {
     }
     if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
     if (e.code === 'Space' && state.mode === 'foot' && !state.lying && state.explore) { e.preventDefault(); walker.jump(); return; }
-    const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
+    if (e.code === 'KeyM' && e.shiftKey) { toggleSound(); return; }
+    const act = { KeyV: () => !state.overlay && !state.rally && photo.enter(), KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: () => !state.overlay && worldMap.show(), KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -847,7 +861,7 @@ function bindUI() {
     const p = courtPoint(e); court.game.aimFromScreen(p);
     court.game.press({ drop: e.shiftKey || (e.pointerType !== 'mouse' && p && p.z < 41.7 + 2.2) });
   });
-  window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'KeyH') horn(false); });
+  window.addEventListener('keyup', (e) => { if (photo?.active) photo.key(e); keys[e.code] = false; if (e.code === 'KeyH') horn(false); });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; horn(false); });
   // the menu: ☰ (or Tab) opens it; a click outside or Escape closes it
   const menu = document.getElementById('hud-menu'), menuBtn = document.getElementById('hud-menu-btn');
@@ -864,7 +878,7 @@ function bindUI() {
       b.addEventListener('pointerdown', () => horn(true));
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => horn(false));
     } else {
-      b.addEventListener('click', () => ({ goto: showGoTo, musiczone: cycleMusicZone, aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
+      b.addEventListener('click', () => ({ photo: () => photo.enter(), map: () => worldMap.show(), goto: showGoTo, musiczone: cycleMusicZone, aids: cycleAids, cam: cycleCam, lights: toggleBeams, time: cycleTime, home: goHome, studio: goStudio, foot: toggleFoot, sound: toggleSound, music: toggleMusicPanel, tour: () => location.reload() })[act]());
     }
   }
   for (const b of document.querySelectorAll('#touch button')) {
@@ -899,6 +913,7 @@ function bindUI() {
     if (it) interact(it);
   });
   window.addEventListener('pointermove', (e) => {
+    if (photo?.active) return;
     if (!drag || e.pointerId !== drag.id) return;
     if (reader?.busy || artView?.active || state.rally || hunt?.busy) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -1412,6 +1427,44 @@ function rideLift(from, to) {
     veil.classList.remove('on'); flash(`${FLOOR_NAME[to]} floor`);
   }, 1600);
 }
+// ------------------------------------------------------------------ the map's places, and going to them
+function PLACES() {
+  return [
+    { id: 'home', name: 'Home', icon: '⌂', x: 4.6, z: 23.6, park: HOME, yaw: Math.PI },
+    { id: 'studio', name: "Deepti's Studio", icon: '✎', x: studio.entry.x, z: studio.entry.z, park: STUDIO_PARK, yaw: 0, foot: 0.12 },
+    { id: 'garage', name: 'The garage', icon: '◆', x: 89.6, z: 33.2, park: STUDIO_PARK, yaw: Math.PI / 2 },
+    { id: 'court', name: 'Badminton court', icon: '⌁', x: 124.6, z: 39.6, yaw: Math.PI / 2, foot: court.Y },
+    { id: 'fire', name: 'Beach fire', icon: '✦', x: FIRE.x - 1.6, z: FIRE.z - 1.6, yaw: Math.PI / 4 },
+    ...(stunt ? [{ id: 'stunt', name: 'Stunt park', icon: '➚', x: stunt.entry.x, z: stunt.entry.z, park: stunt.park, yaw: stunt.entry.yaw }] : []),
+  ];
+}
+function roadNear(x, z) {
+  let best = ROAD[0], bd = Infinity;
+  for (const p of ROAD) { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; best = p; } }
+  return best;
+}
+// to a place (or a spot clicked on the map): in a vehicle, to its parking or the nearest road, facing along it;
+// on foot, there if she can stand there, else by the nearest road
+function travelTo(x, z, place) {
+  const veil = document.getElementById('veil');
+  veil?.classList.add('on');
+  setTimeout(() => {
+    if (state.mode === 'drive') {
+      let px = x, pz = z, yaw;
+      if (place?.park && cur?.kind === 'car') ({ x: px, z: pz, yaw } = place.park);
+      else { const r = roadNear(x, z); px = r.x; pz = r.z; yaw = Math.atan2(r.tx, r.tz); }
+      sim.reset(px, pz, yaw); pose.copyFrom(sim); state.driven = true; look.yaw = 0; chase.init = false; placeCamera(true, 1 / 60);
+    } else {
+      getUp();
+      const g = place?.foot ?? groundHeight(x, z), ok = coastDist(x, z) < 0.4 && !walker.blocked(x * 1000, z * 1000, g);
+      if (ok) placeHer(x, z, place?.yaw ?? orb.yaw, place?.foot);
+      else { const r = roadNear(x, z); placeHer(r.x + r.tz * 4.5, r.z - r.tx * 4.5, Math.atan2(r.tx, r.tz)); }
+      for (let i = 0; i < 3; i++) { updateFoot(1 / 30); placeFootCamera(1 / 30, i === 0); }
+    }
+    flash(place ? place.name : 'Here');
+    setTimeout(() => veil?.classList.remove('on'), 120);
+  }, 450);
+}
 // go to: any room of the house, the studio, the court
 function showGoTo() {
   const fl = ['GF', 'FF', 'SF'].map((f) => `<section><h4>${FLOORS.find((q) => q.id === f).name}</h4>${ROOMS.filter((r) => r.floor === f && !/Toilet|Washroom|Store|Storage|Utility|Lobby/.test(r.name)).map((r) => `<button data-room="${esc(r.id || r.name)}">${esc(r.name)}</button>`).join('')}</section>`).join('');
@@ -1912,6 +1965,7 @@ function stepSim(dt, input) {
 function loop() {
   const now = performance.now(), dt = Math.min((now - last) / 1000, 0.1);
   last = now;
+  if (photo?.active) { photo.update(dt); draw(); return; }              // (photo mode: the world holds still)
   const input = state.started ? readInput(dt) : NO_INPUT;
   if (state.entering && state.entering.t > ENTER_FROM + 0.5 && (input.throttle > 0.2 || input.brake > 0.2)) endEntering();
   lastInput = state.mode === 'drive' && !state.overlay && !state.entering ? input : { ...NO_INPUT, handbrake: true };
