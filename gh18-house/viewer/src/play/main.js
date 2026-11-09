@@ -895,6 +895,7 @@ function parkPose(v) {
   m.root.updateMatrixWorld(true);
 }
 function exitCar() {
+  state.entering = null;
   if (Math.abs(sim.speed) > 1.5) { flash('Stop the car first'); return; }
   const [fx, fz] = sim.forward, rx = -fz, rz = fx, w = cur?.kind === 'car' ? Math.max(1.45, sim.s.width / 2 + 0.6) : 0.75;
   // beside the driver's door first (right-hand drive: the car's right); in a tight spot (GH-18's bay) in front or behind
@@ -920,8 +921,38 @@ function enterCar() {
   audio.start(); audio.door();
   if (!state.explore) startExplore();
   updateModeUI();
+  startEntering();
   placeCamera(true, 1 / 60);
 }
+// getting in (Mixamo's Entering Car): she walks up to the driver's door, turns and sits; from the driver's side
+// (the Ferrari's on the left; the Baleno's on the right, the clip mirrored). Gas, brake or E skips it
+const ENTER_FROM = 1.25, ENTER_TO = 3.25, ENTER_RATE = 1.15;   // (seated by 3.25 s: the rest reaches for a door that doesn't open)
+function startEntering() {
+  state.entering = null;
+  if (!her?.enterEnds || cur?.kind !== 'car') return;
+  state.entering = { t: ENTER_FROM, mirror: car.eye.position.x < 0, cam: enterView(car.eye.position.x < 0 ? -1 : 1) };      // (the driver's on the car's right: -X)
+}
+// where to watch from: beside the driver's door, a little ahead, or failing that (a wall, the gate) behind, in
+// front, or from above; the first with a clear line to the door. [across (out from the door side), along, up]
+const enterRay = new THREE.Raycaster();
+function enterView(sd) {
+  const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw), gy = groundHeight(pose.x, pose.z);
+  const door = new THREE.Vector3(pose.x + lx * sd * 1.1 - fx * 0.2, gy + 0.95, pose.z + lz * sd * 1.1 - fz * 0.2);
+  const hide = [car.root, her?.root].filter(Boolean), was = hide.map((o) => o.visible);
+  hide.forEach((o) => (o.visible = false));
+  let pick = null;
+  for (const [a, b, h] of [[4.6, 2.8, 1.65], [4.2, -2.6, 1.65], [3.2, 4.4, 1.9], [2.8, -4.2, 1.9], [2.2, 3.0, 3.6], [1.6, 0.4, 5.5]]) {
+    const c = new THREE.Vector3(pose.x + lx * sd * a + fx * b, gy + h, pose.z + lz * sd * a + fz * b), d = door.clone().sub(c), len = d.length();
+    enterRay.set(c, d.normalize()); enterRay.far = len;
+    const hits = [];
+    for (const o of scene.children) { if (!o.visible || o.isPoints || o.isSprite || o.isLine || o.isSkinnedMesh) continue; try { enterRay.intersectObject(o, true, hits); } catch { /* (the sky, the sea: not solid) */ } }
+    const hit = hits.sort((p, q) => p.distance - q.distance).find((i) => i.object.visible && i.object.isMesh && !i.object.isSkinnedMesh);
+    if (!hit || hit.distance > len - 0.5) { pick = [a, b, h]; break; }
+  }
+  hide.forEach((o, i) => (o.visible = was[i]));
+  return pick || [1.6, 0.4, 5.5];
+}
+function endEntering() { if (!state.entering) return; state.entering = null; her.snap('drive'); chase.init = false; placeCamera(true, 1 / 60); }
 // she gets in (from the tour): the drive opens up, and on her birthday a tune plays
 function startExplore() {
   state.explore = true;
@@ -998,6 +1029,7 @@ function findFocus() {
   return best;
 }
 function interact(it = focus || findFocus()) {
+  if (state.entering) return endEntering();
   if (!it || it instanceof Event) it = focus || findFocus();
   if (!it) return;
   if (it.kind === 'car') return toggleFoot(it.v);
@@ -1410,6 +1442,24 @@ function updateHer(dt) {
     her.update(dt, { mode: seatMode(cur), crank: a, rig: { hip: g.hip, hands: g.hands, feet } });
     return;
   }
+  if (state.mode === 'drive' && cur?.seat && state.entering) {
+    // getting in: the clip's end lined up with where her hips will be in the seat; her feet on the ground until
+    // she sits (the clip's car has a higher seat)
+    const E = state.entering;
+    E.t += dt * ENTER_RATE;
+    r.visible = true;
+    car.body.getWorldQuaternion(herQ); car.eye.getWorldPosition(herE);
+    herV.copy(cur.seat).add(EYE_OFF).applyQuaternion(herQ);
+    const seatRoot = herE.clone().sub(herV), seatHips = cur.seat.hips.clone().applyQuaternion(herQ).add(seatRoot);
+    const psi = pose.yaw + (E.mirror ? Math.PI / 2 : -Math.PI / 2);
+    r.quaternion.setFromAxisAngle(UP, psi);
+    const endW = her.enterEnds[E.mirror ? 1 : 0].clone().applyQuaternion(r.quaternion);
+    const sitting = THREE.MathUtils.smoothstep(E.t, 2.55, 3.05), gy = groundHeight(seatHips.x - endW.x, seatHips.z - endW.z);
+    r.position.set(seatHips.x - endW.x, gy + (seatHips.y - endW.y - gy) * sitting, seatHips.z - endW.z);
+    her.update(dt, { enter: { t: E.t, mirror: E.mirror } });
+    if (E.t >= Math.min(ENTER_TO, her.enterDur)) endEntering();
+    return;
+  }
   if (state.mode === 'drive' && cur?.seat) {
     r.visible = state.cam !== 'driver' && state.cam !== 'hood';
     her.update(dt, { mode: seatMode(cur), crank: cur.crankA || 0 });
@@ -1428,7 +1478,7 @@ function updateHer(dt) {
 // Mixamo's motion-captured moves, if they've been downloaded into play/models/anims/ (see README): each one found
 // takes the place of the move made in avatar.js
 async function loadMoves() {
-  const found = (await Promise.all(['walk', 'run', 'sit', 'drive'].map((m) => {
+  const found = (await Promise.all(['walk', 'run', 'sit', 'drive', 'enter'].map((m) => {
     const url = `play/models/anims/${m}.fbx`;
     return fetch(url, { method: 'HEAD' }).then((r) => (r.ok && !/text\/html/.test(r.headers.get('content-type') || '') ? [m, url] : null)).catch(() => null);
   }))).filter(Boolean);
@@ -1439,6 +1489,7 @@ async function loadMoves() {
     catch (e) { console.warn('move', m, e); }
   }
   for (const v of fleet) v.seat = her.headIn(seatMode(v));          // (seated by a clip: her head's somewhere else)
+  if (her.canEnter) { her.enterEnds = [her.enterEnd(false), her.enterEnd(true)]; }
 }
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {
@@ -1524,6 +1575,17 @@ function blockedAt(px, pz) {
 const damp = (a, b, rate, dt) => a + (b - a) * (1 - Math.exp(-rate * dt));
 function placeCamera(snap, dt) {
   if (state.mode === 'foot') return placeFootCamera(dt, snap);
+  if (state.entering && her) {
+    // from the driver's side, a little ahead: her walking up, the door, the seat
+    const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), lx = Math.cos(pose.yaw), lz = -Math.sin(pose.yaw), sd = state.entering.mirror ? -1 : 1;
+    const gy = groundHeight(pose.x, pose.z), [va, vb, vh] = state.entering.cam;
+    camPos.set(pose.x + lx * sd * va + fx * vb, gy + vh, pose.z + lz * sd * va + fz * vb);
+    camLook.set(pose.x + lx * sd * 1.1 - fx * 0.2, gy + 0.95, pose.z + lz * sd * 1.1 - fz * 0.2);
+    if (snap) camera.position.copy(camPos); else camera.position.lerp(camPos, 1 - Math.exp(-3 * dt));
+    camera.fov = 48; camera.near = 0.05; camera.updateProjectionMatrix();
+    camera.lookAt(camLook);
+    return;
+  }
   const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), now = performance.now() / 1000;
   const kmh = Math.abs(sim.speed) * 3.6;
   if (Math.abs(sim.speed) > 2 && now - look.last > 1.5) { look.yaw = damp(look.yaw, 0, 1.5, dt); look.pitch = damp(look.pitch, 0, 1.5, dt); }
@@ -1679,7 +1741,8 @@ function loop() {
   const now = performance.now(), dt = Math.min((now - last) / 1000, 0.1);
   last = now;
   const input = state.started ? readInput(dt) : NO_INPUT;
-  lastInput = state.mode === 'drive' && !state.overlay ? input : { ...NO_INPUT, handbrake: true };
+  if (state.entering && state.entering.t > ENTER_FROM + 0.5 && (input.throttle > 0.2 || input.brake > 0.2)) endEntering();
+  lastInput = state.mode === 'drive' && !state.overlay && !state.entering ? input : { ...NO_INPUT, handbrake: true };
   padExtras(dt);
   stepSim(dt, lastInput);
   if (state.mode === 'foot') updateFoot(dt);

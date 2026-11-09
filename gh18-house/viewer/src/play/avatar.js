@@ -82,8 +82,22 @@ export async function loadAvatar(url, height = 1.62) {
   let phase = 0;
   const w = { ...W, idle: 1 };
   let modeNow = 'idle';
-  function update(dt, { mode = 'idle', speed = 0, crank = 0, rig = null } = {}) {
-    modeNow = mode;
+  function update(dt, { mode = 'idle', speed = 0, crank = 0, rig = null, enter = null } = {}) {
+    modeNow = enter ? 'enter' : mode;
+    if (enter) {
+      // getting into a car: the clip at time enter.t (mirrored for a right-hand drive), nothing else
+      for (const m in w) w[m] = 0;
+      for (const act of Object.values(clips)) act.setEffectiveWeight(0);
+      const a = enter.mirror ? once.enterM : once.enter;
+      (enter.mirror ? once.enter : once.enterM).setEffectiveWeight(0);
+      a.setEffectiveWeight(1); a.time = Math.min(enter.t, a.getClip().duration - 1e-3);
+      if (idle) idle.setEffectiveWeight(0.001);
+      for (const [b, q] of rest) b.quaternion.copy(q);
+      mixer.update(0);
+      model.updateMatrixWorld(true);
+      return;
+    }
+    if (once.enter) { once.enter.setEffectiveWeight(0); once.enterM.setEffectiveWeight(0); }
     for (const m in w) w[m] += ((m === mode ? 1 : 0) - w[m]) * (1 - Math.exp(-8 * dt));
     // a Mixamo clip, if there is one for this move, plays at its weight (the made move then stands aside)
     for (const [m, act] of Object.entries(clips)) { act.setEffectiveWeight(w[m]); if (m === 'walk' || m === 'run') act.setEffectiveTimeScale(Math.max(0.4, speed / (m === 'run' ? 3.6 : 1.4))); }
@@ -155,7 +169,9 @@ export async function loadAvatar(url, height = 1.62) {
     }
   }
   // a Mixamo clip for a move (play/models/anims/<move>.fbx): its tracks renamed to her bones; in place
+  const once = {};
   function addClip(move, clip) {
+    if (move === 'enter') return addOnce(clip);
     clip.tracks = clip.tracks.filter((t) => {
       const [node, prop] = t.name.split('.');
       const b = bones[strip(node)];
@@ -168,6 +184,45 @@ export async function loadAvatar(url, height = 1.62) {
     const act = mixer.clipAction(clip); act.setEffectiveWeight(0); act.play();
     clips[move] = act;
   }
+  // getting into a car: the hips keep their path (she walks up, turns, sits), in her units. A mirrored copy for
+  // a right-hand drive car: left and right swapped, reflected across her own left-right (x)
+  function addOnce(clip) {
+    const f = hipsRest.y / MIXAMO_HIPS;
+    clip.tracks = clip.tracks.filter((t) => {
+      const [node, prop] = t.name.split('.');
+      const b = bones[strip(node)];
+      if (!b) return false;
+      if (prop === 'position' && strip(node) !== 'Hips') return false;
+      t.name = strip(node) + '.' + prop;                                     // (canonical for now: mirrored below)
+      if (prop === 'position') for (let i = 0; i < t.values.length; i++) t.values[i] *= f;
+      return true;
+    });
+    const mir = clip.clone();
+    for (const t of mir.tracks) {
+      const [node, prop] = t.name.split('.');
+      t.name = node.replace(/^Left/, '#').replace(/^Right/, 'Left').replace(/^#/, 'Right') + '.' + prop;
+      const v = t.values;
+      if (prop === 'position') for (let i = 0; i < v.length; i += 3) v[i] = -v[i];
+      else for (let i = 0; i < v.length; i += 4) { v[i + 1] = -v[i + 1]; v[i + 2] = -v[i + 2]; }
+    }
+    for (const c of [clip, mir]) for (const t of c.tracks) { const [node, prop] = t.name.split('.'); t.name = bones[node].name + '.' + prop; }
+    for (const [k, c] of [['enter', clip], ['enterM', mir]]) {
+      const a = mixer.clipAction(c); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.setEffectiveWeight(0); a.play(); a.paused = true;
+      once[k] = a;
+    }
+  }
+  // where her hips are at the end of getting in (her root at the origin, facing +Z), to line it up with a seat
+  const hv2 = new THREE.Vector3();
+  function enterEnd(mirror) {
+    const rp = root.position.clone(), rq = root.quaternion.clone();
+    root.position.set(0, 0, 0); root.quaternion.identity(); root.updateMatrixWorld(true);
+    update(0, { enter: { t: 1e9, mirror } });
+    bones.Hips.getWorldPosition(hv2);
+    const out = hv2.clone();
+    root.position.copy(rp); root.quaternion.copy(rq); root.updateMatrixWorld(true);
+    return out;
+  }
+  function snap(mode) { for (const m in w) w[m] = m === mode ? 1 : 0; }
   // where her head is, seated in a move, from her feet (root) — to put her eyes where a vehicle's driver's eyes are
   const hv = new THREE.Vector3();
   function headIn(mode) {
@@ -177,8 +232,9 @@ export async function loadAvatar(url, height = 1.62) {
     update(0, { mode });
     bones.Head.getWorldPosition(hv);
     const out = hv.clone();
+    out.hips = bones.Hips.getWorldPosition(new THREE.Vector3());
     Object.assign(w, keep); phase = ph; root.position.copy(rp); root.quaternion.copy(rq); root.updateMatrixWorld(true);
     return out;
   }
-  return { root, model, bones, update, addClip, headIn, get mode() { return modeNow; }, height };
+  return { root, model, bones, update, addClip, headIn, enterEnd, snap, get canEnter() { return !!once.enter; }, get enterDur() { return once.enter?.getClip().duration || 0; }, get mode() { return modeNow; }, height };
 }
