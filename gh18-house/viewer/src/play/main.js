@@ -359,13 +359,60 @@ async function init() {
 
 // the tour's walker, on this coast: sand heights, no wading out to sea, and the parked car is solid
 class FootWalker extends Walker {
-  heights(x, y) {
+  // tops: also the tops of solid things (walls, benches, tables, the court's windbreak): somewhere to land a jump
+  // or climb up to, never stepped onto just by walking
+  heights(x, y, tops = false) {
     const out = super.heights(x, y);
     out[0] = groundHeight(x / 1000, y / 1000);
     // the studio's and the garden's built floors (plinth, deck, steps, boardwalk) stand on the sand: where one
     // is, the sand under it is not a floor, or she would stay on the sand and walk through them
     for (const s of this.raised || []) if (x >= s.bb[0] && x <= s.bb[2] && y >= s.bb[1] && y <= s.bb[3] && pointInPoly(x, y, s.poly)) { out.shift(); break; }
+    if (tops) for (const c of this.data.colliders) {
+      if (c.y1 > 7 || c.noTop) continue;
+      const b = c.bb;
+      if (x < b[0] || x > b[2] || y < b[1] || y > b[3] || !pointInPoly(x, y, c.poly)) continue;
+      out.push(c.y1);
+    }
     return out;
+  }
+  // ---- jumping, falling, climbing (heights in metres; this.air: { y, vy } while off the ground)
+  jump() {
+    if (this.air || this.climb || !this.active) return;
+    // a ledge just ahead, within reach: climb up onto it
+    const p = this.camera.position, ry = this.camera.rotation.y, fx = -Math.sin(ry), fz = -Math.cos(ry);
+    for (const dist of [0.45, 0.65]) {
+      const x = (p.x + fx * dist) * 1000, y = (p.z + fz * dist) * 1000;
+      const up = this.heights(x, y, true).filter((h) => h > this.foot + 0.42 && h <= this.foot + 1.8).sort((a, b) => a - b)[0];
+      if (up != null && !this.blocked(x, y, up)) {
+        this.climb = { t: 0, dur: up - this.foot > 0.95 ? 0.95 : 0.55, x0: p.x, z0: p.z, y0: this.foot, x1: x / 1000, z1: y / 1000, y1: up };
+        this.mv = { x: 0, z: 0 };
+        return 'climb';
+      }
+    }
+    const sp = Math.hypot(this.mv?.x || 0, this.mv?.z || 0);
+    this.air = { y: this.foot, vy: 3.5 + Math.min(0.5, sp * 0.12) };       // ~0.65 m up; a little more at a run
+    return 'jump';
+  }
+  // after a horizontal step: falling or landing (returns true while she's off the ground)
+  airStep(dt) {
+    const p = this.camera.position, x = p.x * 1000, y = p.z * 1000;
+    if (this.climb) {
+      const c = this.climb; c.t += dt;
+      const k = Math.min(1, c.t / c.dur), up = Math.min(1, k / 0.7), fw = Math.max(0, (k - 0.45) / 0.55);
+      p.x = c.x0 + (c.x1 - c.x0) * fw; p.z = c.z0 + (c.z1 - c.z0) * fw;
+      this.foot = c.y0 + (c.y1 - c.y0) * (1 - (1 - up) * (1 - up));
+      if (k >= 1) { this.foot = c.y1; this.climb = null; this.eye = this.foot; }
+      return true;
+    }
+    if (!this.air) return false;
+    const a = this.air;
+    a.vy -= 9.81 * dt; a.y += a.vy * dt;
+    // the surface under her: the highest one at or below her feet
+    const below = this.heights(x, y, true).filter((h) => h <= Math.max(a.y, this.foot) + 0.05);
+    const ground = below.length ? Math.max(...below) : this.foot;
+    if (a.vy <= 0 && a.y <= ground) { this.foot = ground; this.air = null; this.landed = Math.min(1, -a.vy / 6); return false; }
+    this.foot = Math.max(ground, Math.min(this.foot, a.y));          // (for what's underfoot; she's at a.y)
+    return true;
   }
   place(x, y, foot, yaw = 0, pitch = 0) {
     super.place(x, y, foot, yaw, pitch);
@@ -378,6 +425,7 @@ class FootWalker extends Walker {
     const R = cam ? 120 : 210;
     for (const c of this.data.colliders) {
       if (c.y1 < foot + 0.2 || c.y0 > foot + 1.75) continue;
+      if (cam && c.y1 - c.y0 <= 2.05) continue;               // (furniture's blocks are 2 m tall: walls only, for the camera)
       const b = c.bb;
       if (x < b[0] - R || x > b[2] + R || y < b[1] - R || y > b[3] + R) continue;
       if (circleHitsPoly(x, y, R, c.poly)) return true;
@@ -398,6 +446,7 @@ class FootWalker extends Walker {
   update(dt) {
     if (this.classic) return super.update(dt);       // (the tour's own walking: kept for side-by-side tests)
     if (!this.active) return;
+    if (this.climb) { this.airStep(dt); this.eye = this.foot; this.camera.position.y = this.foot + 1.6; this.mv = { x: 0, z: 0 }; return; }
     const k = this.keys;
     const fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + this.stick.y;
     const side = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + this.stick.x;
@@ -436,13 +485,23 @@ class FootWalker extends Walker {
     if (sp < 0.03) { v.x = v.z = 0; }
     else {
       const x = p.x * 1000, y = p.z * 1000, sx = v.x * dt * 1000, sz = v.z * dt * 1000;
-      const stuck = this.blocked(x, y, this.foot);           // (already overlapping something: let her step out of it)
+      const at = this.air ? this.air.y : this.foot;              // (in the air: over whatever is below her feet)
+      const stuck = this.blocked(x, y, at);           // (already overlapping something: let her step out of it)
       let moved = false;
       for (const a of [0, 0.3, -0.3, 0.6, -0.6, 0.95, -0.95, 1.35, -1.35]) {
         const c = Math.cos(a), s2 = Math.sin(a), f = Math.max(0.25, c);
         const nx = x + (sx * c - sz * s2) * f, ny = y + (sx * s2 + sz * c) * f;
-        const h = this.standAt(nx, ny, this.foot);
-        if (h === null || (!stuck && this.blocked(nx, ny, h))) continue;
+        if (this.air) {                                           // airborne: anything she's above doesn't stop her
+          if (!stuck && this.blocked(nx, ny, at)) continue;
+          p.x = nx / 1000; p.z = ny / 1000; moved = true; break;
+        }
+        let h = this.standAt(nx, ny, this.foot);
+        if (h === null) {                                         // a drop (off a wall, a table, the deck's edge): she falls
+          const lower = this.heights(nx, ny, true).filter((q) => q < this.foot - 0.3);
+          if (lower.length && !this.blocked(nx, ny, this.foot)) { p.x = nx / 1000; p.z = ny / 1000; this.air = { y: this.foot, vy: 0 }; moved = true; break; }
+          continue;
+        }
+        if (!stuck && this.blocked(nx, ny, h)) continue;
         p.x = nx / 1000; p.z = ny / 1000; this.foot = h; moved = true;
         if (a) { const k2 = 0.35; v.x = v.x * (1 - k2) + ((nx - x) / 1000 / dt) * k2; v.z = v.z * (1 - k2) + ((ny - y) / 1000 / dt) * k2; }   // glide along it
         break;
@@ -450,6 +509,7 @@ class FootWalker extends Walker {
       if (!moved) { v.x *= 0.3; v.z *= 0.3; }
     }
     this.stride = (this.stride || 0) + sp * dt * 3.6;
+    if (this.airStep(dt)) { this.eye = this.air ? this.air.y : this.foot; p.y = this.eye + 1.6; return; }
     this.eye = this.eye == null || Math.abs(this.eye - this.foot) > 1.2 ? this.foot : this.eye + (this.foot - this.eye) * (1 - Math.exp(-14 * dt));
     p.y = this.eye + 1.6 + Math.sin(this.stride) * 0.016 * Math.min(1, sp / 1.6);
   }
@@ -748,6 +808,7 @@ function bindUI() {
       return;
     }
     if (e.code === 'BracketRight' || e.code === 'BracketLeft' || e.code === 'Backslash') { clockSpeed(e.code === 'BracketRight' ? 1 : e.code === 'BracketLeft' ? -1 : 0); return; }
+    if (e.code === 'Space' && state.mode === 'foot' && !state.lying && state.explore) { e.preventDefault(); walker.jump(); return; }
     const act = { KeyK: cycleAids, KeyC: cycleCam, KeyL: toggleBeams, KeyT: cycleTime, KeyR: goHome, KeyM: toggleSound, KeyF: toggleFoot, KeyE: interact, KeyP: playMusicHere, KeyO: cycleMusicZone, KeyN: () => music.next(), KeyG: goStudio }[e.code];
     if (act) act();
     if (e.code === 'KeyH' && state.explore) horn(true);
@@ -854,7 +915,7 @@ const chase = new ChaseCam(), head2 = {};
 const lookingBack = () => !!keys.KeyB || !!driver?.lookBack;
 const CAM_LABEL = { chase: 'Chase', driver: "Driver's seat", hood: 'Bonnet', high: 'High' };
 function cycleCam() {
-  if (state.mode === 'foot') { view.third = !view.third; setVal('cam', view.third ? 'Behind her' : 'Her eyes'); flash(view.third ? 'Walking: seen from behind her' + (isIndoors() ? ' (outdoors; through her eyes indoors)' : '') : 'Walking: through her eyes'); return; }
+  if (state.mode === 'foot') { view.third = !view.third; setVal('cam', view.third ? 'Behind her' : 'Her eyes'); flash(view.third ? 'Walking: seen from behind her (through her eyes in the house)' : 'Walking: through her eyes'); return; }
   if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; setVal('cam', CAM_LABEL[state.cam]); look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
 function toggleBeams() { state.beamsOverride = !state.beams; setBeams(state.beamsOverride); }
 function cycleTime() { state.beamsOverride = null; setTime(TIME_ORDER[(TIME_ORDER.indexOf(state.time) + 1) % TIME_ORDER.length]); }
@@ -1110,6 +1171,7 @@ function lieDown(seat) {
     // the reading nook: curled up in the ring, looking out across the studio
     state.lying = { seat, eye: new THREE.Vector3(...seat.eye) };
     orb.yaw = Math.atan2(seat.look[0], seat.look[1]); orb.pitch = seat.pitch != null ? (seat.lie ? -seat.pitch : seat.pitch) : 0.05;
+    if (sittingAsHer() && view.third) orb.pitch = 0.38;           // (seen sitting: the camera a little above, behind her)
     flash(seat.flash || 'Curl up and read · E to get up');
     return;
   }
@@ -1203,30 +1265,45 @@ function updateFoot(dt) {
   const turn = (touchKeys.left ? 1 : 0) - (touchKeys.right ? 1 : 0);
   if (turn) orb.yaw += turn * 1.6 * dt;
   walker.update(dt);
+  if (walker.landed) { ambience?.footstep(groundUnderfoot()); walker.landed = 0; }
   footprints.step(head.position.x, head.position.z, orb.yaw, surfaceAt(head.position.x, head.position.z) === 'sand');
+}
+// where her eyes are, seated (the hammock sways, the rocking chair rocks)
+function seatEye(out) {
+  const L = state.lying;
+  out.copy(L.eye);
+  if (L.seat.sway) out.add(new THREE.Vector3(0, Math.sin(clock * 0.9) * 0.02, Math.sin(clock * 0.9) * 0.07));
+  if (L.seat.rocker) { const a = studio.rocker.angle, lk = L.seat.look; out.add(new THREE.Vector3(lk[0] * Math.sin(a) * 0.55, -(1 - Math.cos(a)) * 0.5, lk[1] * Math.sin(a) * 0.55)); }
+  return out;
+}
+// seated somewhere outside the house (the studio's sofa, rocker, nook, window bed, bench, cushions; the fire):
+// seen as her figure, sitting (lying down on a lounger stays through her eyes)
+function sittingAsHer() {
+  const L = state.lying;
+  return !!(her && L && L.seat.eye && !L.seat.lie && !inHouse(L.seat.x, L.seat.z));
 }
 function placeFootCamera(dt, snap = false) {
   camera.near = 0.05;
-  let e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
-  if (state.lying?.seat.sway) e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(0, Math.sin(clock * 0.9) * 0.02, Math.sin(clock * 0.9) * 0.07));   // the hammock rocks
-  let rockPitch = 0;
-  if (state.lying?.seat.rocker) {                                   // rocking: the head swings back and forth with the chair
-    const a = studio.rocker.angle, lk = state.lying.seat.look;
-    e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(lk[0] * Math.sin(a) * 0.55, -(1 - Math.cos(a)) * 0.5, lk[1] * Math.sin(a) * 0.55));
-    rockPitch = a * 0.8;
-  }
-  // behind her, over her right shoulder, outdoors (indoors, lying down, or with C: through her eyes). The camera
-  // comes in where a wall or a tree is between, and eases back out
-  const far = her && view.third && !state.lying && !isIndoors() ? 2.7 : 0;
+  const e = state.lying ? seatEye(tmpV) : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
+  const rockPitch = state.lying?.seat.rocker ? studio.rocker.angle * 0.8 : 0;
+  // behind her, over her right shoulder: outdoors and in the studio (closer there), and when she sits down in it.
+  // Through her eyes in the house, lying on a lounger, or with C. The camera comes in where a wall or a tree is
+  // between, and eases back out
+  const inHouseNow = inHouse(head.position.x, head.position.z) && walker.foot > 0.3;
+  const close = (inStudio(head.position.x, head.position.z) && walker.foot > 0.4) || sittingAsHer();
+  const far = her && view.third && (!state.lying || sittingAsHer()) && !inHouseNow ? (close ? 2.1 : 2.7) : 0;
   view.d = snap ? far : damp(view.d, far, far > view.d ? 2.5 : 7, dt);
-  camera.rotation.set(-orb.pitch - rockPitch, orb.yaw + Math.PI, 0, 'YXZ');
+  camera.rotation.set(-orb.pitch - rockPitch * Math.max(0, 1 - view.d), orb.yaw + Math.PI, 0, 'YXZ');
   if (view.d > 0.02) {
     const sy = Math.sin(orb.yaw), cy = Math.cos(orb.yaw), cp = Math.cos(orb.pitch), sp = Math.sin(orb.pitch), k = view.d / 2.7;
     const px = e.x - cy * 0.34 * k, pz = e.z + sy * 0.34 * k, py = e.y - 0.12 * k;          // the pivot, by her shoulder
     let room = view.d;
     for (let t = 0.3; t <= view.d + 0.25; t += 0.15) {
       const x = px - sy * cp * t, z = pz - cy * cp * t;
-      if (walker.blocked(x * 1000, z * 1000, walker.foot, true) || blockedAt(x, z)) { room = Math.max(0.25, t - 0.35); break; }
+      // walls and things at the camera's height (not the sofa below it); outside, the trees and buildings too (the
+      // cars' outline of the studio would count its whole floor as a wall)
+      const cy2 = py + sp * t;
+      if (walker.blocked(x * 1000, z * 1000, cy2 - 0.3, true) || (!inStudio(x, z) && !inHouse(x, z) && blockedAt(x, z))) { room = Math.max(0.25, t - 0.35); break; }
     }
     view.dc = snap ? room : Math.min(room, damp(view.dc, room, 3, dt));
     const d = Math.min(view.d, view.dc);
@@ -1442,6 +1519,7 @@ async function addLater() {
     try { await renderer.compileAsync(h.root, camera, scene); } catch { /* (compiled when first drawn) */ }
     her = h; scene.add(her.root);
     for (const v of fleet) v.seat = her.headIn(seatMode(v));
+    her.sitHead = her.headIn('sit');
     await loadMoves();
   }
   mark('garage');
@@ -1527,17 +1605,29 @@ function updateHer(dt) {
     r.position.copy(herE).sub(herV); r.quaternion.copy(herQ);
     return;
   }
+  if (sittingAsHer()) {
+    // seated: her eyes where the seat's view is from, facing the way it looks, the sitting move
+    const L = state.lying, yaw = Math.atan2(L.seat.look[0], L.seat.look[1]);
+    herYaw = yaw; r.quaternion.setFromAxisAngle(UP, yaw);
+    seatEye(herE); herV.copy(her.sitHead || cur.seat).add(EYE_OFF).applyQuaternion(r.quaternion);
+    r.position.copy(herE).sub(herV);
+    r.visible = view.d > 0.7 && !artView?.active && !reader?.busy && !hunt?.busy;
+    if (r.visible) her.update(dt, { mode: 'sit' });
+    return;
+  }
   const mv = walker.mv || { x: 0, z: 0 }, sp = Math.hypot(mv.x, mv.z);
   if (sp > 0.2) { let d = Math.atan2(mv.x, mv.z) - herYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); herYaw += d * (1 - Math.exp(-10 * dt)); }
   r.position.set(head.position.x, walker.eye ?? walker.foot, head.position.z);
+  if (walker.climb) { const c = walker.climb; herYaw = Math.atan2(c.x1 - c.x0, c.z1 - c.z0); }       // (facing the ledge)
   r.quaternion.setFromAxisAngle(UP, herYaw);
   r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !reader?.busy && !hunt?.busy;
-  if (r.visible) her.update(dt, { mode: sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle', speed: sp });   // (through her eyes: no work)
+  const move = walker.climb ? 'climb' : walker.air ? 'jump' : sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle';
+  if (r.visible) her.update(dt, { mode: move, speed: sp });   // (through her eyes: no work)
 }
 // Mixamo's motion-captured moves, if they've been downloaded into play/models/anims/ (see README): each one found
 // takes the place of the move made in avatar.js
 async function loadMoves() {
-  const found = (await Promise.all(['walk', 'run', 'sit', 'drive', 'enter'].map((m) => {
+  const found = (await Promise.all(['walk', 'run', 'sit', 'drive', 'enter', 'jump', 'climb'].map((m) => {
     const url = `play/models/anims/${m}.fbx`;
     return fetch(url, { method: 'HEAD' }).then((r) => (r.ok && !/text\/html/.test(r.headers.get('content-type') || '') ? [m, url] : null)).catch(() => null);
   }))).filter(Boolean);
@@ -1548,6 +1638,7 @@ async function loadMoves() {
     catch (e) { console.warn('move', m, e); }
   }
   for (const v of fleet) v.seat = her.headIn(seatMode(v));          // (seated by a clip: her head's somewhere else)
+  her.sitHead = her.headIn('sit');
   if (her.canEnter) { her.enterEnds = [her.enterEnd(false), her.enterEnd(true)]; }
 }
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
@@ -1995,6 +2086,8 @@ window.play = {
   court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)
   // walking with a key held, every frame drawn (her stride; the third-person camera)
+  // a jump (or a climb, at a ledge), then `seconds` of walking with `code` held (null: standing)
+  jumpWalk: (seconds = 1, code = null) => { const r = walker.jump(); if (code) walker.keys[code] = true; for (let t = 0; t < seconds; t += 1 / 30) { updateFoot(1 / 30); frame(1 / 30, false); } if (code) walker.keys[code] = false; hudTimer = 0; frame(1 / 60); return { r, foot: +walker.foot.toFixed(2), air: !!walker.air, climb: !!walker.climb, x: +head.position.x.toFixed(2), z: +head.position.z.toFixed(2) }; },
   walk: (seconds, code = 'KeyW') => { walker.keys[code] = true; for (let t = 0; t < seconds; t += 1 / 30) { updateFoot(1 / 30); frame(1 / 30, false); } walker.keys[code] = false; hudTimer = 0; frame(1 / 60); return { x: +head.position.x.toFixed(2), z: +head.position.z.toFixed(2) }; },
   tick: (seconds) => { for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); },
   pick: (x, y) => { const it = pickAt(x, y); return it && { kind: it.kind, index: it.index, label: it.label }; },

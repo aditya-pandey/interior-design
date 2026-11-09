@@ -17,7 +17,7 @@ const strip = (n) => n.replace(/^mixamorig\d*:?/, '').replace(/_\d+$/, '');     
 // her figure is drawn on its own layer: the camera and the sun's shadows see it, the sea's reflection doesn't
 export const AVATAR_LAYER = 2;
 const MIXAMO_HIPS = 98;           // Mixamo's standing hip height (cm), for scaling the clips' hip height to hers
-const W = { idle: 0, walk: 0, run: 0, sit: 0, drive: 0, ride: 0, pedal: 0 };
+const W = { idle: 0, walk: 0, run: 0, sit: 0, drive: 0, ride: 0, pedal: 0, jump: 0, climb: 0 };
 
 export async function loadAvatar(url, height = 1.62) {
   const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
@@ -145,7 +145,7 @@ export async function loadAvatar(url, height = 1.62) {
       return;
     }
     if (once.enter) { once.enter.setEffectiveWeight(0); once.enterM.setEffectiveWeight(0); }
-    for (const m in w) w[m] += ((m === mode ? 1 : 0) - w[m]) * (1 - Math.exp(-8 * dt));
+    for (const m in w) w[m] += ((m === mode ? 1 : 0) - w[m]) * (1 - Math.exp(-(m === 'jump' || m === 'climb' || mode === 'jump' ? 16 : 8) * dt));
     // a Mixamo clip, if there is one for this move, plays at its weight (the made move then stands aside)
     for (const [m, act] of Object.entries(clips)) { act.setEffectiveWeight(w[m]); if (m === 'walk' || m === 'run') act.setEffectiveTimeScale(Math.max(0.4, speed / (m === 'run' ? 3.6 : 1.4))); }
     let cw = 0; for (const m in clips) cw += w[m];
@@ -171,6 +171,18 @@ export async function loadAvatar(url, height = 1.62) {
       turn(B.Spine1, U, c * 0.05 * amp); turn(B.Spine, L, -0.05 * runW);
       B.Hips.position.y = hipsRest.y - (Math.abs(c) * 0.025 * amp + 0.07 * runW) / k;
     } else B.Hips.position.y = hipsRest.y;
+    // in the air: knees drawn up, arms forward for balance; climbing: arms reaching up over the ledge, a knee up
+    const wj = clips.jump ? 0 : w.jump, wc = clips.climb ? 0 : w.climb;
+    if (wj > 0.01) {
+      turn(B.LeftUpLeg, L, -0.75 * wj); turn(B.RightUpLeg, L, -0.3 * wj); turn(B.LeftLeg, L, 1.15 * wj); turn(B.RightLeg, L, 0.55 * wj);
+      turn(B.LeftArm, L, -0.8 * wj); turn(B.RightArm, L, -0.5 * wj); turn(B.LeftForeArm, L, -0.4 * wj); turn(B.RightForeArm, L, -0.5 * wj);
+      turn(B.Spine, L, 0.12 * wj);
+    }
+    if (wc > 0.01) {
+      turn(B.LeftArm, L, -2.5 * wc); turn(B.RightArm, L, -2.5 * wc); turn(B.LeftForeArm, L, -0.35 * wc); turn(B.RightForeArm, L, -0.35 * wc);
+      turn(B.LeftUpLeg, L, -1.1 * wc); turn(B.LeftLeg, L, 1.5 * wc); turn(B.RightUpLeg, L, -0.3 * wc); turn(B.RightLeg, L, 0.5 * wc);
+      turn(B.Spine, L, 0.3 * wc);
+    }
     // seated (a car, the Vespa, the bicycle, a sofa)
     // (a move with a Mixamo clip is the clip's alone: the made one stands aside)
     const ws = clips.sit ? 0 : w.sit, wd = clips.drive ? 0 : w.drive;
