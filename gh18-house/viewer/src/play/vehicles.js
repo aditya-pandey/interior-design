@@ -37,7 +37,10 @@ export const FLEET = [
     load: { kind: 'scooter', scale: 1.86 / 4.64, flip: false, front: [1.696, 0.517, 0.6], rear: [-1.665, 0.517, 0.57], halfWidth: 0.26,
       axis: { at: [0.9, 2.5], dir: [-0.8, 1.98] }, barsAbove: 2.52, barsBehind: 0.75, lamp: [1.05, 2.75], eye: [0, 1.52, -0.22] },
     // her on it (metres, the body's frame): hips on the seat, wrists at the grips, ankles on the floorboard
-    rig: { hip: [0, 0.97, -0.34], hands: [[0.28, 1.16, 0.2], [-0.28, 1.16, 0.2]], feet: [[0.15, 0.47, 0.1], [-0.15, 0.47, 0.1]], down: [0.36, 0.08, -0.05] },
+    // her on it (metres, the body's frame): hips on the seat; the grips (centre, outward along it); the balls of her
+    // feet on the floorboard, or, stopped, on the ground either side
+    rig: { hip: [0, 0.97, -0.33], grips: [[[0.3, 1.14, 0.25], [1, 0, -0.08]], [[-0.3, 1.14, 0.25], [-1, 0, -0.08]]],
+      feet: [[0.15, 0.4, 0.17], [-0.15, 0.4, 0.17]], footDir: [0, -0.1, 1], down: { feet: [[0.31, 0.02, 0.0], [-0.31, 0.02, 0.0]], dir: [0, -0.55, 0.83] } },   // (stopped: on tiptoe, as at her height on a Vespa)
     park: { x: 95.4, z: 37.4, yaw: -Math.PI / 2 }, // by the studio, at the end of the parking pad, facing it
     spec: {
       ...TUNING,
@@ -58,10 +61,14 @@ export const FLEET = [
   {
     id: 'bicycle', name: 'her bicycle', verb: 'Ride', kind: 'bicycle', model: 'bicycle', url: 'play/models/bike.glb',
     load: { kind: 'bicycle', scale: 0.0435, flip: true, front: [-0.83, 0.3, 7.7], rear: [25.23, 0.3, 7.7], halfWidth: 1.6,
-      axis: { at: [3.78, 17.3], dir: [4.61, 16.83] }, steerBehind: 0.7, barsAbove: 16, barsBehind: 7, crank: [14.2, -1.3, 3.2], eye: [0, 1.62, -0.12] },
+      axis: { at: [3.78, 17.3], dir: [4.61, 16.83] }, steerBehind: 0.7, barsAbove: 16, barsBehind: 7, crank: [14.2, -1.3, 3.2], eye: [0, 1.62, -0.12], steerRest: -0.227, upright: [0.027, 0.06],   // (modelled leaning 3.4° on its stand, its steering turned 13°)
+      saddleDrop: { box: [-0.14, 0.14, 0.86, 1.1, -0.47, -0.1], dy: -0.1 } },   // (and its saddle set for someone taller)
     // hips on the saddle, wrists at the swept-back grips; the pedals (where they are at crank angle 0, from the
     // crank's centre: [x, y, z]) carry her ankles round
-    rig: { hip: [0, 1.05, -0.31], hands: [[0.2, 1.15, 0.2], [-0.2, 1.15, 0.2]], pedals: [[0.16, 0.098, -0.086], [-0.16, -0.106, 0.078]], down: [0.3, 0.08, -0.12] },
+    rig: { hip: [0, 0.985, -0.28], grips: [[[0.263, 1.155, 0.245], [0.53, -0.22, -0.82]], [[-0.263, 1.155, 0.245], [-0.53, -0.22, -0.82]]],
+      pedals: [[0.18, 0.098, -0.086], [-0.18, -0.106, 0.078]], footDir: [0, -0.26, 0.97],
+      // stopped: a step-through frame, so she slides forward off the saddle and stands astride it, both feet down
+      down: { hip: [0, 0.86, 0.0], feet: [[0.17, 0.02, 0.12], [-0.17, 0.02, 0.12]] } },
     park: { x: 102.8, z: 37.9, yaw: -Math.PI / 2 },          // on the sand by the studio's front, where her old bicycle leaned
     spec: {
       ...TUNING,

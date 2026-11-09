@@ -1478,15 +1478,26 @@ function updateHer(dt) {
   if (!her) return;
   const r = her.root;
   if (state.mode === 'drive' && cur?.rig) {
-    // on a two-wheeler: placed with its body, her hips, hands and feet put on it (avatar.js), pedalling with the
-    // crank; stopped, her left foot comes down
+    // on a two-wheeler: placed with its body; her hips, hands and feet put on it (avatar.js) from where its saddle,
+    // grips (on the handlebar: they turn with it) and pedals (round with the crank) are this frame. Stopped, she
+    // puts her feet down (on the bicycle she stands astride it); the change is eased
     r.visible = true;
-    car.body.getWorldPosition(r.position); car.body.getWorldQuaternion(r.quaternion);
-    const g = cur.rig, cr = car.crank, a = cr ? cr.rotation.x : 0, ca = Math.cos(a), sa = Math.sin(a);
-    const feet = g.pedals ? g.pedals.map(([x, y, z]) => [x, cr.position.y + y * ca - z * sa + 0.075, cr.position.z + y * sa + z * ca - 0.05]) : g.feet.map((f) => f.slice());
-    const down = THREE.MathUtils.clamp(1 - Math.abs(sim.speed) / 1.2, 0, 1);
-    for (let i = 0; i < 3; i++) feet[0][i] += (g.down[i] - feet[0][i]) * down;
-    her.update(dt, { mode: seatMode(cur), crank: a, rig: { hip: g.hip, hands: g.hands, feet } });
+    const m = car, body = m.body, g = cur.rig, W = (p) => body.localToWorld(new THREE.Vector3(...p));
+    body.getWorldPosition(r.position); body.getWorldQuaternion(r.quaternion);
+    if (!cur.gripsLocal) {                                 // (the grips in the handlebar's own frame, found once, bars straight)
+      const keep = m.steerRot.rotation.y; m.steerRot.rotation.y = 0; m.root.updateMatrixWorld(true);
+      const toSteer = new THREE.Matrix4().copy(m.steerRot.matrixWorld).invert().multiply(body.matrixWorld);
+      cur.gripsLocal = g.grips.map(([c, d]) => ({ c: new THREE.Vector3(...c).applyMatrix4(toSteer), g: new THREE.Vector3(...d).normalize().transformDirection(toSteer) }));
+      m.steerRot.rotation.y = keep; m.root.updateMatrixWorld(true);
+    }
+    const hands = cur.gripsLocal.map((q) => ({ c: m.steerRot.localToWorld(q.c.clone()), g: q.g.clone().transformDirection(m.steerRot.matrixWorld) }));
+    const cr = m.crank, a = cr ? cr.rotation.x : 0, ca = Math.cos(a), sa = Math.sin(a);
+    const balls = g.pedals ? g.pedals.map(([x, y, z]) => [x, cr.position.y + y * ca - z * sa + 0.02, cr.position.z + y * sa + z * ca]) : g.feet;
+    cur.stopK = THREE.MathUtils.damp(cur.stopK ?? 1, Math.abs(sim.speed) < 0.9 && lastInput.throttle < 0.05 ? 1 : 0, 5, dt);
+    const k = cur.stopK, mix = (p, q) => (q ? p.map((x, i) => x + (q[i] - x) * k) : p);
+    const dirRide = new THREE.Vector3(...g.footDir).normalize().transformDirection(body.matrixWorld), dirDown = new THREE.Vector3(...(g.down.dir || [0, 0, 1])).normalize().transformDirection(body.matrixWorld);
+    const feet = balls.map((b, i) => ({ ball: W(mix(b, g.down.feet[i])), dir: dirRide.clone().lerp(dirDown, k).normalize() }));
+    her.update(dt, { mode: seatMode(cur), crank: a, rig: { hip: W(mix(g.hip, g.down.hip)), hands, feet } });
     return;
   }
   if (state.mode === 'drive' && cur?.seat && state.entering) {

@@ -104,6 +104,8 @@ export async function loadTwoWheeler(url, o) {
   const ground = o.front[1] - o.front[2], midZ = (o.front[0] + o.rear[0]) / 2;
   // native → metres, facing +Z, the wheels' contact on y = 0, centred between the axles
   const M = new THREE.Matrix4().makeScale(S * F, S, S * F).multiply(new THREE.Matrix4().makeTranslation(0, -ground, -midZ));
+  // stood upright and centred, if it's modelled leaning on its stand (o.upright: [x at the ground, lean per metre up])
+  if (o.upright) M.premultiply(new THREE.Matrix4().makeRotationZ(Math.atan(o.upright[1]))).premultiply(new THREE.Matrix4().makeTranslation(-o.upright[0], 0, 0));
   const P = (z, y) => new THREE.Vector3(0, y, z).applyMatrix4(M);
   const ax = new THREE.Vector2(o.axis.dir[0], o.axis.dir[1]).normalize();      // (z, y) along the steering axis, up
   const sets = { body: [], bars: [], front: [], rear: [], crank: [] };
@@ -123,6 +125,24 @@ export async function loadTwoWheeler(url, o) {
     }
     for (const [k, list] of Object.entries(idx)) if (list.length) sets[k].push({ geo: subset(g, list).applyMatrix4(M), material: m.material });
   });
+  // the steering as modelled may be turned a little (the bicycle's is, 13°): turned straight about its axis
+  const turnBack = o.steerRest ? new THREE.Matrix4().makeTranslation(...P(o.axis.at[0], o.axis.at[1]).toArray())
+    .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, ax.y, ax.x * F).normalize(), o.steerRest))
+    .multiply(new THREE.Matrix4().makeTranslation(...P(o.axis.at[0], o.axis.at[1]).negate().toArray())) : null;
+  if (turnBack) for (const pc of [...sets.bars, ...sets.front]) pc.geo.applyMatrix4(turnBack);
+  // the saddle lowered for her (o.saddleDrop: { box: [x0, x1, y0, y1, z0, z1] in metres, dy }): the triangles
+  // of the saddle and the top of the seatpost slide down, the post into the frame's tube
+  if (o.saddleDrop) {
+    const [x0, x1, y0, y1, z0, z1] = o.saddleDrop.box;
+    for (const pc of sets.body) {
+      const p = pc.geo.attributes.position, a = p.array;
+      for (let i = 0; i < p.count; i += 3) {
+        const cx = (a[i * 3] + a[i * 3 + 3] + a[i * 3 + 6]) / 3, cy = (a[i * 3 + 1] + a[i * 3 + 4] + a[i * 3 + 7]) / 3, cz = (a[i * 3 + 2] + a[i * 3 + 5] + a[i * 3 + 8]) / 3;
+        if (cx > x0 && cx < x1 && cy > y0 && cy < y1 && cz > z0 && cz < z1) for (let k = 0; k < 3; k++) a[(i + k) * 3 + 1] += o.saddleDrop.dy;
+      }
+      p.needsUpdate = true;
+    }
+  }
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   const add = (parent, pieces, at) => { for (const pc of pieces) { if (at) pc.geo.translate(-at.x, -at.y, -at.z); const mesh = new THREE.Mesh(pc.geo, pc.material); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); } };
   add(body, sets.body);
@@ -136,6 +156,7 @@ export async function loadTwoWheeler(url, o) {
   add(steerRot, sets.bars);
   const wheelOf = (w, parent, frontWheel) => {
     const c = P(w[0], w[1]), axle = new THREE.Group(), spin = new THREE.Group();
+    if (frontWheel && turnBack) c.applyMatrix4(turnBack);
     const pieces = frontWheel ? sets.front : sets.rear;
     for (const pc of pieces) pc.geo.translate(-c.x, -c.y, -c.z);                // (in the bike's own frame, about the hub)
     axle.position.copy(frontWheel ? c.clone().applyMatrix4(toSteer) : c);
@@ -152,7 +173,7 @@ export async function loadTwoWheeler(url, o) {
   root.add(contactShadow(0.7, dims.z + 0.2));
   const mats = { head: lampMat(0xf4f4f0, 0xfff6e8), tail: lampMat(0x6e0d0d, 0xff2a1a), reverse: lampMat(0xdddddd, 0xffffff) };
   const beams = [];
-  if (o.lamp) { const lp = P(o.lamp[0], o.lamp[1]), sl = new THREE.SpotLight(0xfff1dd, 0, 0, 0.42, 0.5, 2); sl.position.copy(lp).applyMatrix4(toSteer); sl.target.position.set(lp.x, 0, lp.z + 14).applyMatrix4(toSteer); steerRot.add(sl, sl.target); beams.push(sl); }
+  if (o.lamp) { const lp = P(o.lamp[0], o.lamp[1]); if (turnBack) lp.applyMatrix4(turnBack); const sl = new THREE.SpotLight(0xfff1dd, 0, 0, 0.42, 0.5, 2); sl.position.copy(lp).applyMatrix4(toSteer); sl.target.position.set(lp.x, 0, lp.z + 14).applyMatrix4(toSteer); steerRot.add(sl, sl.target); beams.push(sl); }
   const eye = new THREE.Object3D(); eye.position.set(...o.eye); body.add(eye);
   return { root, body, model: body, wheels, mats, beams, eye, cabin: null, dims, steering: null, steerRot, crank, wheelbase: Math.abs(P(o.front[0], 0).z - P(o.rear[0], 0).z), track: 0.12, kind: o.kind };
 }

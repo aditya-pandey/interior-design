@@ -51,7 +51,10 @@ export async function loadAvatar(url, height = 1.62) {
   idle?.play();
   const clips = {};
   const hipsRest = bones.Hips.position.clone();
-  const rest = Object.values(bones).map((b) => [b, b.quaternion.clone()]);     // (the made moves turn bones the clips may not touch)
+  const rest = Object.values(bones).map((b) => [b, b.quaternion.clone()]);
+  const wp1 = new THREE.Vector3(), wp2 = new THREE.Vector3(), len = (a, b) => (bones[a] && bones[b] ? bones[a].getWorldPosition(wp1).distanceTo(bones[b].getWorldPosition(wp2)) : 0);
+  const palmLen = len('LeftHand', 'LeftHandMiddle1') || 0.09, footLen = len('LeftFoot', 'LeftToeBase') || 0.1;
+  const armLen = len('LeftArm', 'LeftForeArm') + len('LeftForeArm', 'LeftHand');     // (the made moves turn bones the clips may not touch)
 
   // ---- the moves made here: rotations about her own axes, applied after the idle
   const L = new THREE.Vector3(), F = new THREE.Vector3(), U = new THREE.Vector3(), tq = new THREE.Quaternion(), pq = new THREE.Quaternion(), ax = new THREE.Vector3();
@@ -89,6 +92,27 @@ export async function loadAvatar(url, height = 1.62) {
     aim(mid, C, T);
   };
   const tgt = new THREE.Vector3(), pole = new THREE.Vector3(), sh = new THREE.Vector3(), gr = new THREE.Vector3(), sp0 = new THREE.Vector3();
+  // turn a hand so that wrist → knuckles lies along d and pinky → index along t (both world directions)
+  const m1 = new THREE.Matrix4(), m2 = new THREE.Matrix4(), qa = new THREE.Quaternion(), va2 = new THREE.Vector3(), vb2 = new THREE.Vector3(), vc2 = new THREE.Vector3(), vd2 = new THREE.Vector3();
+  const orient = (hand, mid, index, pinky, d, t) => {
+    if (!hand || !mid || !index || !pinky) return;
+    hand.getWorldPosition(bp);
+    va2.copy(mid.getWorldPosition(vd2)).sub(bp).normalize();
+    vb2.copy(index.getWorldPosition(vd2)).sub(pinky.getWorldPosition(vc2)); vb2.addScaledVector(va2, -vb2.dot(va2)).normalize();
+    m1.makeBasis(va2, vb2, vc2.crossVectors(va2, vb2));
+    const tt = vd2.copy(t).addScaledVector(d, -t.dot(d)).normalize();
+    m2.makeBasis(d, tt, new THREE.Vector3().crossVectors(d, tt));
+    qa.setFromRotationMatrix(m2.multiply(m1.transpose()));            // (current frame → wanted frame)
+    hand.getWorldQuaternion(qw); qw.premultiply(qa);
+    hand.parent.getWorldQuaternion(pq); hand.quaternion.copy(pq.invert().multiply(qw));
+    hand.updateMatrixWorld(true);
+  };
+  // bend a finger joint towards the palm (n: the way the palm faces)
+  const curl = (bone, child, n, a) => {
+    if (!bone || !child) return;
+    bone.getWorldPosition(bp); child.getWorldPosition(vd2);
+    turn(bone, vc2.subVectors(vd2, bp).normalize().cross(n).normalize(), a);
+  };
   let phase = 0;
   const w = { ...W, idle: 1 };
   let modeNow = 'idle';
@@ -152,29 +176,46 @@ export async function loadAvatar(url, height = 1.62) {
       turn(B.Spine, L, 0.06 * w.pedal + 0.03 * w.ride);
       B.Hips.position.y = hipsRest.y - 0.02 * sit / k;
     }
-    // on a two-wheeler: her hips on the saddle, leaning to the handlebar, hands on the grips, feet on the pedals
-    // (or the floorboard; one foot down when stopped). rig: points in root's frame (the vehicle's body frame)
+    // on a two-wheeler (rig: world-space targets, worked out by main.js from the vehicle as it is this frame):
+    //   hip       where her hips go (on the saddle; or, stopped on the bicycle, standing astride it)
+    //   hands[i]  { c: the grip's centre, g: along the grip, outward } (left, right): the grip runs through her
+    //             palm, the palm on top of it, index finger on its inner end, fingers and thumb closed round it
+    //   feet[i]   { ball: where the ball of her foot goes, dir: the way her foot points }
     if (rig) {
-      root.localToWorld(tgt.set(...rig.hip));
-      B.Hips.position.copy(B.Hips.parent.worldToLocal(tgt.clone()));
+      B.Hips.position.copy(B.Hips.parent.worldToLocal(tgt.copy(rig.hip)));
       B.Hips.updateMatrixWorld(true);
-      // lean the spine forward until the shoulders are within reach of the grips
-      root.localToWorld(gr.set((rig.hands[0][0] + rig.hands[1][0]) / 2, (rig.hands[0][1] + rig.hands[1][1]) / 2, (rig.hands[0][2] + rig.hands[1][2]) / 2));
-      const reach = (B.LeftArm.getWorldPosition(sh).distanceTo(B.LeftForeArm.getWorldPosition(sp0)) + sp0.distanceTo(B.LeftHand.getWorldPosition(tgt))) * 0.86;
-      for (let i = 0; i < 14; i++) {
+      // where her wrists must be, and how her hands must be turned, for each grip
+      const hands = rig.hands.map((h, i) => {
+        const g = h.g.clone().normalize(), n = new THREE.Vector3(0, -1, 0).addScaledVector(g, g.y).normalize();   // palm faces down onto it
+        const t = g.clone().negate();                                  // the index finger's side: inward along the grip
+        const d = i === 0 ? t.clone().cross(n) : n.clone().cross(t);   // wrist → knuckles (a left hand is the mirror of a right)
+        const wrist = h.c.clone().addScaledVector(n, -0.032).addScaledVector(d, -palmLen * 0.82);
+        return { n, t, d, wrist };
+      });
+      // lean forward from the hips until the grips are in comfortable reach (elbows a little bent)
+      gr.copy(hands[0].wrist).add(hands[1].wrist).multiplyScalar(0.5);
+      for (let i = 0; i < 16; i++) {
         B.LeftArm.getWorldPosition(sh); B.RightArm.getWorldPosition(sp0); sh.add(sp0).multiplyScalar(0.5);
-        if (sh.distanceTo(gr) - 0.12 <= reach) break;
-        turn(B.Spine, L, 0.05); turn(B.Spine1, L, 0.02);
+        if (sh.distanceTo(gr) <= armLen * 0.9) break;
+        turn(B.Spine, L, 0.035); turn(B.Spine1, L, 0.02); turn(B.Spine2, L, 0.01);
       }
-      turn(B.Neck, L, -0.15); turn(B.Head, L, -0.1);                 // (eyes up the road)
+      turn(B.Neck, L, -0.12); turn(B.Head, L, -0.12);                // (eyes up the road)
       for (const [side, i] of [['Left', 0], ['Right', 1]]) {
-        const s = i ? -1 : 1;
-        root.localToWorld(tgt.set(...rig.feet[i]));
-        pole.copy(F).addScaledVector(L, s * 0.15).addScaledVector(U, 0.3);
+        const s = i ? -1 : 1, f = rig.feet[i], h = hands[i];
+        // the leg: the ankle where the ball of the foot lands on its spot, the knee forward and a little out
+        tgt.copy(f.ball).addScaledVector(f.dir, -footLen).addScaledVector(U, 0.045);
+        pole.copy(F).addScaledVector(L, s * 0.12).addScaledVector(U, 0.2);
         ik(B[side + 'UpLeg'], B[side + 'Leg'], B[side + 'Foot'], tgt, pole);
-        root.localToWorld(tgt.set(...rig.hands[i]));
-        pole.copy(L).multiplyScalar(s * 0.7).addScaledVector(U, -1).addScaledVector(F, -0.3);
-        ik(B[side + 'Arm'], B[side + 'ForeArm'], B[side + 'Hand'], tgt, pole);
+        B[side + 'ToeBase'].getWorldPosition(sp0); tgt.copy(f.ball).addScaledVector(U, 0.045);
+        aim(B[side + 'Foot'], sp0, tgt);
+        // the arm: elbows down and a little out
+        pole.copy(L).multiplyScalar(s * 0.6).addScaledVector(U, -1).addScaledVector(F, -0.2);
+        ik(B[side + 'Arm'], B[side + 'ForeArm'], B[side + 'Hand'], h.wrist, pole);
+        // the hand turned onto the grip: its knuckles along d, its thumb side along t
+        orient(B[side + 'Hand'], B[side + 'HandMiddle1'], B[side + 'HandIndex1'], B[side + 'HandPinky1'], h.d, h.t);
+        // fingers closed round the grip, the thumb under it
+        for (const fg of ['Index', 'Middle', 'Ring', 'Pinky']) [1.0, 1.25, 0.85].forEach((a, j) => curl(B[side + 'Hand' + fg + (j + 1)], B[side + 'Hand' + fg + (j + 2)], h.n, a));
+        [0.25, 0.55, 0.45].forEach((a, j) => curl(B[side + 'HandThumb' + (j + 1)], B[side + 'HandThumb' + (j + 2)], h.n, a));
       }
     }
   }
