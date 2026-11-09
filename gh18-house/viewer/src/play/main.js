@@ -37,6 +37,7 @@ import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion, CAM } from './chasecam.js';
 import { FLEET } from './vehicles.js';
 import { loadCar, loadTwoWheeler } from './vehiclemodels.js';
+import { loadAvatar } from './avatar.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -132,7 +133,9 @@ let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0,
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
-let fleet = [], cur = null;          // the garage (vehicles.js), and the one she's in or last drove
+let fleet = [], cur = null;
+let her = null;                     // her figure (avatar.js): seen from behind outdoors, through her eyes indoors
+const view = { third: true, d: 0, dc: 0 };   // on foot: behind her (C switches); d: the camera's distance now, dc: as far as walls let it          // the garage (vehicles.js), and the one she's in or last drove
 const skyHDR = {};
 let seatSpots = [];                 // GH-18's sofas, chairs and beds, as things to interact with on foot                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
 const lampLights = [];
@@ -300,6 +303,13 @@ async function init() {
     }
     return best;
   } });
+  // her figure, and the moves from Mixamo if they've been added (play/models/anims/)
+  try {
+    her = await loadAvatar('play/models/woman.glb');
+    scene.add(her.root);
+    for (const v of fleet) v.seat = her.headIn(seatMode(v));
+    loadMoves();
+  } catch (e) { console.warn('figure', e); her = null; }
   dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
   ambience = new Ambience(audio);
@@ -353,14 +363,15 @@ class FootWalker extends Walker {
     this.eye = this.foot; this.mv = { x: 0, z: 0 };
   }
   // (a slimmer body than the tour's 250 mm: she fits through an 800 mm door without brushing the frame)
-  blocked(x, y, foot) {
-    const R = 210;
+  blocked(x, y, foot, cam = false) {
+    const R = cam ? 120 : 210;
     for (const c of this.data.colliders) {
       if (c.y1 < foot + 0.2 || c.y0 > foot + 1.75) continue;
       const b = c.bb;
       if (x < b[0] - R || x > b[2] + R || y < b[1] - R || y > b[3] + R) continue;
       if (circleHitsPoly(x, y, R, c.poly)) return true;
     }
+    if (cam) return false;
     if (coastDist(x / 1000, y / 1000) > 0.6) return true;
     if (state.mode === 'foot' && foot < 1.2) for (const v of fleet.length ? fleet : [{ sim }]) {
       if (Math.abs(v.sim.x * 1000 - x) > 4500 || Math.abs(v.sim.z * 1000 - y) > 4500) continue;
@@ -831,7 +842,9 @@ const CAMS = ['chase', 'driver', 'hood', 'high'];
 const chase = new ChaseCam(), head2 = {};
 const lookingBack = () => !!keys.KeyB || !!driver?.lookBack;
 const CAM_LABEL = { chase: 'Chase', driver: "Driver's seat", hood: 'Bonnet', high: 'High' };
-function cycleCam() { if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; setVal('cam', CAM_LABEL[state.cam]); look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
+function cycleCam() {
+  if (state.mode === 'foot') { view.third = !view.third; setVal('cam', view.third ? 'Behind her' : 'Her eyes'); flash(view.third ? 'Walking: seen from behind her' + (isIndoors() ? ' (outdoors; through her eyes indoors)' : '') : 'Walking: through her eyes'); return; }
+  if (state.mode !== 'drive') return; state.cam = CAMS[(CAMS.indexOf(state.cam) + 1) % CAMS.length]; setVal('cam', CAM_LABEL[state.cam]); look.yaw = 0; look.pitch = 0; state.driven = true; placeCamera(true, 1 / 60); }
 function toggleBeams() { state.beamsOverride = !state.beams; setBeams(state.beamsOverride); }
 function cycleTime() { state.beamsOverride = null; setTime(TIME_ORDER[(TIME_ORDER.indexOf(state.time) + 1) % TIME_ORDER.length]); }
 function goHome() {
@@ -940,13 +953,14 @@ function placeHer(x, z, yaw, foot = null) {
   walker.place(x * 1000, z * 1000, foot ?? groundHeight(x, z), yaw + Math.PI, 0);
   walker.active = true;
   orb.yaw = yaw; orb.pitch = 0;
+  herYaw = yaw; view.d = view.dc = 0;
 }
 function updateModeUI() {
   const foot = state.mode === 'foot';
   document.body.classList.toggle('on-foot', foot);
   setVal('foot', 'Get out');
   document.getElementById('foot-btn').hidden = foot;          // (on foot, the prompt by the car offers to get in)
-  document.querySelector('[data-act="cam"]').disabled = foot;
+  setVal('cam', foot ? (view.third ? 'Behind her' : 'Her eyes') : CAM_LABEL[state.cam]);
 }
 // a control's current value, in the menu (and the time chip): Camera · Chase, Sound · On
 function setVal(act, text) { for (const el of document.querySelectorAll(`[data-act="${act}"] .val`)) el.textContent = text; }
@@ -1147,7 +1161,7 @@ function updateFoot(dt) {
   walker.update(dt);
   footprints.step(head.position.x, head.position.z, orb.yaw, surfaceAt(head.position.x, head.position.z) === 'sand');
 }
-function placeFootCamera(dt) {
+function placeFootCamera(dt, snap = false) {
   camera.near = 0.05;
   let e = state.lying ? state.lying.eye : tmpV.set(head.position.x, head.position.y - 0.05, head.position.z);    // (smoothed on stairs)
   if (state.lying?.seat.sway) e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(0, Math.sin(clock * 0.9) * 0.02, Math.sin(clock * 0.9) * 0.07));   // the hammock rocks
@@ -1157,9 +1171,24 @@ function placeFootCamera(dt) {
     e = tmpV.copy(state.lying.eye).add(new THREE.Vector3(lk[0] * Math.sin(a) * 0.55, -(1 - Math.cos(a)) * 0.5, lk[1] * Math.sin(a) * 0.55));
     rockPitch = a * 0.8;
   }
-  camera.position.copy(e);
+  // behind her, over her right shoulder, outdoors (indoors, lying down, or with C: through her eyes). The camera
+  // comes in where a wall or a tree is between, and eases back out
+  const far = her && view.third && !state.lying && !isIndoors() ? 2.7 : 0;
+  view.d = snap ? far : damp(view.d, far, far > view.d ? 2.5 : 7, dt);
   camera.rotation.set(-orb.pitch - rockPitch, orb.yaw + Math.PI, 0, 'YXZ');
-  camera.fov = damp(camera.fov, 70, 6, dt);
+  if (view.d > 0.02) {
+    const sy = Math.sin(orb.yaw), cy = Math.cos(orb.yaw), cp = Math.cos(orb.pitch), sp = Math.sin(orb.pitch), k = view.d / 2.7;
+    const px = e.x - cy * 0.34 * k, pz = e.z + sy * 0.34 * k, py = e.y - 0.12 * k;          // the pivot, by her shoulder
+    let room = view.d;
+    for (let t = 0.3; t <= view.d + 0.25; t += 0.15) {
+      const x = px - sy * cp * t, z = pz - cy * cp * t;
+      if (walker.blocked(x * 1000, z * 1000, walker.foot, true) || blockedAt(x, z)) { room = Math.max(0.25, t - 0.35); break; }
+    }
+    view.dc = snap ? room : Math.min(room, damp(view.dc, room, 3, dt));
+    const d = Math.min(view.d, view.dc);
+    camera.position.set(px - sy * cp * d, Math.max(py + sp * d, groundHeight(px - sy * cp * d, pz - cy * cp * d) + 0.35), pz - cy * cp * d);
+  } else camera.position.copy(e);
+  camera.fov = damp(camera.fov, view.d > 1 ? 64 : 70, 6, dt);
   camera.updateProjectionMatrix();
 }
 
@@ -1357,6 +1386,46 @@ function updateRide(dt) {
   for (const w of m.wheels) w.spin.rotation.x = pose.spin * (sim.s.wheelRadius / w.radius);
   if (m.crank) { const pedal = state.mode === 'drive' && lastInput.throttle > 0.05; if (pedal) v.crankA += dt * Math.max(2.5, Math.abs(sim.speed) / sim.s.wheelRadius / 2.4); m.crank.rotation.x = v.crankA; }
   m.root.updateMatrixWorld(true);
+}
+// ------------------------------------------------------------------ her figure
+// On foot she turns to the way she's walking (not the camera's: she can be looked at from the front), walks or
+// runs with her speed, and is hidden when the camera is her eyes. In a vehicle her eyes are where its driver's
+// are, seated (hands on the wheel), on the Vespa (on the handlebar), on the bicycle (pedalling with the crank).
+const UP = new THREE.Vector3(0, 1, 0), herQ = new THREE.Quaternion(), herE = new THREE.Vector3(), herV = new THREE.Vector3();
+const EYE_OFF = new THREE.Vector3(0, 0.09, 0.08);          // her eyes from her head bone
+let herYaw = 0;
+function seatMode(v) { return v.kind === 'car' ? 'drive' : v.kind === 'bicycle' ? 'pedal' : 'ride'; }
+function updateHer(dt) {
+  if (!her) return;
+  const r = her.root;
+  if (state.mode === 'drive' && cur?.seat) {
+    r.visible = state.cam !== 'driver' && state.cam !== 'hood';
+    her.update(dt, { mode: seatMode(cur), crank: cur.crankA || 0 });
+    car.body.getWorldQuaternion(herQ); car.eye.getWorldPosition(herE);
+    herV.copy(cur.seat).add(EYE_OFF).applyQuaternion(herQ);
+    r.position.copy(herE).sub(herV); r.quaternion.copy(herQ);
+    return;
+  }
+  const mv = walker.mv || { x: 0, z: 0 }, sp = Math.hypot(mv.x, mv.z);
+  if (sp > 0.2) { let d = Math.atan2(mv.x, mv.z) - herYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); herYaw += d * (1 - Math.exp(-10 * dt)); }
+  r.position.set(head.position.x, walker.eye ?? walker.foot, head.position.z);
+  r.quaternion.setFromAxisAngle(UP, herYaw);
+  her.update(dt, { mode: sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle', speed: sp });
+  r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !reader?.busy && !hunt?.busy;
+}
+// Mixamo's motion-captured moves, if they've been downloaded into play/models/anims/ (see README): each one found
+// takes the place of the move made in avatar.js
+async function loadMoves() {
+  const found = (await Promise.all(['walk', 'run', 'sit', 'drive'].map((m) => {
+    const url = `play/models/anims/${m}.fbx`;
+    return fetch(url, { method: 'HEAD' }).then((r) => (r.ok && !/text\/html/.test(r.headers.get('content-type') || '') ? [m, url] : null)).catch(() => null);
+  }))).filter(Boolean);
+  if (!found.length) return;
+  const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js');
+  for (const [m, url] of found) {
+    try { const o = await new FBXLoader().loadAsync(url); if (o.animations[0]) her.addClip(m, o.animations[0]); }
+    catch (e) { console.warn('move', m, e); }
+  }
 }
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {
@@ -1639,6 +1708,7 @@ function frame(dt = 1 / 60, show = true) {
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
+  updateHer(dt);
   if (!state.cine && !artView?.update(dt) && !(state.rally && court.game.placeCamera(camera, dt))) placeCamera(false, dt);
   tickClock(dt);
   let focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
@@ -1783,10 +1853,12 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse, her, view }),
   step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
   court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)
+  // walking with a key held, every frame drawn (her stride; the third-person camera)
+  walk: (seconds, code = 'KeyW') => { walker.keys[code] = true; for (let t = 0; t < seconds; t += 1 / 30) { updateFoot(1 / 30); frame(1 / 30, false); } walker.keys[code] = false; hudTimer = 0; frame(1 / 60); return { x: +head.position.x.toFixed(2), z: +head.position.z.toFixed(2) }; },
   tick: (seconds) => { for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); },
   pick: (x, y) => { const it = pickAt(x, y); return it && { kind: it.kind, index: it.index, label: it.label }; },
   clock: (h, speed) => { if (h != null) { state.clock.h = h; } if (speed != null) state.clock.speed = speed; applyClock(true); return { h: state.clock.h, label: fmtClock(state.clock.h), moment: state.time, sun: sunPosition(state.clock.date, state.clock.h) }; },
