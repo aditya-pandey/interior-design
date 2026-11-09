@@ -1438,6 +1438,7 @@ async function loadMoves() {
     try { const o = await new FBXLoader().loadAsync(url); if (o.animations[0]) her.addClip(m, o.animations[0]); }
     catch (e) { console.warn('move', m, e); }
   }
+  for (const v of fleet) v.seat = her.headIn(seatMode(v));          // (seated by a clip: her head's somewhere else)
 }
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {

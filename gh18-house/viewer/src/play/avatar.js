@@ -13,7 +13,8 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 //   const her = await loadAvatar(url); scene.add(her.root);
 //   her.update(dt, { mode, speed, crank })      root: her feet, facing +Z (turn it with root.rotation.y)
 
-const strip = (n) => n.replace(/^mixamorig:?/, '').replace(/_\d+$/, '');
+const strip = (n) => n.replace(/^mixamorig\d*:?/, '').replace(/_\d+$/, '');          // (Mixamo: mixamorig:Hips, mixamorig2Hips…)
+const MIXAMO_HIPS = 98;           // Mixamo's standing hip height (cm), for scaling the clips' hip height to hers
 const W = { idle: 0, walk: 0, run: 0, sit: 0, drive: 0, ride: 0, pedal: 0 };
 
 export async function loadAvatar(url, height = 1.62) {
@@ -110,16 +111,18 @@ export async function loadAvatar(url, height = 1.62) {
       B.Hips.position.y = hipsRest.y - (Math.abs(c) * 0.025 * amp + 0.07 * runW) / k;
     } else B.Hips.position.y = hipsRest.y;
     // seated (a car, the Vespa, the bicycle, a sofa)
-    const sit = w.sit + w.drive + w.ride + w.pedal;
+    // (a move with a Mixamo clip is the clip's alone: the made one stands aside)
+    const ws = clips.sit ? 0 : w.sit, wd = clips.drive ? 0 : w.drive;
+    const sit = ws + wd + w.ride + w.pedal;
     if (sit > 0.01) {
-      const knee = w.sit * 1.5 + w.drive * 1.3 + w.ride * 1.25 + w.pedal * 1.0;
+      const knee = ws * 1.5 + wd * 1.3 + w.ride * 1.25 + w.pedal * 1.0;
       let lt = 0, rt = 0, lk = 0, rk = 0;
       if (w.pedal > 0.01) { lt = Math.sin(crank) * 0.32 * w.pedal; rt = -lt; lk = Math.sin(crank + 1.6) * 0.45 * w.pedal; rk = -lk; }
-      turn(B.LeftUpLeg, L, -(1.45 * (w.sit + w.drive) + 1.3 * w.ride + 1.05 * w.pedal) + lt);
-      turn(B.RightUpLeg, L, -(1.45 * (w.sit + w.drive) + 1.3 * w.ride + 1.05 * w.pedal) + rt);
+      turn(B.LeftUpLeg, L, -(1.45 * (ws + wd) + 1.3 * w.ride + 1.05 * w.pedal) + lt);
+      turn(B.RightUpLeg, L, -(1.45 * (ws + wd) + 1.3 * w.ride + 1.05 * w.pedal) + rt);
       turn(B.LeftLeg, L, knee + lk); turn(B.RightLeg, L, knee + rk);
       // hands forward: on the wheel, on the handlebar
-      const reach = w.drive * 0.95 + w.ride * 0.85 + w.pedal * 0.9;
+      const reach = wd * 0.95 + w.ride * 0.85 + w.pedal * 0.9;
       turn(B.LeftArm, L, -reach); turn(B.RightArm, L, -reach);
       turn(B.LeftForeArm, L, -reach * 0.45); turn(B.RightForeArm, L, -reach * 0.45);
       turn(B.Spine, L, 0.06 * w.pedal + 0.03 * w.ride);
@@ -159,7 +162,7 @@ export async function loadAvatar(url, height = 1.62) {
       if (!b) return false;
       if (prop === 'position' && strip(node) !== 'Hips') return false;
       t.name = b.name + '.' + prop;
-      if (prop === 'position') { const f = hipsRest.y / (t.values[1] || 1); for (let i = 0; i < t.values.length; i += 3) { t.values[i] = 0; t.values[i + 2] = 0; t.values[i + 1] *= f; } }   // (her units, not Mixamo's; in place)
+      if (prop === 'position') { const f = hipsRest.y / MIXAMO_HIPS; for (let i = 0; i < t.values.length; i += 3) { t.values[i] = 0; t.values[i + 2] = 0; t.values[i + 1] *= f; } }   // (her units; in place; sitting stays lower)
       return true;
     });
     const act = mixer.clipAction(clip); act.setEffectiveWeight(0); act.play();
