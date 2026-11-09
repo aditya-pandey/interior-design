@@ -14,6 +14,8 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 //   her.update(dt, { mode, speed, crank })      root: her feet, facing +Z (turn it with root.rotation.y)
 
 const strip = (n) => n.replace(/^mixamorig\d*:?/, '').replace(/_\d+$/, '');          // (Mixamo: mixamorig:Hips, mixamorig2Hips…)
+// her figure is drawn on its own layer: the camera and the sun's shadows see it, the sea's reflection doesn't
+export const AVATAR_LAYER = 2;
 const MIXAMO_HIPS = 98;           // Mixamo's standing hip height (cm), for scaling the clips' hip height to hers
 const W = { idle: 0, walk: 0, run: 0, sit: 0, drive: 0, ride: 0, pedal: 0 };
 
@@ -24,7 +26,7 @@ export async function loadAvatar(url, height = 1.62) {
   const bones = {};
   model.traverse((o) => {
     if (o.isBone || o.type === 'Bone' || /_\d+$/.test(o.name)) bones[strip(o.name)] = bones[strip(o.name)] || o;
-    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; }
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.layers.set(AVATAR_LAYER); }
   });
   // her height: the top of her head at `height`
   model.updateMatrixWorld(true);
@@ -35,6 +37,14 @@ export async function loadAvatar(url, height = 1.62) {
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
   model.position.y -= box.min.y;
+  model.updateMatrixWorld(true);
+  // bounds for skipping her when she's off screen: each part's, from her standing pose, grown by 0.8 m (her
+  // arms out, her legs bent, sitting)
+  model.traverse((o) => {
+    if (!o.isSkinnedMesh) return;
+    o.computeBoundingSphere();
+    o.boundingSphere.radius += 0.8 / o.matrixWorld.getMaxScaleOnAxis();
+  });
   // her idle, always playing underneath; Mixamo clips (if given) on top
   const mixer = new THREE.AnimationMixer(model);
   const idle = gltf.animations[0] ? mixer.clipAction(gltf.animations[0]) : null;

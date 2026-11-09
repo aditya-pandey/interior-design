@@ -37,7 +37,7 @@ import { poolLights } from './lightpool.js';
 import { ChaseCam, headMotion, CAM } from './chasecam.js';
 import { FLEET } from './vehicles.js';
 import { loadCar, loadTwoWheeler } from './vehiclemodels.js';
-import { loadAvatar } from './avatar.js';
+import { loadAvatar, AVATAR_LAYER } from './avatar.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -79,6 +79,7 @@ document.getElementById('play-app').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 9000);
+camera.layers.enable(AVATAR_LAYER);
 const sky = new Sky();
 sky.scale.setScalar(8000);
 scene.add(sky);
@@ -93,6 +94,7 @@ const sun = new THREE.DirectionalLight(0xffffff, 2.5);
 sun.castShadow = true;
 sun.shadow.mapSize.set(LOW ? 1024 : 2048, LOW ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 260 });
+sun.shadow.camera.layers.enable(AVATAR_LAYER);         // (her figure: in the shadows, not in the sea's reflection)
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.03;
 scene.add(sun, sun.target);
@@ -1507,7 +1509,7 @@ function updateHer(dt) {
   }
   if (state.mode === 'drive' && cur?.seat) {
     r.visible = state.cam !== 'driver' && state.cam !== 'hood';
-    her.update(dt, { mode: seatMode(cur), crank: cur.crankA || 0 });
+    if (r.visible) her.update(dt, { mode: seatMode(cur), crank: cur.crankA || 0 });      // (hidden: no work)
     car.body.getWorldQuaternion(herQ); car.eye.getWorldPosition(herE);
     herV.copy(cur.seat).add(EYE_OFF).applyQuaternion(herQ);
     r.position.copy(herE).sub(herV); r.quaternion.copy(herQ);
@@ -1517,8 +1519,8 @@ function updateHer(dt) {
   if (sp > 0.2) { let d = Math.atan2(mv.x, mv.z) - herYaw; d = Math.atan2(Math.sin(d), Math.cos(d)); herYaw += d * (1 - Math.exp(-10 * dt)); }
   r.position.set(head.position.x, walker.eye ?? walker.foot, head.position.z);
   r.quaternion.setFromAxisAngle(UP, herYaw);
-  her.update(dt, { mode: sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle', speed: sp });
   r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !reader?.busy && !hunt?.busy;
+  if (r.visible) her.update(dt, { mode: sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle', speed: sp });   // (through her eyes: no work)
 }
 // Mixamo's motion-captured moves, if they've been downloaded into play/models/anims/ (see README): each one found
 // takes the place of the move made in avatar.js
