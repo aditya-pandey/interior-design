@@ -49,3 +49,5 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000       # ms; /play/ (its scanned textures and models, ~100 MB) takes Pages longer than the default 10 min to sync
