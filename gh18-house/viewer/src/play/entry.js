@@ -12,6 +12,7 @@
 import house from '../../../house_r1.json';
 import { improveWalker } from './walkfeel.js';
 import { houseSeats, nearestSeat, standSpot } from './seats.js';
+import { prefetch } from './prefetch.js';
 
 const params = new URLSearchParams(location.search);
 const CAR = { x: 7.615, z: 21.945 };          // the Baleno in GH-18's parking (house_r1.json GF-O07)
@@ -87,6 +88,7 @@ function watch() {
   setInterval(() => {
     const v = window.viewer;
     if (started || !v || !v.ready) return;
+    prefetch();                                           // (the tour is up: fetch the drive behind it)
     const w = v.walker(), cam = w.camera.position;
     const walking = v.state.mode === 'walk';
     if (!walking && seated) seated = null;

@@ -13,8 +13,8 @@
 // the road surface and impacts.
 
 export const AID_LEVELS = {
-  assisted: { label: 'Assisted', counter: 1, esc: 1, tcs: true, abs: true, keyLimit: 1.0, padLimit: 1.15 },
-  sport: { label: 'Sport', counter: 0.35, esc: 0.3, tcs: true, abs: true, keyLimit: 1.15, padLimit: 1.5 },
+  assisted: { label: 'Assisted', counter: 1, esc: 1, tcs: true, tcsReserve: 0.45, abs: true, keyLimit: 1.0, padLimit: 1.15 },
+  sport: { label: 'Sport', counter: 0.35, esc: 0.3, tcs: true, tcsReserve: 0.3, abs: true, keyLimit: 1.15, padLimit: 1.5 },
   off: { label: 'Aids off', counter: 0, esc: 0, tcs: false, abs: false, keyLimit: Infinity, padLimit: Infinity },
 };
 export const AID_ORDER = ['assisted', 'sport', 'off'];

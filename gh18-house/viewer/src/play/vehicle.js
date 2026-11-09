@@ -138,8 +138,10 @@ export class VehicleSim {
     // so an axle whose load is shared unevenly grips less in total.
     const L = s.wheelbase, a = this.a, b = this.b, m = s.mass;
     const N0f = m * G * b / L, N0r = m * G * a / L;
-    const Nf = Math.max(500, N0f - m * this.ax * s.cgHeight / L);
-    const Nr = Math.max(500, N0r + m * this.ax * s.cgHeight / L);
+    // downforce (a fast car's body presses it onto the road, growing with the square of speed)
+    const DF = (s.downforce || 0) * u * u, dfF = s.downforceFront ?? 0.4;
+    const Nf = Math.max(500, N0f - m * this.ax * s.cgHeight / L + DF * dfF);
+    const Nr = Math.max(500, N0r + m * this.ax * s.cgHeight / L + DF * (1 - dfF));
     const dLat = m * this.ay * s.cgHeight / s.track;                 // total sideways load transfer, N
     const tf = dLat * s.rollFront, tr = dLat * (1 - s.rollFront);
     const wheelGrip = (N, N0) => Math.max(0, N) * (1 - s.loadSens * (Math.max(0, N) / N0 - 1));
@@ -166,6 +168,12 @@ export class VehicleSim {
     const spinR = rwd && !this.aids.tcs && Fdrive > 0 && FxR > Dr;    // power oversteer: the rears spin up and let go
     if (spinR) FxR = s.muSlide * Dr;
     else FxR = Math.max(-capR * Dr, Math.min((rwd && Fdrive > 0 ? s.absFront : capR) * Dr, FxR));             // brake proportioning keeps the rear turning
+    // rear-wheel drive with traction control: the power is held back so the rear tyres keep some grip for
+    // holding the car in a corner (what they're holding now, plus a reserve), not all of it used to push
+    if (rwd && Fdrive > 0 && this.aids.tcs && !spinR) {
+      const lat = Math.min(0.94, Math.abs(this.tel.Fyr || 0) / Math.max(1, Dr) + (this.aids.tcsReserve ?? 0.3));
+      FxR = Math.min(FxR, Dr * Math.sqrt(1 - lat * lat));
+    }
     const locked = input.handbrake && Math.abs(u) > 0.8;
 
     // ---- slip angles. A tyre needs to roll a little way (its relaxation length) before its sideways
@@ -218,7 +226,7 @@ export class VehicleSim {
     T.FxF = FxF; T.FxR = FxR; T.Fyf = Fyf * kRoll; T.Fyr = Fyr * (locked ? 1 : kRoll);
     T.steer = d; T.assist = u >= 0 ? assist : 0; T.locked = locked; T.surface = this.surface;
     T.abs = brake > 0 && (Math.abs(FxF0) > Math.abs(FxF) + 1 || Math.abs(FxR0) > Math.abs(FxR) + 1);
-    T.tcs = Fdrive !== 0 && Math.abs(FxF0) > Math.abs(FxF) + 1;
+    T.tcs = Fdrive !== 0 && (Math.abs(FxF0) > Math.abs(FxF) + 1 || (rwd && FxR0 > FxR + 1));
     T.esc = escOn && aidK > 0.5 && this.aids.esc > 0;
     T.spin = spinF; T.lockF = lockF;
     T.useF = Math.hypot(FxF, Fyf) / Math.max(1, Df); T.useR = locked ? 1 : Math.hypot(FxR, Fyr) / Math.max(1, Dr);

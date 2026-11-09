@@ -19,12 +19,13 @@ export const FLEET = [
       ...TUNING,
       rwd: true,
       mass: 1650, wheelbase: 2.67, cgFront: 1.3, cgHeight: 0.46, length: 4.66, width: 1.97, inertia: 2700, wheelRadius: 0.35,
-      maxSteer: 0.6, steerRate: 3.0, steerRateFalloff: 14,
+      maxSteer: 0.6, steerRate: 2.6, steerRateFalloff: 10, lockSpeedFalloff: 12,   // (much less lock, and calmer hands, at speed)
       power: 400000, maxAccelForce: 12500,
       gears: [5.3, 3.3, 2.3, 1.75, 1.4, 1.15, 0.9, 0.7], final: 4.4, reverseRatio: 4.5,
       idle: 950, redline: 7500, shiftUpRpm: 7100, shiftDownRpm: 4200, shiftTime: 0.08, maxReverse: 7,
       brakeForce: 23000, rollResist: 200, drag: 0.37,
-      mu: 1.2, muRear: 1.32, peakSlip: 0.11, peakSlipRear: 0.085,
+      mu: 1.2, muRear: 1.38, peakSlip: 0.11, peakSlipRear: 0.095, shapeRear: 1.05,   // (wide rears that let go gently)
+      downforce: 1.2, downforceFront: 0.42, escGain: 5,                               // (~3.6 kN at 200 km/h)
       track: 1.65, rollStiff: 140000, rollDamp: 6500, pitchStiff: 260000, pitchDamp: 17000,
     },
     sound: { freq: 2, gain: 1.3, tone: 1.5 },     // a V8: twice the firing frequency of the Baleno's four, fuller

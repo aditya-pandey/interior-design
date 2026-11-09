@@ -51,10 +51,24 @@ const playPage = {
   },
 };
 
+// The drive's code (src/play/main.js and the chunks it needs), named for prefetch.js to preload during the tour
+const mainChunks = {
+  name: 'main-chunks',
+  apply: 'build',
+  generateBundle(_, bundle) {
+    const main = Object.values(bundle).find((c) => c.type === 'chunk' && c.facadeModuleId?.replace(/\\/g, '/').endsWith('src/play/main.js'));
+    if (!main) return;
+    const files = new Set();
+    const walk = (c) => { if (!c || files.has(c.fileName)) return; files.add(c.fileName); for (const i of c.imports) walk(bundle[i]); };
+    walk(main);
+    for (const c of Object.values(bundle)) if (c.type === 'chunk' && c.code.includes('__PLAY_MAIN_CHUNKS__')) c.code = c.code.replace(/(["'])__PLAY_MAIN_CHUNKS__\1/g, JSON.stringify([...files]));
+  },
+};
+
 export default defineConfig(({ command }) => ({
   base: './',
   publicDir: command === 'serve' ? '../assets' : false,
-  plugins: [stripPrivate, tourMarkup, playPage],
+  plugins: [stripPrivate, tourMarkup, playPage, mainChunks],
   server: { port: 5174, fs: { allow: ['..'] } },
   build: {
     outDir: 'dist',

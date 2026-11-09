@@ -148,9 +148,22 @@ const state = {
   clock: { h: 17.4, speed: HEADLESS ? 0 : 20, date: PARAM_DATE, boost: 0 },
 };
 
+// how long each stage of opening the world took (shown in the console; play.timings() in tests)
+const T0 = performance.now(), timings = [];
+const mark = (stage) => timings.push([stage, Math.round(performance.now() - T0)]);
+let later = null;          // the garage's other vehicles and her figure: loading while the world opens, added after
 async function init() {
+  // everything that comes over the network starts at once (and was fetched during the tour: prefetch.js)
+  const packP = fetch('play/deepti/pack.json').then((r) => r.json()).catch(() => null);
+  const balenoP = loadBaleno('models/baleno.glb', CAR_ITEM.size[1] / 1000);
+  const waterP = new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
+  later = {
+    vehicles: FLEET.filter((f) => f.id !== 'baleno').map((f) => (f.kind === 'car' ? loadCar(f.url, f.load) : loadTwoWheeler(f.url, f.load)).then((m) => [f, m]).catch((e) => { console.warn('vehicle', f.id, e); return null; })),
+    her: loadAvatar('play/models/woman.glb').catch((e) => { console.warn('figure', e); return null; }),
+  };
   M = await createMaterials(renderer);
-  try { pack = await (await fetch('play/deepti/pack.json')).json(); } catch { pack = null; }
+  pack = await packP;
+  mark('materials');
 
   const data = buildHouse(house, M);
   for (const mesh of data.meshes) {
@@ -160,14 +173,18 @@ async function init() {
     mesh.updateMatrix();
     scene.add(mesh);
   }
+  mark('house');
   beach = buildBeach(M, { low: LOW });
   for (const m of beach.meshes) scene.add(m);
   for (const o of beach.objects) scene.add(o);
   dressing = buildDressing({ low: LOW, time: beach.time });
   for (const o of dressing.objects) scene.add(o);
   footprints = createFootprints(scene);
+  mark('coast');
   await fontsReady;                                  // (her name, the poems and the labels are drawn in the bundled type)
+  mark('fonts');
   studio = buildStudio(M, pack);
+  mark('studio');
   scene.add(studio.group);
   // her e-reader (poems) and the paintings seen up close, both in the studio itself
   const quiet = () => { state.overlay = true; for (const k in keys) keys[k] = false; for (const k in walker?.keys || {}) walker.keys[k] = false; document.body.classList.add('viewing'); };
@@ -214,7 +231,7 @@ async function init() {
     lanterns = skyLanterns(scene, { x0: LIGHTHOUSE.x - 30, x1: LIGHTHOUSE.x + 20, z0: LIGHTHOUSE.z + 6, z1: LIGHTHOUSE.z + 50 });
   }
   scene.add(cosy.group);
-  const waterNormals = await new THREE.TextureLoader().loadAsync('play/textures/waternormals.jpg');
+  const waterNormals = await waterP;
   sea = buildSea(renderer, { low: LOW, normals: waterNormals });
   scene.add(sea.mesh);
   night = buildNightSky();
@@ -269,7 +286,9 @@ async function init() {
     lampLights.push(pl);
   }
 
-  car = await loadBaleno('models/baleno.glb', CAR_ITEM.size[1] / 1000);
+  mark('world');
+  car = await balenoP;
+  mark('car');
   scene.add(car.root);
   skids = createSkids(scene);
   wheelFx = createParticles(scene, { max: LOW ? 700 : 1600 });
@@ -278,21 +297,14 @@ async function init() {
   driver = new DriverInput(sim.s);
   sim.aids = driver.aids; sim.aidsLabel = driver.aids.label;
   driver.onPadConnect = () => flash('Controller connected · RT gas · LT brake · RB handbrake · left stick steer · Y get out · View camera');
-  // the rest of the garage: each its own model, physics and parking place
-  for (const f of FLEET) {
-    const v = { ...f };
-    if (f.id === 'baleno') { v.model = car; v.sim = sim; }
-    else {
-      try { v.model = f.kind === 'car' ? await loadCar(f.url, f.load) : await loadTwoWheeler(f.url, f.load); }
-      catch (e) { console.warn('vehicle', f.id, e); continue; }
-      scene.add(v.model.root);
-      v.sim = new VehicleSim(f.spec); v.sim.reset(f.park.x, f.park.z, f.park.yaw);
-    }
-    v.lean = 0; v.crankA = 0;
-    fleet.push(v);
-  }
+  // the garage: the Baleno now; the others (at the studio, 80 m on) join once she's driving (addLater)
+  fleet.push({ ...FLEET.find((f) => f.id === 'baleno'), model: car, sim, lean: 0, crankA: 0 });
   cur = fleet[0];
-  for (const v of fleet) if (v !== cur) parkPose(v);
+  // their headlamps: stand-ins in the scene from the start, handed over when they arrive (a light added later
+  // would change the lighting in every shader, and every one would be prepared again)
+  for (const f of FLEET) if (f.id !== 'baleno') for (let i = 0; i < (f.kind === 'car' ? 2 : f.load.lamp ? 1 : 0); i++) {
+    const sl = new THREE.SpotLight(0xfff1dd, 0, 0, 0.45, 0.5, 2); scene.add(sl, sl.target); spareBeams.push(sl);
+  }
   // the parked ones are solid to whichever one she's driving
   collide.add({ field: true, test(corners) {
     let best = null; const cx = corners.reduce((a, c) => a + c[0], 0) / 4, cz = corners.reduce((a, c) => a + c[1], 0) / 4;
@@ -303,13 +315,6 @@ async function init() {
     }
     return best;
   } });
-  // her figure, and the moves from Mixamo if they've been added (play/models/anims/)
-  try {
-    her = await loadAvatar('play/models/woman.glb');
-    scene.add(her.root);
-    for (const v of fleet) v.seat = her.headIn(seatMode(v));
-    loadMoves();
-  } catch (e) { console.warn('figure', e); her = null; }
   dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
   ambience = new Ambience(audio);
@@ -336,9 +341,13 @@ async function init() {
   placeHer(HOME.x - 1.45, HOME.z, 0);
   enterCar();
   lightPool = poolLights(scene, LOW ? 5 : 8);          // (all the point lights above, played by a fixed few)
+  mark('built');
   await warmUp();                                      // (behind the curtain: no stutter as she drives off)
+  mark('shaders');
   document.getElementById('hud').hidden = false;
   document.getElementById('play-loading').hidden = true;
+  const rest = addLater();
+  if (HEADLESS) await rest;                            // (tests start with the whole garage)
   window.play.ready = true;
   const unlock = () => { audio.start(); audio.setOn(state.sound); window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
@@ -876,8 +885,9 @@ function toggleFoot(v = null) {
 // the garage: she takes another one (the last stays where she left it)
 function useVehicle(v) {
   if (!v || v === cur) return;
-  if (cur) parkPose(cur);
+  if (cur) { parkPose(cur); for (const b of car.beams) b.intensity = 0; car.mats.head.emissiveIntensity = 0; car.mats.tail.emissiveIntensity = 0; }
   cur = v; car = v.model; sim = v.sim;
+  setBeams(state.beams);                               // (her lights on in this one, if they were on in the last)
   sim.aids = driver.aids; sim.aidsLabel = driver.aids.label; driver.s = sim.s;
   pose.copyFrom(sim);
   chase.c = { ...CAM, dist: CAM.dist * v.cam.dist, distMax: CAM.distMax * v.cam.dist, height: CAM.height * v.cam.height, high: CAM.high };
@@ -1419,6 +1429,41 @@ function updateRide(dt) {
   if (m.crank) { const pedal = state.mode === 'drive' && lastInput.throttle > 0.05; if (pedal) v.crankA += dt * Math.max(2.5, Math.abs(sim.speed) / sim.s.wheelRadius / 2.4); m.crank.rotation.x = v.crankA; }
   m.root.updateMatrixWorld(true);
 }
+// ------------------------------------------------------------------ after the curtain: the rest of the garage, her figure
+// Each is prepared for the GPU (its shaders compiled, off the main thread where the browser can) before it's put
+// in the world, so it appears without a stutter. Then three.js's file cache is emptied (prefetch.js filled it).
+const spareBeams = [];
+async function addLater() {
+  for (const r of await Promise.all(later.vehicles)) if (r) await addVehicle(...r);
+  const h = await later.her;
+  if (h) {
+    try { await renderer.compileAsync(h.root, camera, scene); } catch { /* (compiled when first drawn) */ }
+    her = h; scene.add(her.root);
+    for (const v of fleet) v.seat = her.headIn(seatMode(v));
+    await loadMoves();
+  }
+  mark('garage');
+  THREE.Cache.clear(); THREE.Cache.enabled = false;
+  if (!HEADLESS) console.info('opening the world (ms from start): ' + timings.map(([k, t]) => `${k} ${t}`).join(' · '));
+}
+async function addVehicle(f, model) {
+  const v = { ...f, model, lean: 0, crankA: 0 };
+  model.beams.forEach((sl, i) => {
+    const p = spareBeams.shift();
+    if (!p) return;
+    p.color.copy(sl.color); p.intensity = sl.intensity; p.distance = sl.distance; p.angle = sl.angle; p.penumbra = sl.penumbra; p.decay = sl.decay;
+    p.position.copy(sl.position); p.target.position.copy(sl.target.position);
+    scene.remove(p, p.target); sl.parent.add(p, p.target); sl.parent.remove(sl, sl.target);
+    model.beams[i] = p;
+  });
+  v.sim = new VehicleSim(f.spec); v.sim.reset(f.park.x, f.park.z, f.park.yaw);
+  parkPose(v);
+  try { await renderer.compileAsync(model.root, camera, scene); } catch { /* (compiled when first drawn) */ }
+  scene.add(model.root);
+  if (model.cabin) lightPool.adopt(model.cabin);       // (its cabin light joins the pooled ones)
+  fleet.push(v);
+  if (her) v.seat = her.headIn(seatMode(v));
+}
 // ------------------------------------------------------------------ her figure
 // On foot she turns to the way she's walking (not the camera's: she can be looked at from the front), walks or
 // runs with her speed, and is hidden when the camera is her eyes. In a vehicle her eyes are where its driver's
@@ -1929,6 +1974,7 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
+  timings: () => timings,
   debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse, her, view }),
   step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
   court: () => court,

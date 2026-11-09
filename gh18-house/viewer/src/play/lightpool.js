@@ -25,7 +25,9 @@ export function poolLights(scene, n = 8) {
   };
   let timer = 0;
   return {
-    count: sources.length,
+    get count() { return sources.length; },
+    // a point light that arrives later (a car's cabin light): pooled like the rest
+    adopt(l) { l.parent.updateMatrixWorld(true); l.userData.parent = l.parent; l.userData.parentMatrix = l.parent.matrixWorld.clone(); l.parent.remove(l); sources.push(l); },
     reset() { timer = 0; },            // (re-choose on the next update: the camera jumped)
     update(dt, cam) {
       timer -= dt;
