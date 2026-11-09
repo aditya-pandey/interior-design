@@ -152,17 +152,20 @@ export class VehicleSim {
     const Fb = brake * s.brakeForce;
     const stopF = Math.abs(u) * m / dt;                       // never more than stops the car this step
     const bF = Math.min(Fb, stopF);
-    let FxF = Fdrive - sgn * bF * s.frontBrake;
-    let FxR = -sgn * bF * (1 - s.frontBrake);
+    const rwd = !!s.rwd;                                      // (rear-wheel drive: the Ferrari, the two-wheelers)
+    let FxF = (rwd ? 0 : Fdrive) - sgn * bF * s.frontBrake;
+    let FxR = (rwd ? Fdrive : 0) - sgn * bF * (1 - s.frontBrake);
     const FxF0 = FxF, FxR0 = FxR;
     // traction control / ABS keep the front just inside its grip. Without them the wheels spin up or
     // lock, and a sliding tyre only has its sliding friction, mostly used up along the road
-    const spinF = !this.aids.tcs && Fdrive !== 0 && Math.abs(FxF) > Df;
+    const spinF = !rwd && !this.aids.tcs && Fdrive !== 0 && Math.abs(FxF) > Df;
     const lockF = !this.aids.abs && brake > 0 && Math.abs(FxF) > Df && !spinF;
     if (spinF || lockF) FxF = Math.sign(FxF) * s.muSlide * Df;
     else FxF = Math.max(-s.absFront * Df, Math.min(s.absFront * Df, FxF));   // wheelspin / ABS: capped at the grip
     const capR = this.aids.abs ? s.absRear : 0.98;
-    FxR = Math.max(-capR * Dr, Math.min(capR * Dr, FxR));             // brake proportioning keeps the rear turning
+    const spinR = rwd && !this.aids.tcs && Fdrive > 0 && FxR > Dr;    // power oversteer: the rears spin up and let go
+    if (spinR) FxR = s.muSlide * Dr;
+    else FxR = Math.max(-capR * Dr, Math.min((rwd && Fdrive > 0 ? s.absFront : capR) * Dr, FxR));             // brake proportioning keeps the rear turning
     const locked = input.handbrake && Math.abs(u) > 0.8;
 
     // ---- slip angles. A tyre needs to roll a little way (its relaxation length) before its sideways
@@ -193,7 +196,7 @@ export class VehicleSim {
     const kRoll = Math.min(1, Math.max(0, (Math.abs(u) - s.rollBlend[0]) / s.rollBlend[1]));
     const FyfE = Fyf * kRoll, FyrE = Fyr * (locked ? 1 : kRoll);
     const slideF = Math.min(1, Math.abs(af) / (s.peakSlip * 1.4)), slideR = locked ? 1 : Math.min(1, Math.abs(ar) / (s.peakSlip * 1.4));
-    const spin = spinF || lockF ? 1 : Math.abs(Fdrive) > 0.9 * Df ? 0.8 : 0;
+    const spin = spinF || lockF || spinR ? 1 : Math.abs(Fdrive) > 0.9 * (rwd ? Dr : Df) ? 0.8 : 0;
     const sp6 = Math.min(1, Math.abs(u) / 6);
     this.slip = Math.min(1, Math.max(slideF, slideR, spin) * sp6);
     this.slipF = Math.max(slideF, spin) * sp6;            // per axle, for skid marks

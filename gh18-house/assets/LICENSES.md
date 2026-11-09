@@ -40,3 +40,10 @@ The script records each asset's source URL in `textures/manifest.json`. These ar
   - textures resized and converted to WebP
   - stretched 5.3% lengthwise in the viewer to the published 3990 mm length
   The credit is shown in the viewer panel.
+
+## /play/ garage and her figure (Sketchfab, CC BY 4.0)
+
+- "2020 Ferrari Roma" by Ddiaz Design — https://sketchfab.com/3d-models/2020-ferrari-roma-cbc0c13c0fb54fc8bbfa79a9ff99e3aa — `viewer/play/models/roma.glb` (compressed, parts joined)
+- "Vespa scooty" by yogendraprajapati298 — https://sketchfab.com/3d-models/vespa-scooty-3faa866d4e764e93af4e03d402cf6c61 — `viewer/play/models/vespa.glb` (compressed)
+- "Retro bike" by annzep — https://sketchfab.com/3d-models/retro-bike-d9c4d3b44b2e4e4aa24e360c9830c0a1 — `viewer/play/models/bike.glb` (grass mound removed, simplified, compressed)
+- "Modern Indian Woman" by Pixel_Monster — https://sketchfab.com/3d-models/modern-indian-woman-830d8ed3236a4221862290b81807f408 — `viewer/play/models/woman.glb` (compressed)

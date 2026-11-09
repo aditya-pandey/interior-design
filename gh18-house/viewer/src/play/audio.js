@@ -103,18 +103,32 @@ export class CarAudio {
     if (this.ctx && on && this.ctx.state === 'suspended') this.ctx.resume();
   }
 
+  // the vehicle's voice (vehicles.js sound): freq × the firing frequency, gain, tone (the filter's brightness),
+  // engine: false for the bicycle (then the freewheel's buzz instead), cvt: the revs held up by the belt
+  setProfile(p = {}) { this.profile = { freq: 1, gain: 1, tone: 1, engine: true, ...p }; }
+  // a bicycle's bell (instead of the horn)
+  bell() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    for (const [f, at] of [[2350, 0], [2350, 0.16]]) for (const k of [1, 2.76]) {
+      const o = this.ctx.createOscillator(); o.frequency.value = f * k;
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0, t + at); g.gain.linearRampToValueAtTime(k === 1 ? 0.12 : 0.04, t + at + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + at + 0.9);
+      o.connect(g).connect(this.master); o.start(t + at); o.stop(t + at + 1);
+    }
+  }
   // engineOn: false when she has got out (the car idles quietly, then the engine is switched off)
   update({ rpm, throttle, slip, speed, gear, surface, shoreDist, inside, engineOn = true, tel = {} }) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime, e = this.engine;
-    const f = rpm / 30;
+    const t = this.ctx.currentTime, e = this.engine, P = this.profile || { freq: 1, gain: 1, tone: 1, engine: true };
+    if (P.engine === false) engineOn = false;
+    const f = rpm / 30 * P.freq;
     e.o1.frequency.setTargetAtTime(f, t, 0.025);
     e.o2.frequency.setTargetAtTime(f * 0.5 * 1.004, t, 0.025);
     e.o3.frequency.setTargetAtTime(f * 1.5, t, 0.025);
     e.o4.frequency.setTargetAtTime(f * 0.25, t, 0.025);
-    e.lp.frequency.setTargetAtTime(220 + throttle * 1300 + rpm * 0.18, t, 0.05);
-    let g = engineOn ? 0.075 + throttle * 0.085 + Math.min(rpm / 6000, 1) * 0.05 : 0;
-    if (gear !== this.gear) {                        // gear change: a short dip
+    e.lp.frequency.setTargetAtTime((220 + throttle * 1300 + rpm * 0.18) * P.tone, t, 0.05);
+    let g = (engineOn ? 0.075 + throttle * 0.085 + Math.min(rpm / 6000, 1) * 0.05 : 0) * P.gain;
+    if (gear !== this.gear && !P.cvt) {              // gear change: a short dip
       this.gear = gear;
       e.eng.gain.cancelScheduledValues(t);
       e.eng.gain.setValueAtTime(e.eng.gain.value, t);
@@ -137,9 +151,18 @@ export class CarAudio {
     this.splash.g.gain.setTargetAtTime(surface === 'water' ? Math.min(0.2, v * 0.03) : 0, t, 0.1);
     // gearbox whine: a faint tone tracking the driveline, louder on the overrun
     this.whineOsc.frequency.setTargetAtTime(Math.max(40, rpm * 0.21), t, 0.05);
-    this.whine.gain.setTargetAtTime(engineOn && v > 3 ? 0.004 + (throttle < 0.05 ? 0.004 : 0) : 0, t, 0.1);
+    this.whine.gain.setTargetAtTime(engineOn && v > 3 && !P.cvt ? 0.004 + (throttle < 0.05 ? 0.004 : 0) : 0, t, 0.1);
+    // a bicycle: the freewheel's buzz while she coasts (the pawls clicking ~24 times a wheel turn), the chain while she pedals
+    if (P.freewheel) {
+      if (!this.fw) {
+        const o = this.ctx.createOscillator(); o.type = 'square'; const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3800; bp.Q.value = 2.5;
+        const g2 = this.ctx.createGain(); g2.gain.value = 0; o.connect(bp).connect(g2).connect(this.outside); o.start(); this.fw = { o, g: g2 };
+      }
+      this.fw.o.frequency.setTargetAtTime(Math.max(5, v * 11.4), t, 0.05);
+      this.fw.g.gain.setTargetAtTime(v > 0.8 && throttle < 0.05 ? 0.012 : 0, t, 0.06);
+    } else if (this.fw) this.fw.g.gain.setTargetAtTime(0, t, 0.05);
     // exhaust pops: lifting off sharply at high revs
-    if (engineOn && this.prevThrottle > 0.5 && throttle < 0.05 && rpm > 3600) this.pops(2 + Math.floor(Math.random() * 3));
+    if (engineOn && !P.cvt && this.prevThrottle > 0.5 && throttle < 0.05 && rpm > 3600) this.pops(2 + Math.floor(Math.random() * 3));
     this.prevThrottle = throttle;
     this.sand.gain.setTargetAtTime(surface === 'sand' || surface === 'water' ? Math.min(0.12, v * 0.012) : 0, t, 0.08);
     this.surf.gain.setTargetAtTime(Math.max(0, 1 - Math.max(0, shoreDist) / 120) * 0.22, t, 0.3);

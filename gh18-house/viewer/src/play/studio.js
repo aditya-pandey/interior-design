@@ -385,10 +385,7 @@ export function buildStudio(M, pack) {
   // a frangipani by the steps, her bicycle against the wall
   frangipani(parts, 97.0, 35.5, groundHeight(97.0, 35.5), rng(77));                 // at the start of the boardwalk
   carColliders.push({ circle: [97.0, 35.5, 0.4] }); solid(96.8, 35.3, 97.2, 35.7, -0.5, 3);
-  const bike = bicycleGroup();
-  bike.position.set(102.75, F, Z0 - 0.45); bike.rotation.set(0.09, Math.PI + 0.06, 0);   // front wheel to the east, leaning on its stand
-  group.add(bike);
-  solid(101.85, Z0 - 0.75, 103.65, Z0 - 0.15, F, F + 1);
+  // (her bicycle is in the garage now: vehicles.js, parked by the studio)
   // a pair of loungers on the north deck, under the eaves
   for (const lx of [112.6, 114.2]) {
     parts.rbox('wood', lx, F, Z1 + 1.35, 0.7, 0.3, 1.9, 0.03, 0x9c7450);

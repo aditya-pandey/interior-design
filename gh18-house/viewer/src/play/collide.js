@@ -79,7 +79,7 @@ function project(pts, nx, nz) {
   return [mn, mx];
 }
 
-function sat(A, ax, az, B, bc) {
+export function sat(A, ax, az, B, bc) {
   let depth = Infinity, n = null;
   for (const poly of [A, B]) {
     for (let i = 0; i < poly.length; i++) {

@@ -13,7 +13,7 @@ import { createArtView } from './artview.js';
 import { buildBookCart } from './bookcart.js';
 import { fontsReady } from './fonts.js';
 import { STUDIO, STUDIO_PARK } from './site.js';
-import { CollisionWorld } from './collide.js';
+import { CollisionWorld, sat } from './collide.js';
 import { VehicleSim } from './vehicle.js';
 import { loadBaleno, DASH } from './carmodel.js';
 import { createParticles } from './particles.js';
@@ -34,7 +34,9 @@ import { createHunt, skyLanterns } from './hunt.js';
 import { FIRE } from './cosy.js';
 import { buildHouseLife } from './houselife.js';
 import { poolLights } from './lightpool.js';
-import { ChaseCam, headMotion } from './chasecam.js';
+import { ChaseCam, headMotion, CAM } from './chasecam.js';
+import { FLEET } from './vehicles.js';
+import { loadCar, loadTwoWheeler } from './vehiclemodels.js';
 import { buildSea } from './water.js';
 import { createPost } from './post.js';
 import { loadScans } from './textures.js';
@@ -130,6 +132,7 @@ let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0,
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
 let M, beach, studio, collide, camBlock, car, sim, audio, music, walker, pack, head, walkData, sea, night, post, scans, skids, dev;
+let fleet = [], cur = null;          // the garage (vehicles.js), and the one she's in or last drove
 const skyHDR = {};
 let seatSpots = [];                 // GH-18's sofas, chairs and beds, as things to interact with on foot                 // photographed skies, if fetched: { sky_day: { texture, background, phi, norm } }
 const lampLights = [];
@@ -272,6 +275,31 @@ async function init() {
   driver = new DriverInput(sim.s);
   sim.aids = driver.aids; sim.aidsLabel = driver.aids.label;
   driver.onPadConnect = () => flash('Controller connected · RT gas · LT brake · RB handbrake · left stick steer · Y get out · View camera');
+  // the rest of the garage: each its own model, physics and parking place
+  for (const f of FLEET) {
+    const v = { ...f };
+    if (f.id === 'baleno') { v.model = car; v.sim = sim; }
+    else {
+      try { v.model = f.kind === 'car' ? await loadCar(f.url, f.load) : await loadTwoWheeler(f.url, f.load); }
+      catch (e) { console.warn('vehicle', f.id, e); continue; }
+      scene.add(v.model.root);
+      v.sim = new VehicleSim(f.spec); v.sim.reset(f.park.x, f.park.z, f.park.yaw);
+    }
+    v.lean = 0; v.crankA = 0;
+    fleet.push(v);
+  }
+  cur = fleet[0];
+  for (const v of fleet) if (v !== cur) parkPose(v);
+  // the parked ones are solid to whichever one she's driving
+  collide.add({ field: true, test(corners) {
+    let best = null; const cx = corners.reduce((a, c) => a + c[0], 0) / 4, cz = corners.reduce((a, c) => a + c[1], 0) / 4;
+    for (const v of fleet) {
+      if (v === cur || Math.hypot(v.sim.x - cx, v.sim.z - cz) > 8) continue;
+      const hit = sat(corners, cx, cz, v.sim.corners(), [v.sim.x, v.sim.z]);
+      if (hit && (!best || hit.depth > best.depth)) best = hit;
+    }
+    return best;
+  } });
   dev = createDevTools({ sim, car, scene, state, onReplayStart: () => { if (state.mode !== 'drive') enterCar(); pose.copyFrom(sim); state.driven = true; skids.clear(); flash('Replaying the recording'); } });
   audio = new CarAudio();
   ambience = new Ambience(audio);
@@ -334,9 +362,10 @@ class FootWalker extends Walker {
       if (circleHitsPoly(x, y, R, c.poly)) return true;
     }
     if (coastDist(x / 1000, y / 1000) > 0.6) return true;
-    if (state.mode === 'foot') {
-      const c = sim.corners(sim.x, sim.z, -0.05).map(([a, b]) => [a * 1000, b * 1000]);
-      if (foot < 1.2 && circleHitsPoly(x, y, 250, c)) return true;
+    if (state.mode === 'foot' && foot < 1.2) for (const v of fleet.length ? fleet : [{ sim }]) {
+      if (Math.abs(v.sim.x * 1000 - x) > 4500 || Math.abs(v.sim.z * 1000 - y) > 4500) continue;
+      const c = v.sim.corners(v.sim.x, v.sim.z, v.kind && v.kind !== 'car' ? 0.12 : -0.05).map(([a, b]) => [a * 1000, b * 1000]);
+      if (circleHitsPoly(x, y, v.kind && v.kind !== 'car' ? 180 : 250, c)) return true;
     }
     return false;
   }
@@ -819,28 +848,51 @@ function toggleSound() {
   audio.setOn(state.sound);
   setVal('sound', state.sound ? 'On' : 'Off');
 }
-function horn(on) { audio?.hornOn(on && state.sound && state.mode === 'drive'); document.querySelector('[data-act="horn"]')?.classList.toggle('on', on); }
+function horn(on) { if (cur?.kind === 'bicycle') { if (on && state.sound && state.mode === 'drive') audio?.bell(); return; } audio?.hornOn(on && state.sound && state.mode === 'drive'); document.querySelector('[data-act="horn"]')?.classList.toggle('on', on); }
 
 // ------------------------------------------------------------------ getting out, walking, getting in
-function toggleFoot() {
+function toggleFoot(v = null) {
   if (state.mode === 'drive') return exitCar();
   if (state.mode === 'foot') {
-    const d = Math.hypot(head.position.x - sim.x, head.position.z - sim.z);
-    if (d > 3.4) { flash('Walk up to the car to get in'); return; }
+    if (!v) { let nd = Infinity; for (const q of fleet) { const d = Math.hypot(head.position.x - q.sim.x, head.position.z - q.sim.z); if (d < (q.kind === 'car' ? 3.4 : 2.0) && d < nd) { v = q; nd = d; } } }
+    if (!v) { flash('Walk up to the car (or the Vespa, or the bicycle) to get in'); return; }
+    useVehicle(v);
     enterCar();
   }
 }
+// the garage: she takes another one (the last stays where she left it)
+function useVehicle(v) {
+  if (!v || v === cur) return;
+  if (cur) parkPose(cur);
+  cur = v; car = v.model; sim = v.sim;
+  sim.aids = driver.aids; sim.aidsLabel = driver.aids.label; driver.s = sim.s;
+  pose.copyFrom(sim);
+  chase.c = { ...CAM, dist: CAM.dist * v.cam.dist, distMax: CAM.distMax * v.cam.dist, height: CAM.height * v.cam.height, high: CAM.high };
+  chase.init = false;
+  audio?.setProfile?.(v.sound);
+  document.getElementById('credit').textContent = (v.kind === 'car' ? 'Car: ' : 'Ride: ') + v.credit;
+  if (v.kind !== 'car' && (state.cam === 'driver' || state.cam === 'hood')) state.cam = 'chase';
+  skids?.clear?.();
+}
+// a parked one, drawn where it stands (and a two-wheeler on its stand, leaning a little)
+function parkPose(v) {
+  const m = v.model, s = v.sim, y = groundHeight(s.x, s.z);
+  m.root.position.set(s.x, y, s.z); m.root.rotation.y = s.yaw;
+  if (v.kind !== 'car') { v.lean = 0.13; m.body.rotation.set(0, 0, -0.13); if (m.steerRot) m.steerRot.rotation.y = 0.35; }
+  m.root.updateMatrixWorld(true);
+}
 function exitCar() {
   if (Math.abs(sim.speed) > 1.5) { flash('Stop the car first'); return; }
-  const [fx, fz] = sim.forward, rx = -fz, rz = fx;
+  const [fx, fz] = sim.forward, rx = -fz, rz = fx, w = cur?.kind === 'car' ? Math.max(1.45, sim.s.width / 2 + 0.6) : 0.75;
   // beside the driver's door first (right-hand drive: the car's right); in a tight spot (GH-18's bay) in front or behind
   for (const [side, along, face] of [[1, -0.2, 0.6], [-1, -0.2, -0.6], [1, 1.2, 0.3], [-1, 1.2, -0.3], [0, 2.7, 0], [0, -2.7, Math.PI]]) {
-    const x = sim.x + rx * side * 1.45 + fx * along, z = sim.z + rz * side * 1.45 + fz * along;
+    const x = sim.x + rx * side * w + fx * along, z = sim.z + rz * side * w + fz * along;
     if (walker.blocked(x * 1000, z * 1000, 0.3)) continue;
     state.mode = 'foot';
     placeHer(x, z, sim.yaw + face, groundHeight(x, z));
     state.engineOff = 2.5;
-    audio.door();
+    if (cur?.kind === 'car') audio.door();
+    if (cur && cur.kind !== 'car') parkPose(cur);
     updateModeUI();
     return;
   }
@@ -924,14 +976,17 @@ function findFocus() {
     const sc = d + (it.kind === 'lounger' ? 0.6 : 0);               // (a thing to use beats a seat beside it)
     if (sc < bestD) { best = it; bestD = sc; }
   }
-  const dc = Math.hypot(hx - sim.x, hz - sim.z);
-  if (!best && dc < 3.4) return { kind: 'car', label: 'Get in the car' };
+  if (!best) {
+    let near = null, nd = Infinity;
+    for (const v of fleet) { const d = Math.hypot(hx - v.sim.x, hz - v.sim.z), reach = v.kind === 'car' ? 3.4 : 2.0; if (d < reach && d < nd) { near = v; nd = d; } }
+    if (near) return { kind: 'car', v: near, label: `${near.verb} ${near.name}` };
+  }
   return best;
 }
 function interact(it = focus || findFocus()) {
   if (!it || it instanceof Event) it = focus || findFocus();
   if (!it) return;
-  if (it.kind === 'car') return toggleFoot();
+  if (it.kind === 'car') return toggleFoot(it.v);
   if (it.kind === 'getup') return getUp();
   if (it.kind === 'poem') return reader.open({ index: it.index });
   if (it.kind === 'art') return it.size ? artView.start(it.index) : showArt(it.url);
@@ -1289,6 +1344,20 @@ function updateMusicUI() {
   setVal('musiczone', roomAudio?.mode === 'all' ? 'Everywhere' : roomAudio?.here ? roomAudio.here.name : 'This room');
 }
 
+// ------------------------------------------------------------------ a two-wheeler: it leans into the turn
+// (as a rider balances: tan(lean) = speed × yaw rate / g), steers about its raked axis, the wheels and the
+// pedals turn; stopped, it settles upright (she has a foot down)
+function updateRide(dt) {
+  const v = cur, m = car;
+  m.root.position.set(pose.x, groundHeight(pose.x, pose.z), pose.z); m.root.rotation.y = pose.yaw;
+  const target = THREE.MathUtils.clamp(Math.atan(sim.speed * sim.r / 9.81), -0.7, 0.7) * Math.min(1, Math.abs(sim.speed) / 2.5);
+  v.lean += (target - v.lean) * (1 - Math.exp(-7 * dt));
+  m.body.rotation.set(-0.012 * (sim.axT ?? 0), 0, -v.lean);
+  if (m.steerRot) m.steerRot.rotation.y = pose.steer * 0.9;
+  for (const w of m.wheels) w.spin.rotation.x = pose.spin * (sim.s.wheelRadius / w.radius);
+  if (m.crank) { const pedal = state.mode === 'drive' && lastInput.throttle > 0.05; if (pedal) v.crankA += dt * Math.max(2.5, Math.abs(sim.speed) / sim.s.wheelRadius / 2.4); m.crank.rotation.x = v.crankA; }
+  m.root.updateMatrixWorld(true);
+}
 // ------------------------------------------------------------------ car visuals (drawn between physics steps)
 const pose = {
   x: 0, z: 0, yaw: 0, steer: 0, spin: 0, roll: 0, pitch: 0,
@@ -1305,6 +1374,7 @@ const pose = {
 const body = { pitch: 0, roll: 0, vp: 0, vr: 0 };
 const H = { FL: 0, FR: 0, RL: 0, RR: 0 };
 function updateCar(dt) {
+  if (cur && cur.kind !== 'car') return updateRide(dt);
   const fx = Math.sin(pose.yaw), fz = Math.cos(pose.yaw), rx = -fz, rz = fx;
   for (const w of car.wheels) {
     const lx = w.rest.x, lz = w.rest.z;
@@ -1391,7 +1461,7 @@ function placeCamera(snap, dt) {
     camera.near = state.cam === 'hood' ? 0.1 : 0.03;
     // a natural field of view from the seat (wider ones stretch the dashboard and the wheel)
     cam.fov = damp(cam.fov, (state.cam === 'hood' ? 62 : 56) + Math.min(kmh, 140) * 0.035, 4, dt);
-    car.cabin.intensity = state.cam === 'driver' ? (sun.userData.dir?.y > 0 ? sun.intensity * 0.32 : 0) + hemi.intensity * 0.6 : 0;
+    if (car.cabin) car.cabin.intensity = state.cam === 'driver' ? (sun.userData.dir?.y > 0 ? sun.intensity * 0.32 : 0) + hemi.intensity * 0.6 : 0;
     camera.fov = cam.fov;
     camera.position.copy(camPos);
     const roll = hm.roll * k;
@@ -1402,7 +1472,7 @@ function placeCamera(snap, dt) {
     return;
   }
   camera.near = 0.1;
-  car.cabin.intensity = 0;
+  if (car.cabin) car.cabin.intensity = 0;
   // opening shot from the beach side of the road, looking back at the car and GH-18
   if (!state.driven && state.cam === 'chase') {
     tmpV.set(HOME.x - 4.6, 1.8, HOME.z + 10.5);
@@ -1604,7 +1674,7 @@ function frame(dt = 1 / 60, show = true) {
     hudTimer = 0.1;
     document.getElementById('kmh').textContent = Math.round(Math.abs(sim.speed) * 3.6);
     const moving = Math.abs(sim.speed) > 0.2;
-    document.getElementById('gear').textContent = sim.reversing ? 'R' : moving ? 'D' + sim.gear : 'D';
+    document.getElementById('gear').textContent = cur && cur.kind !== 'car' ? (cur.kind === 'bicycle' ? '' : 'D') : sim.reversing ? 'R' : moving ? 'D' + sim.gear : 'D';
     focus = findFocus();
     updateRoomChip();
     // her message plays once, the first time she reaches the studio (by car or on foot)
@@ -1713,7 +1783,7 @@ window.play = {
   },
   // let `seconds` of time pass (water, stars) and draw; shoot: fire a shooting star first
   wait: (seconds, shoot = false) => { if (shoot) night.shoot(); for (let t = 0; t < seconds; t += 1 / 30) frame(1 / 30, false); hudTimer = 0; frame(1 / 60); return !document.getElementById('wish').hidden; },
-  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse }),
+  debug: () => ({ sea, night, post, scene, camera, renderer, sun, THREE, state, fleet, walker, roomAudio, music, court, reader, artView, studio, hunt, lanterns, lighthouse }),
   step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) frame(dt, false); },
   court: () => court,
   // let time pass with the view drawn (the reader rising, a glide to a painting)

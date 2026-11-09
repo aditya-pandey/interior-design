@@ -186,7 +186,7 @@ function wheelMaterial(m) {
   return out;
 }
 // a soft dark patch under the car where the sky can't reach (the sun's shadow is separate)
-function contactShadow(w, l) {
+export function contactShadow(w, l) {
   const c = document.createElement('canvas');
   c.width = 64; c.height = 128;
   const g = c.getContext('2d'), img = g.createImageData(64, 128);
@@ -207,7 +207,7 @@ function contactShadow(w, l) {
 
 // Turn a (possibly quantized, indexed) glTF geometry into a plain float, non-indexed one in the
 // coordinate frame given by `matrix`.
-function bake(src, matrix) {
+export function bake(src, matrix) {
   const g = new THREE.BufferGeometry();
   for (const name of ['position', 'normal', 'uv']) {
     const a = src.attributes[name];
@@ -226,7 +226,7 @@ function bake(src, matrix) {
   return out;
 }
 
-function subset(g, starts) {
+export function subset(g, starts) {
   const out = new THREE.BufferGeometry();
   for (const [name, a] of Object.entries(g.attributes)) {
     const size = a.itemSize, arr = new Float32Array(starts.length * 3 * size);
