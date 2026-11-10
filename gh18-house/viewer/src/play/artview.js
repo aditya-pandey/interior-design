@@ -22,7 +22,7 @@ const smooth = (t) => t * t * t * (t * (t * 6 - 15) + 10);
 const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
-export function createArtView({ camera, canvas, scene, artworks, meta = [], total, veil, onStart = () => {}, onEnd = () => {}, onSlideshow = () => {} }) {
+export function createArtView({ camera, canvas, scene, artworks, meta = [], total, veil, onStart = () => {}, onEnd = () => {}, onSlideshow = () => {}, onShow = null, noLabel = false }) {
   const cap = document.createElement('div');
   cap.id = 'artcap'; cap.hidden = true;
   cap.innerHTML = `<div class="label"><p class="t"></p><p class="by"></p><p class="md"></p><p class="note"></p></div><p class="n"></p>
@@ -86,6 +86,8 @@ export function createArtView({ camera, canvas, scene, artworks, meta = [], tota
     q('.note').textContent = m.note || ''; q('.note').hidden = !m.note;
     q('.n').innerHTML = `${String(a.index + 1).padStart(2, '0')} <span>/ ${total}</span>${v.show ? ' <span>· slideshow</span>' : ''}`;
     cap.classList.add('hints'); v.hintT = v.show ? 0 : 4.5;
+    if (noLabel) cap.querySelector('.label').hidden = true;
+    onShow?.(a);
   }
   // the varnish: no shine while she's looking at it (and back after)
   let glare = null;

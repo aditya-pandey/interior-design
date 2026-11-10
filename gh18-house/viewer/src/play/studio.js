@@ -959,7 +959,7 @@ export function buildStudio(M, pack) {
     group.add(mesh);
     parts.box('brass', wallX, cy + h / 2 + 0.1, cz - pw * 0.3, wallX + 0.12, cy + h / 2 + 0.14, cz + pw * 0.3, 0xb08d57);
     parts.box('glow', wallX + 0.07, cy + h / 2 + 0.095, cz - pw * 0.28, wallX + 0.1, cy + h / 2 + 0.1, cz + pw * 0.28, 0xffffff);
-    interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [1, 0], r: 2.0 });
+    interact.push({ kind: 'poem', index: pi, label: `Read “${poem.title}”`, pos: [wallX, cy, cz], normal: [1, 0], r: 2.0, size: [pw, h], px: [Math.round(pw * 1400), Math.round(h * 1400)], mesh });
   });
   fontsReady.then(() => { for (const t of poemTexs) t.userData.redraw(); });
   // a mood board on the atelier's south wall: her photographs pinned to cork
@@ -1467,7 +1467,7 @@ function drawPoem(c, poem, W, Hh) {
     for (const dx of [-26, 0, 26]) { g.beginPath(); g.arc(W / 2 + dx, Hh - 168, 4, 0, Math.PI * 2); g.fill(); }
     g.font = `600 22px ${SANS}`; g.fillStyle = '#9a7b55';
     if ('letterSpacing' in g) g.letterSpacing = '5px';
-    g.fillText('READ ON IN HER READER', W / 2, Hh - 112);
+    g.fillText('READ ON · CLICK THE POEM', W / 2, Hh - 112);
     if ('letterSpacing' in g) g.letterSpacing = '0px';
     return;
   }

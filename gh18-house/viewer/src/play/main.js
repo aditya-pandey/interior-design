@@ -132,7 +132,7 @@ const PARAM_DATE = params.get('date') ? new Date(params.get('date') + 'T12:00:00
 // ------------------------------------------------------------------ state
 let lodTimer = 0;
 const lodAt = new THREE.Vector3(1e9, 0, 0);
-let billboards, roomAudio, court, houseLife, lightPool, reader, artView;
+let billboards, roomAudio, court, houseLife, lightPool, reader, artView, poemView;
 let wheelFx, cosy, clouds, spray, dressing, footprints, ambience, nearPalms = 0, palmTimer = 0;
 const skyLight = { sunDir: new THREE.Vector3(0, 1, 0), sunCol: new THREE.Color(), amb: new THREE.Color(), haze: new THREE.Color(), moonDir: new THREE.Vector3(0, 1, 0), night: 0, cover: 0.42 };
 const CLOUDS = params.has('clouds') ? Math.max(0, Math.min(1, +params.get('clouds'))) : null;   // ?clouds=0..1 fixes the cover
@@ -204,6 +204,20 @@ async function init() {
   const artworks = studio.interact.filter((it) => it.kind === 'art' && it.size && it.index >= 0);
   artView = createArtView({ camera, canvas: renderer.domElement, scene, artworks, meta: pack?.art || [], total: pack?.art?.length || artworks.length, veil: document.getElementById('veil'), onStart: quiet, onEnd: awake,
     onSlideshow: (on) => { if (on && music && !music.playing) { music.play(); updateMusicUI(); } } });
+  // her poems, the way her paintings are seen: the camera to the poem on the wall, the whole poem large beside it
+  // (scrolls when long), ← → along the wall, Esc back (instead of the e-reader)
+  {
+    const poemsOnWall = studio.interact.filter((i) => i.kind === 'poem').sort((a, b) => a.pos[2] - b.pos[2]);
+    const card = document.createElement('div'); card.id = 'poemcard'; card.hidden = true; document.body.appendChild(card);
+    poemView = createArtView({ camera, canvas: renderer.domElement, scene, artworks: poemsOnWall, meta: [], total: poemsOnWall.length, veil: document.getElementById('veil'), noLabel: true,
+      onStart: () => { quiet(); card.hidden = false; }, onEnd: () => { card.hidden = true; awake(); },
+      onShow: (a) => {
+        const p = pack.poems[a.index];
+        card.innerHTML = `<p class="k">${p.author && p.author !== 'Deepti' ? 'For Deepti · from ' + esc(p.author) : 'A poem by Deepti'}</p><h2>${esc(p.title)}</h2>${p.date ? `<p class="d">${esc(p.date)}</p>` : ''}`
+          + p.stanzas.map((st) => `<p class="st">${st.map((l) => esc(l)).join('<br>')}</p>`).join('') + `<p class="sig">— ${esc(p.author || 'Deepti')}</p><p class="nav">← → the next poem · Esc back</p>`;
+        card.scrollTop = 0;
+      } });
+  }
   cosy = buildCosy({ time: beach.time, anchors: studio.anchors });
   billboards = buildBillboards({ pack, studio: { x: STUDIO.x0 + STUDIO.w / 2, z: STUDIO.z0 + STUDIO.d / 2 } });
   scene.add(billboards.group);
@@ -856,6 +870,7 @@ function bindUI() {
     if (e.repeat || !state.started) return;
     if (reader?.busy) { if (reader.isOpen) reader.key(e); return; }
     if (artView?.active) { artView.key(e); return; }
+    if (poemView?.active) { poemView.key(e); return; }
     if (state.overlay) {
       if (album && (e.code === 'ArrowRight' || e.code === 'ArrowLeft')) { turnAlbum(e.code === 'ArrowRight' ? 1 : -1); return; }
       if (['Escape', 'KeyE', 'Enter', 'Space'].includes(e.code)) closeOverlay();
@@ -944,7 +959,7 @@ function bindUI() {
   window.addEventListener('pointermove', (e) => {
     if (photo?.active) return;
     if (!drag || e.pointerId !== drag.id) return;
-    if (reader?.busy || artView?.active || state.rally) return;
+    if (reader?.busy || artView?.active || poemView?.active || state.rally) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.x = e.clientX; drag.y = e.clientY;
     if (state.mode === 'foot') {                 // look around
@@ -1192,9 +1207,9 @@ function interact(it = focus || findFocus()) {
   if (!it) return;
   if (it.kind === 'car') return toggleFoot(it.v);
   if (it.kind === 'getup') return getUp();
-  if (it.kind === 'poem') return reader.open({ index: it.index });
+  if (it.kind === 'poem') return poemView.start(studio.interact.filter((i) => i.kind === 'poem').sort((a, b) => a.pos[2] - b.pos[2]).indexOf(it));
   if (it.kind === 'art') return it.size ? artView.start(it.index) : showArt(it.url);
-  if (it.kind === 'reader') return reader.open({ source: it.device });
+  if (it.kind === 'reader') return poemView.start(0);
   if (it.kind === 'book') return reader.open({ book: it.index });
   if (it.kind === 'radio' || it.kind === 'musicpanel') return musicPanel(it.zone);
   if (it.kind === 'rally') return state.rally ? stopRally() : startRally();
@@ -1713,7 +1728,7 @@ function updateHer(dt) {
     herYaw = yaw; r.quaternion.setFromAxisAngle(UP, yaw);
     seatEye(herE); herV.copy(her.sitHead || cur.seat).add(EYE_OFF).applyQuaternion(r.quaternion);
     r.position.copy(herE).sub(herV);
-    r.visible = view.d > 0.7 && !artView?.active && !reader?.busy;
+    r.visible = view.d > 0.7 && !artView?.active && !poemView?.active && !reader?.busy;
     if (r.visible) her.update(dt, { mode: 'sit' });
     return;
   }
@@ -1722,7 +1737,7 @@ function updateHer(dt) {
   r.position.set(head.position.x, walker.eye ?? walker.foot, head.position.z);
   if (walker.climb) { const c = walker.climb; herYaw = Math.atan2(c.x1 - c.x0, c.z1 - c.z0); }       // (facing the ledge)
   r.quaternion.setFromAxisAngle(UP, herYaw);
-  r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !reader?.busy;
+  r.visible = view.d > 0.7 && !state.lying && !state.rally && !artView?.active && !poemView?.active && !reader?.busy;
   const move = walker.climb ? 'climb' : walker.air ? 'jump' : walker.landT > 0 ? 'land' : sp > 2.3 ? 'run' : sp > 0.15 ? 'walk' : 'idle';
   // the jump clip follows her flight: leaving the ground as she rises, the top of the hop at the top, legs reaching
   // for the ground as she falls (a long fall holds that)
@@ -2041,7 +2056,7 @@ function frame(dt = 1 / 60, show = true) {
   beach.update(clock);
   updateCar(dt);
   updateHer(dt);
-  if (!state.cine && !artView?.update(dt) && !(state.rally && court.game.placeCamera(camera, dt))) placeCamera(false, dt);
+  if (!state.cine && !artView?.update(dt) && !poemView?.update(dt) && !(state.rally && court.game.placeCamera(camera, dt))) placeCamera(false, dt);
   tickClock(dt);
   let focusX = state.mode === 'foot' ? head.position.x : pose.x, focusZ = state.mode === 'foot' ? head.position.z : pose.z;
   if (state.cine) { focusX = state.cine.tx; focusZ = state.cine.tz; }      // (a film shot: the sun's shadows round what the camera looks at)
