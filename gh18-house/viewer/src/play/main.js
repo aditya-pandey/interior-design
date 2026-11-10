@@ -376,7 +376,11 @@ class FootWalker extends Walker {
     out[0] = groundAt(x / 1000, y / 1000);
     // the studio's and the garden's built floors (plinth, deck, steps, boardwalk) stand on the sand: where one
     // is, the sand under it is not a floor, or she would stay on the sand and walk through them
-    for (const s of this.raised || []) if (x >= s.bb[0] && x <= s.bb[2] && y >= s.bb[1] && y <= s.bb[3] && pointInPoly(x, y, s.poly)) { out.shift(); break; }
+    let onRaised = false;
+    for (const s of this.raised || []) if (x >= s.bb[0] && x <= s.bb[2] && y >= s.bb[1] && y <= s.bb[3] && pointInPoly(x, y, s.poly)) { out.shift(); onRaised = true; break; }
+    // inside the house's footprint the ground is under its floor: never something to stand on (between two rooms'
+    // floor polygons there's only the ground and the floors upstairs; she crosses that seam at her own level)
+    if (!onRaised && inHouse(x / 1000, y / 1000) && out.length > 1 && out.slice(1).some((h) => h > out[0] + 0.25)) out.shift();
     if (tops) for (const c of this.data.colliders) {
       if (c.y1 > 7 || c.noTop) continue;
       const b = c.bb;
@@ -385,6 +389,21 @@ class FootWalker extends Walker {
       if (top != null) out.push(top);
     }
     return out;
+  }
+  // is there floor at her level (within a step) just ahead of (x, y) along (dx, dy), or to either side of it?
+  floorNear(x, y, dx, dy) {
+    const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    for (const [a, b] of [[150, 0], [300, 0], [500, 0], [150, 150], [150, -150]]) {
+      const qx = x + ux * a - uy * b, qy = y + uy * a + ux * b;
+      if (this.heights(qx, qy).some((h) => Math.abs(h - this.foot) < 0.12)) return true;
+    }
+    return false;
+  }
+  // the ground (the sand, the terrain) with a building's floor over it: not somewhere to land
+  covered(x, y, h) {
+    const g = groundAt(x / 1000, y / 1000);
+    if (Math.abs(h - g) > 0.05) return false;
+    return this.heights(x, y).some((q) => q > g + 0.25) || inHouse(x / 1000, y / 1000);
   }
   // ---- jumping, falling, climbing (heights in metres; this.air: { y, vy } while off the ground)
   jump() {
@@ -433,7 +452,7 @@ class FootWalker extends Walker {
     if (a.y + 1.75 > ceil && a.vy > 0) { a.y = ceil - 1.75; a.vy = 0; }
     a.peak = Math.max(a.peak ?? a.y, a.y);
     // the surface under her: the highest one at or below her feet
-    const below = this.heights(x, y, true).filter((h) => h <= Math.max(a.y, this.foot) + 0.05);
+    const below = this.heights(x, y, true).filter((h) => h <= Math.max(a.y, this.foot) + 0.05 && !(h < a.y - 0.3 && this.covered(x, y, h)));
     const ground = below.length ? Math.max(...below) : this.foot;
     if (a.vy <= 0 && a.y <= ground) {
       // down, from any height, unhurt: a crouch to take it if it was a long way
@@ -449,6 +468,7 @@ class FootWalker extends Walker {
     const hs = this.heights(x, y);                     // (the shared walker always counts the sand as a choice)
     if (!hs.includes(this.foot)) { this.foot = hs.reduce((a, b) => (Math.abs(b - foot) < Math.abs(a - foot) ? b : a)); this.camera.position.y = this.foot + 1.6; }
     this.eye = this.foot; this.mv = { x: 0, z: 0 };
+    this.air = null; this.climb = null; this.landT = 0;           // (put somewhere: standing, whatever she was doing)
   }
   // (a slimmer body than the tour's 250 mm: she fits through an 800 mm door without brushing the frame)
   blocked(x, y, foot, cam = false) {
@@ -527,8 +547,16 @@ class FootWalker extends Walker {
           p.x = nx / 1000; p.z = ny / 1000; moved = true; break;
         }
         let h = this.standAt(nx, ny, this.foot);
-        if (h === null) {                                         // a drop (off a wall, a table, the deck's edge): she falls
-          const lower = this.heights(nx, ny, true).filter((q) => q < this.foot - 0.3);
+        if (h === null) {
+          // a seam between two floors (the house's rooms are separate polygons): the floor goes on at her level a
+          // little further on, so she carries on across it at that level
+          if (this.floorNear(nx, ny, sx * c - sz * s2, sx * s2 + sz * c)) {
+            if (!stuck && this.blocked(nx, ny, this.foot)) continue;
+            p.x = nx / 1000; p.z = ny / 1000; moved = true; break;
+          }
+          // a real edge (off a wall, a table, the deck, a terrace): she falls, to something below that's open to the
+          // sky or a floor, never to the ground under a building
+          const lower = this.heights(nx, ny, true).filter((q) => q < this.foot - 0.3 && !this.covered(nx, ny, q));
           if (lower.length && !this.blocked(nx, ny, this.foot)) { p.x = nx / 1000; p.z = ny / 1000; this.air = { y: this.foot, vy: 0 }; moved = true; break; }
           continue;
         }
@@ -541,6 +569,11 @@ class FootWalker extends Walker {
     }
     this.stride = (this.stride || 0) + sp * dt * 3.6;
     if (this.airStep(dt)) { this.eye = this.air ? this.air.y : this.foot; p.y = this.eye + 1.6; return; }
+    // (somehow on the ground under a building's floor: back up onto the floor just above her)
+    if (inHouse(p.x, p.z) && Math.abs(this.foot - groundAt(p.x, p.z)) < 0.05) {
+      const up = this.heights(p.x * 1000, p.z * 1000).filter((h) => h > this.foot + 0.1 && h < this.foot + 0.9).sort((a, b) => a - b)[0];
+      if (up != null) this.foot = up;
+    }
     this.eye = this.eye == null || Math.abs(this.eye - this.foot) > 1.2 ? this.foot : this.eye + (this.foot - this.eye) * (1 - Math.exp(-14 * dt));
     p.y = this.eye + 1.6 + Math.sin(this.stride) * 0.016 * Math.min(1, sp / 1.6);
   }
