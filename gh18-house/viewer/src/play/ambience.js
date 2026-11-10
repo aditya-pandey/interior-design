@@ -154,6 +154,7 @@ export class Ambience {
     const toShore = Math.max(0, -sL);
     const near = Math.max(0, 1 - toShore / 160);
     const roomK = indoors ? 0.35 : 1;
+    this.out.gain.setTargetAtTime(indoors ? 0 : 1, now, 0.35);   // (inside the house or studio: quiet, no sea, wind or birds)
     // surf bed
     this.bed.gain.setTargetAtTime(0.11 * Math.pow(near, 1.6) * roomK, now, 0.4);
     // the breaking wave in front of her: when its crest passes the break point, schedule a crash

@@ -1120,7 +1120,7 @@ function startExplore() {
   } else flash('Take her for a drive along the coast');
 }
 // Happy Birthday on the piano, in the background as she gets in the car: on its own audio context, so the ⏸ chip
-// by the clock really pauses it (and ▶ carries on from there); it hides when the tune ends
+// by the clock really pauses it (and ▶ carries on from there); it plays on a loop
 let tune = null;
 function playTune() {
   const chip = document.getElementById('tune-chip');
@@ -1131,8 +1131,10 @@ function playTune() {
   tune = { ctx, dest, left: dur };
   chip.hidden = false; chip.querySelector('.val').textContent = '⏸ Happy Birthday';
   chip.onclick = (e) => { e.stopPropagation(); if (ctx.state === 'running') { ctx.suspend(); chip.querySelector('.val').textContent = '▶ Happy Birthday'; } else { ctx.resume(); chip.querySelector('.val').textContent = '⏸ Happy Birthday'; } };
-  const end = () => { if (tune?.ctx !== ctx) return; if (ctx.currentTime < dur) return setTimeout(end, 1000); chip.hidden = true; ctx.close(); tune = null; };
-  setTimeout(end, dur * 1000);
+  // over and over (a short rest between), until she pauses it; the next round is queued just before this one ends
+  let until = dur;
+  const again = () => { if (tune?.ctx !== ctx) return; if (ctx.state === 'running' && ctx.currentTime > until - 1) until = ctx.currentTime + 1.2 + playBirthday(ctx, dest); setTimeout(again, 500); };
+  setTimeout(again, 500);
 }
 // her video (pack.json "studioVideo": a Google Drive share link), on the screen by the painting wall
 function showVideo() {
@@ -1400,7 +1402,7 @@ function placeFootCamera(dt, snap = false) {
   // between, and eases back out
   const inHouseNow = inHouse(head.position.x, head.position.z) && walker.foot > 0.3 && !walker.air;
   const close = (inStudio(head.position.x, head.position.z) && walker.foot > 0.4) || sittingAsHer();
-  const far = her && view.third && (!state.lying || sittingAsHer()) && !inHouseNow ? (close ? 2.1 : 2.7) : 0;
+  const far = her && view.third && (!state.lying || sittingAsHer()) && !inHouseNow && !isIndoors() ? (close ? 2.1 : 2.7) : 0;   // (through her eyes inside the studio too)
   view.d = snap ? far : damp(view.d, far, far > view.d ? 2.5 : 7, dt);
   camera.rotation.set(-orb.pitch - rockPitch * Math.max(0, 1 - view.d), orb.yaw + Math.PI, 0, 'YXZ');
   if (view.d > 0.02) {
