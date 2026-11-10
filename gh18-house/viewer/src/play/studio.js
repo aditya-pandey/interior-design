@@ -729,6 +729,12 @@ export function buildStudio(M, pack) {
   solid(114.35, 44.5, 114.85, 46.3, F, F + 0.5);
   interact.push({ kind: 'lounger', label: 'Sit and look at her paintings', pos: [114.6, F + 0.6, 45.4], r: 1.6,
     seat: { x: 114.6, z: 45.4, y: F, eye: [114.55, F + 1.15, 45.4], look: [1, 0], pitch: -0.05, flash: 'Take your time · E to get up', stand: [113.75, 45.4, -Math.PI / 2, F] } });
+  // a screen beside the bench for her video (pack.json studioVideo), on a slim stand, facing the same way
+  parts.box('metal', 114.58, F, 43.35, 114.62, F + 0.45, 43.39, 0x1d1d1d);
+  parts.box('metal', 114.5, F + 0.45, 42.75, 114.62, F + 1.3, 44.15, 0x111111);
+  parts.box('metal', 114.48, F + 0.5, 42.8, 114.49, F + 1.25, 44.1, 0x24364a);
+  solid(114.4, 42.7, 114.8, 44.2, F, F + 1.35);
+  interact.push({ kind: 'video', label: 'Watch her video', pos: [114.4, F + 0.9, 43.45], r: 2.8, normal: [-1, 0] });
   // a sculpture on a plinth, a tall olive in a pot, cane chairs facing the sunset
   parts.box('plaster', 118.2, F, 49.4, 118.75, F + 0.95, 49.95, 0xf3efe6);
   const sc = new THREE.TorusKnotGeometry(0.16, 0.05, 90, 12, 2, 3); sc.translate(118.475, F + 1.2, 49.675); parts.add('paint', sc, 0x2e2a26);

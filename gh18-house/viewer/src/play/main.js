@@ -994,6 +994,7 @@ function goStudio() {
 }
 function toggleSound() {
   state.sound = !state.sound;
+  if (tune) tune.dest.gain.value = state.sound ? 0.8 : 0;
   audio.start();
   audio.setOn(state.sound);
   setVal('sound', state.sound ? 'On' : 'Off');
@@ -1094,14 +1095,36 @@ function endEntering() { if (!state.entering) return; state.entering = null; her
 // she gets in (from the tour): the drive opens up, and on her birthday a tune plays
 function startExplore() {
   state.explore = true;
+  playTune();                                          // (Happy Birthday on the piano, every time she sets off; ⏸ by the clock)
   if (state.birthday) {
-    audio.start();
-    const dur = audio.ctx ? playBirthday(audio.ctx, audio.master) : 8;
+    const dur = 40;
     const bd = document.getElementById('bday');
     bd.hidden = false;
     requestAnimationFrame(() => bd.classList.add('show'));
     setTimeout(() => { bd.classList.remove('show'); setTimeout(() => (bd.hidden = true), 1200); }, Math.max(6, dur) * 1000);
   } else flash('Take her for a drive along the coast');
+}
+// Happy Birthday on the piano, in the background as she gets in the car: on its own audio context, so the ⏸ chip
+// by the clock really pauses it (and ▶ carries on from there); it hides when the tune ends
+let tune = null;
+function playTune() {
+  const chip = document.getElementById('tune-chip');
+  try { tune?.ctx.close(); } catch { /* closed */ }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const dest = ctx.createGain(); dest.gain.value = state.sound ? 0.8 : 0; dest.connect(ctx.destination);
+  const dur = playBirthday(ctx, dest);
+  tune = { ctx, dest, left: dur };
+  chip.hidden = false; chip.querySelector('.val').textContent = '⏸ Happy Birthday';
+  chip.onclick = (e) => { e.stopPropagation(); if (ctx.state === 'running') { ctx.suspend(); chip.querySelector('.val').textContent = '▶ Happy Birthday'; } else { ctx.resume(); chip.querySelector('.val').textContent = '⏸ Happy Birthday'; } };
+  const end = () => { if (tune?.ctx !== ctx) return; if (ctx.currentTime < dur) return setTimeout(end, 1000); chip.hidden = true; ctx.close(); tune = null; };
+  setTimeout(end, dur * 1000);
+}
+// her video (pack.json "studioVideo": a Google Drive share link), on the screen by the painting wall
+function showVideo() {
+  const link = pack?.studioVideo || '', id = (link.match(/\/d\/([\w-]+)/) || link.match(/[?&]id=([\w-]+)/) || [])[1];
+  if (!id) { flash('No video yet: put its Google Drive link in pack.json → "studioVideo"'); return; }
+  if (music?.playing) music.pause();
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="video"><iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`, 'video');
 }
 // a recording from the owner, played once when she reaches the studio (pack.studioMessage)
 function playMessage() {
@@ -1178,6 +1201,7 @@ function interact(it = focus || findFocus()) {
   if (it.kind === 'diya') { houseLife.lightDiya(audio?.ctx, audio?.master); flash('The diya is lit'); return; }
   if (it.kind === 'chai') { houseLife.makeChai(); flash('Putting the chai on…'); return; }
   if (it.kind === 'lift') return showLift(it.floor);
+  if (it.kind === 'video') return showVideo();
   if (it.kind === 'lounger') return lieDown(it.seat);
   if (it.kind === 'album') return showAlbum();
 }
