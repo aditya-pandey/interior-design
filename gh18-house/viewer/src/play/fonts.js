@@ -5,14 +5,18 @@
 // fontsReady resolves once they are in (or have failed: the canvases fall back to Georgia); the canvas
 // textures that use them are redrawn then.
 const FACES = [
-  ['Cormorant Garamond', 'CormorantGaramond-Italic.woff2', { style: 'italic', weight: '400' }],
-  ['Cormorant Garamond', 'CormorantGaramond-Medium.woff2', { weight: '500' }],
-  ['Inter', 'Inter-Medium.woff2', { weight: '500' }],
-  ['Inter', 'Inter-SemiBold.woff2', { weight: '600' }],
-  ['Noto Serif Devanagari', 'NotoSerifDevanagari-Regular.woff2', { weight: '400' }],
+  ['Kalam', 'kalam-latin-400-normal.woff2', { weight: '400' }],
+  ['Kalam', 'kalam-latin-700-normal.woff2', { weight: '700' }],
+  ['Kalam', 'kalam-devanagari-400-normal.woff2', { weight: '400', unicodeRange: 'U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF' }],
+  ['Kalam', 'kalam-devanagari-700-normal.woff2', { weight: '700', unicodeRange: 'U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+25CC, U+A830-A839, U+A8E0-A8FF' }],
+  ['Manrope', 'manrope-latin-500-normal.woff2', { weight: '500' }],
+  ['Manrope', 'manrope-latin-600-normal.woff2', { weight: '600' }],
+  ['Manrope', 'manrope-latin-700-normal.woff2', { weight: '700' }],
 ];
-export const SERIF = "'Cormorant Garamond', Georgia, serif";
-export const SANS = "Inter, 'Helvetica Neue', Arial, sans-serif";
-export const DEVA = "'Noto Serif Devanagari', Georgia, serif";
+// (handwritten Kalam, Latin and Devanagari, for her name, her poems and the e-reader; Manrope, a modern sans, for
+// labels and the HUD; both SIL OFL, licences in play/fonts/)
+export const SERIF = "Kalam, 'Segoe Print', cursive";
+export const SANS = "Manrope, 'Helvetica Neue', Arial, sans-serif";
+export const DEVA = "Kalam, 'Noto Serif Devanagari', serif";
 export const fontsReady = typeof FontFace === 'undefined' ? Promise.resolve()
   : Promise.allSettled(FACES.map(([family, file, desc]) => new FontFace(family, `url(play/fonts/${file})`, desc).load().then((f) => document.fonts.add(f))));

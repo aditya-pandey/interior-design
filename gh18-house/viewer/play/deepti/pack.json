@@ -499,6 +499,31 @@
     "file": "photos/photo_05.jpg",
     "w": 1050,
     "h": 1400
+   },
+   {
+    "file": "photos/photo_06.jpg",
+    "h": 1200,
+    "w": 1600
+   },
+   {
+    "file": "photos/photo_07.jpg",
+    "h": 1280,
+    "w": 960
+   },
+   {
+    "file": "photos/photo_08.jpg",
+    "h": 1280,
+    "w": 719
+   },
+   {
+    "file": "photos/photo_09.jpg",
+    "h": 1280,
+    "w": 960
+   },
+   {
+    "file": "photos/photo_10.jpg",
+    "h": 1280,
+    "w": 960
    }
   ]
  },

@@ -1057,7 +1057,7 @@ function drawSign(c, name, tag, halo) {
   g.textAlign = 'center';
   if (halo) g.filter = 'blur(18px)';
   g.fillStyle = halo ? '#ffffff' : '#3b2a1c';
-  g.font = `italic 400 236px ${SERIF}`;
+  g.font = `700 236px ${SERIF}`;
   g.fillText(name, 1024, 280);
   g.font = `500 50px ${SANS}`;
   if ('letterSpacing' in g) g.letterSpacing = '18px';
@@ -1079,11 +1079,11 @@ function plaqueTexture() {
     for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(50,30,15,${0.05 + r() * 0.1})`; g.beginPath(); const y = r() * 300; g.moveTo(0, y); g.bezierCurveTo(150, y + 4, 300, y - 4, 460, y + r() * 4); g.stroke(); }
     g.strokeStyle = 'rgba(240,215,160,0.6)'; g.lineWidth = 2; g.strokeRect(18, 18, 424, 264);
     g.fillStyle = '#f1dcae'; g.textAlign = 'center';
-    g.font = `italic 400 66px ${SERIF}`; g.fillText("Deepti's Studio", 230, 140);
+    g.font = `700 66px ${SERIF}`; g.fillText("Deepti's Studio", 230, 140);
     g.font = `600 17px ${SANS}`; if ('letterSpacing' in g) g.letterSpacing = '5px';
     g.fillText('PAINTINGS · POEMS · MUSIC', 230, 190);
     if ('letterSpacing' in g) g.letterSpacing = '0px';
-    g.font = `italic 400 28px ${SERIF}`; g.fillText('come in', 230, 240);
+    g.font = `700 28px ${SERIF}`; g.fillText('come in', 230, 240);
     t.needsUpdate = true;
   };
   draw(); fontsReady.then(draw);
@@ -1148,7 +1148,7 @@ function vinylTexture() {
   if (sheen) { sheen.addColorStop(0, 'rgba(255,255,255,0)'); sheen.addColorStop(0.08, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.16, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, 'rgba(255,255,255,0)'); sheen.addColorStop(0.58, 'rgba(255,255,255,0.10)'); sheen.addColorStop(0.66, 'rgba(255,255,255,0)'); g.fillStyle = sheen; g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.arc(256, 256, 88, 0, Math.PI * 2, true); g.fill(); }
   g.fillStyle = '#efe3c8'; g.beginPath(); g.arc(256, 256, 84, 0, Math.PI * 2); g.fill();
   g.strokeStyle = '#a4532e'; g.lineWidth = 3; g.beginPath(); g.arc(256, 256, 76, 0, Math.PI * 2); g.stroke();
-  g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.font = `italic 400 32px ${SERIF}`; g.fillText("Deepti's Studio", 256, 236);
+  g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.font = `700 32px ${SERIF}`; g.fillText("Deepti's Studio", 256, 236);
   g.font = `600 13px ${SANS}`; g.fillText('SIDE A · 33⅓', 256, 296);
   g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(256, 256, 7, 0, Math.PI * 2); g.fill();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
@@ -1162,7 +1162,7 @@ function sleeveTexture() {
   g.fillStyle = sky; g.fillRect(0, 0, 512, 512);
   g.fillStyle = '#fbe3b0'; g.beginPath(); g.arc(256, 282, 70, Math.PI, 0); g.fill();
   for (let y = 300; y < 500; y += 14) { g.fillStyle = `rgba(251,227,176,${0.5 - (y - 300) / 500})`; g.fillRect(256 - 60 + (y % 28), y, 120 - (y - 300) / 3, 3); }
-  g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = `italic 400 44px ${SERIF}`; g.textAlign = 'left'; g.fillText('Her songs', 28, 64);
+  g.fillStyle = 'rgba(30,20,15,0.85)'; g.font = `700 44px ${SERIF}`; g.textAlign = 'left'; g.fillText('Her songs', 28, 64);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
 }
@@ -1414,7 +1414,7 @@ function drawPoem(c, poem, W, Hh) {
   for (let i = 0; i < 6000; i++) { g.fillStyle = `rgba(120,95,60,${r() * 0.035})`; g.fillRect(r() * W, r() * Hh, 1.5, 1.5); }
   g.strokeStyle = 'rgba(176,141,87,0.55)'; g.lineWidth = 2; g.strokeRect(46, 46, W - 92, Hh - 92);
   // long lines wrap (at a word) rather than being squeezed; the size is the largest at which it all fits
-  const maxW = W - 170, bodyFont = (sz, em) => (em && !hi ? `italic 400 ${Math.round(sz * 1.12)}px ${SERIF}` : hi ? `400 ${sz}px ${bodyFace}` : `500 ${Math.round(sz * 1.12)}px ${bodyFace}`);
+  const maxW = W - 170, bodyFont = (sz, em) => (em && !hi ? `700 ${Math.round(sz * 1.12)}px ${SERIF}` : hi ? `400 ${sz}px ${bodyFace}` : `500 ${Math.round(sz * 1.12)}px ${bodyFace}`);
   const isEm = (ln) => /^\*.*\*$/.test(ln.trim()), plain = (ln) => (isEm(ln) ? ln.trim().slice(1, -1) : ln);
   const wrap = (txt, sz, em) => {
     g.font = bodyFont(sz, em);
@@ -1434,7 +1434,7 @@ function drawPoem(c, poem, W, Hh) {
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   let y = 170;
   g.fillStyle = '#2b211a';
-  g.font = hi ? `400 ${Math.round(size * 1.35)}px ${DEVA}` : `italic 400 ${Math.round(size * 2.0)}px ${SERIF}`;
+  g.font = hi ? `400 ${Math.round(size * 1.35)}px ${DEVA}` : `700 ${Math.round(size * 2.0)}px ${SERIF}`;
   fitText(g, poem.title, W / 2, y, W - 170);
   y += size * 0.9;
   g.strokeStyle = 'rgba(176,141,87,0.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(W / 2 - 46, y); g.lineTo(W / 2 - 10, y); g.moveTo(W / 2 + 10, y); g.lineTo(W / 2 + 46, y); g.stroke();
@@ -1471,7 +1471,7 @@ function drawPoem(c, poem, W, Hh) {
     if ('letterSpacing' in g) g.letterSpacing = '0px';
     return;
   }
-  g.font = `italic 400 ${Math.round(size * 1.25)}px ${SERIF}`;
+  g.font = `700 ${Math.round(size * 1.25)}px ${SERIF}`;
   g.fillStyle = '#8a6a48';
   g.fillText('— ' + (poem.author || 'Deepti'), W / 2, Math.min(Hh - 90, y + size * 0.6));
 }
@@ -1485,7 +1485,7 @@ function readerScreen(pack) {
   g.textAlign = 'center'; g.fillStyle = '#2a2420';
   g.font = `600 17px ${SANS}`; if ('letterSpacing' in g) g.letterSpacing = '6px';
   g.fillText('HER READER', W / 2, 92); if ('letterSpacing' in g) g.letterSpacing = '0px';
-  g.font = `italic 400 112px ${SERIF}`; g.fillText('Deepti', W / 2, 330);
+  g.font = `700 112px ${SERIF}`; g.fillText('Deepti', W / 2, 330);
   g.strokeStyle = '#2a2420'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(W / 2 - 70, 378); g.lineTo(W / 2 - 14, 378); g.moveTo(W / 2 + 14, 378); g.lineTo(W / 2 + 70, 378); g.stroke();
   g.save(); g.translate(W / 2, 378); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.restore();
   g.font = `500 34px ${SERIF}`; g.fillText('Poems & Paintings', W / 2, 440);
@@ -1510,7 +1510,7 @@ function albumCover(title) {
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(255,255,255,${r() * 0.06})`; g.fillRect(r() * 512, r() * 408, 2, 1); g.fillStyle = `rgba(0,0,0,${r() * 0.05})`; g.fillRect(r() * 512, r() * 408, 1, 2); }
   g.strokeStyle = '#d9b46a'; g.lineWidth = 3; g.strokeRect(26, 26, 460, 356);
   g.fillStyle = '#e3c27d'; g.textAlign = 'center';
-  g.font = `italic 400 64px ${SERIF}`;
+  g.font = `700 64px ${SERIF}`;
   g.fillText(title, 256, 220);
   g.font = `500 22px ${SERIF}`;
   g.fillText('❦', 256, 268);

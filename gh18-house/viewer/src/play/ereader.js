@@ -20,7 +20,7 @@ const CW = 1200, CH = 1600;
 const SIZE = [0.86, 1, 1.16];
 // the device: about a Paperwhite (125 × 174 × 8 mm, a 3 : 4 screen)
 const BW = 0.1255, BH = 0.1745, BD = 0.0082, SW = 0.1056, SH = 0.1408, SY = 0.0055;
-const INK = '#0d0c0b', GREY = '#5c5852', PAPER = '#e9e6de';
+const INK = '#231d18', GREY = '#9a6b4a', PAPER = '#fffaf3';
 
 export function createEReader({ pack, books = [], camera, scene, clockLabel = () => '', onOpen = () => {}, onClose = () => {} }) {
   const poems = pack?.poems || [];
@@ -37,13 +37,13 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
   const onTop = (m, order) => { m.depthTest = false; m.depthWrite = false; return order; };
   const shellMat = new THREE.MeshStandardMaterial({ color: 0x1e1d1b, roughness: 0.55, metalness: 0.05, transparent: true });       // (transparent: drawn in order, over the veil)
-  const screenMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.94, metalness: 0, emissive: 0xfff1dc, emissiveMap: tex, emissiveIntensity: 0.2, transparent: true });
+  const screenMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false });   // (a screen lights itself: always clear to read)
   const device = new THREE.Group();
   const body = new THREE.Mesh(new RoundedBoxGeometry(BW, BH, BD, 4, 0.0072), shellMat); body.renderOrder = onTop(shellMat, 1000);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), screenMat); screen.position.set(0, SY, BD / 2 + 0.00015); screen.renderOrder = onTop(screenMat, 1001);
   // her name, small, on the bottom bezel
   const lc = document.createElement('canvas'); lc.width = 256; lc.height = 48;
-  const lg = lc.getContext('2d'); lg.fillStyle = '#8b867e'; lg.font = `italic 400 30px ${SERIF}`; lg.textAlign = 'center'; lg.textBaseline = 'middle'; lg.fillText('Deepti', 128, 26);
+  const lg = lc.getContext('2d'); lg.fillStyle = '#8b867e'; lg.font = `700 30px ${SERIF}`; lg.textAlign = 'center'; lg.textBaseline = 'middle'; lg.fillText('Deepti', 128, 26);
   const logoMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(lc), transparent: true, opacity: 0.75 });
   logoMat.map.colorSpace = THREE.SRGBColorSpace;
   const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.0056), logoMat); logo.position.set(0, -BH / 2 + 0.0105, BD / 2 + 0.0002); logo.renderOrder = onTop(logoMat, 1002);
@@ -69,9 +69,9 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
     return {
       hi,
       body: hi ? `400 ${Math.round(40 * s)}px ${DEVA}` : `500 ${Math.round(47 * s)}px ${SERIF}`,
-      em: hi ? `400 ${Math.round(40 * s)}px ${DEVA}` : `italic 400 ${Math.round(47 * s)}px ${SERIF}`,
+      em: hi ? `400 ${Math.round(40 * s)}px ${DEVA}` : `700 ${Math.round(47 * s)}px ${SERIF}`,
       lh: hi ? Math.round(40 * s * 2.0) : Math.round(47 * s * 1.5),
-      title: hi ? `400 ${Math.round(66 * s)}px ${DEVA}` : `italic 400 ${Math.round(86 * s)}px ${SERIF}`,
+      title: hi ? `400 ${Math.round(66 * s)}px ${DEVA}` : `700 ${Math.round(86 * s)}px ${SERIF}`,
       titleLh: hi ? Math.round(66 * s * 1.5) : Math.round(86 * s * 1.12),
     };
   };
@@ -107,7 +107,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
       lines.push({ kind: 'gap', h: Math.round(f.lh * 0.62) });
       blocks.push({ lines, keep: st.length <= 8 });
     }
-    blocks.push({ lines: [{ text: '— ' + (p.author || 'Deepti'), font: hindi({ title: p.author || '', stanzas: [] }) ? `400 ${Math.round(36 * s)}px ${DEVA}` : `italic 400 ${Math.round(44 * s)}px ${SERIF}`, h: Math.round(70 * s), color: '#5d564c' }], keep: true });
+    blocks.push({ lines: [{ text: '— ' + (p.author || 'Deepti'), font: hindi({ title: p.author || '', stanzas: [] }) ? `400 ${Math.round(36 * s)}px ${DEVA}` : `700 ${Math.round(44 * s)}px ${SERIF}`, h: Math.round(70 * s), color: '#5d564c' }], keep: true });
     const pages = [[]];
     let y = 0;
     const put = (ln) => { pages[pages.length - 1].push({ ...ln, y }); y += ln.h; };
@@ -167,7 +167,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
       g.fillStyle = l.color; g.font = l.font;
       const base = y + l.h * 0.72;
       if (l.spaced) spacedText(l.text, CW / 2, base, l.spaced, 'center');
-      else { g.textAlign = 'center'; g.fillText(l.text, CW / 2, base); if (l.color === INK) { g.strokeStyle = INK; g.lineWidth = 0.9; g.strokeText(l.text, CW / 2, base); } }
+      else { g.textAlign = 'center'; g.fillText(l.text, CW / 2, base); if (l.color === INK) {  } }
     }
     chrome({ text: p.title, hi: hindi(p) }, pages.length > 1 ? `Page ${view.page + 1} of ${pages.length}` : `${prefs.poem + 1} of ${poems.length}`, (view.page + 1) / pages.length);
   }
@@ -178,7 +178,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
   function drawLibrary() {
     g.drawImage(grain, 0, 0);
     g.fillStyle = INK; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-    g.font = `italic 400 76px ${SERIF}`; g.fillText('Library', M.x0, 238);
+    g.font = `700 76px ${SERIF}`; g.fillText('Library', M.x0, 238);
     g.fillStyle = GREY; g.font = `500 22px ${SANS}`; g.fillText([books.length ? `${books.length} ${books.length === 1 ? 'book' : 'books'}` : '', `${poems.length} poems`].filter(Boolean).join('  ·  '), M.x0 + 4, 284);
     const list = items(), RH = 96, HEAD = 74, top = 320, bottom = M.bottom - 10;
     // the rows' heights, section headings included, then scroll so the chosen one is in view
@@ -198,7 +198,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
       if (it.kind === 'book') { const b = books[it.bi]; title = b.title; sub = b.author || ''; const m = prefs.marks[b.url]; right = m ? `${Math.round((m.frac || 0) * 100)}%` : 'new'; }
       else { const p = poems[it.i]; title = p.title; hi = hindi(p); sub = (!hers(p) || p.date) ? [p.author, p.date].filter(Boolean).join('  ·  ') : ''; const n = typeset(it.i).length; right = `${n} ${n === 1 ? 'page' : 'pages'}`; }
       g.fillStyle = on ? PAPER : INK; g.textAlign = 'left';
-      g.font = hi ? `400 35px ${DEVA}` : `italic 400 42px ${SERIF}`;
+      g.font = hi ? `400 35px ${DEVA}` : `700 42px ${SERIF}`;
       let t = title; while (g.measureText(t).width > M.x1 - M.x0 - 200 && t.length > 4) t = t.slice(0, -2);
       g.fillText(t === title ? t : t + '…', M.x0, ry + RH * 0.52);
       g.fillStyle = on ? '#cfcac0' : GREY; g.font = `500 20px ${SANS}`; g.textAlign = 'right'; g.fillText(right, M.x1, ry + RH * 0.52);
@@ -223,7 +223,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
       const hi = DEVANAGARI.test(p.text);
       if (p.kind === 'h') {
         if (y > avail * 0.35) { pages.push([]); y = 0; }                     // (a new chapter starts a new page)
-        const font = hi ? `400 ${Math.round(52 * s)}px ${DEVA}` : `italic 400 ${Math.round(66 * s)}px ${SERIF}`, lh = Math.round((hi ? 52 : 66) * s * 1.3);
+        const font = hi ? `400 ${Math.round(52 * s)}px ${DEVA}` : `700 ${Math.round(66 * s)}px ${SERIF}`, lh = Math.round((hi ? 52 : 66) * s * 1.3);
         put({ kind: 'gap', h: y ? lh * 0.6 : lh * 1.2 });
         for (const t of wrap(p.text, font, width * 0.86)) put({ kind: 'h', text: t, font, h: lh });
         put({ kind: 'gap', h: lh * 0.7 }); afterHead = true; return;
@@ -247,7 +247,7 @@ export function createEReader({ pack, books = [], camera, scene, clockLabel = ()
     const bk = view.book, b = books[bk.bi], d = bookData.get(bk.bi);
     g.drawImage(grain, 0, 0);
     g.textBaseline = 'alphabetic';
-    const msg = (t) => { g.fillStyle = GREY; g.font = `italic 400 44px ${SERIF}`; g.textAlign = 'center'; g.fillText(t, CW / 2, CH / 2); };
+    const msg = (t) => { g.fillStyle = GREY; g.font = `700 44px ${SERIF}`; g.textAlign = 'center'; g.fillText(t, CW / 2, CH / 2); };
     if (!d || d.loading) { msg(`Opening “${b.title}”…`); chrome({ text: b.title }, '', null); return; }
     if (d.error) { msg('This book could not be opened.'); chrome({ text: b.title }, '', null); return; }
     if (bk.original) {

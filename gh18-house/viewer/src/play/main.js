@@ -1314,19 +1314,21 @@ function showAlbum() {
   renderAlbum();
 }
 function renderAlbum() {
-  const a = pack.album, photos = a.photos, i = album.i;
-  const page = i === 0
-    ? `<div class="cover"><h2>${esc(a.title)}</h2><p>❦</p><p class="hint">Turn the page →</p></div>`
-    : `<figure><img src="play/deepti/${photos[i - 1].file}" alt=""><figcaption>${esc(photos[i - 1].caption || '')}</figcaption></figure>`;
-  showOverlay(`<button class="close" aria-label="Close">×</button><div class="album">${page}
-    <nav><button class="prev" ${i === 0 ? 'disabled' : ''}>‹</button><span>${i === 0 ? '' : i + ' / ' + photos.length}</span><button class="next" ${i === photos.length ? 'disabled' : ''}>›</button></nav></div>`, 'album-wrap');
+  const a = pack.album, photos = a.photos, i = album.i, src = (p) => (pack.base || 'play/deepti/') + p.file;
+  const body = i === 0
+    ? `<h2>${esc(a.title)}</h2><p class="sub">${photos.length} photos · click one to see it large</p><div class="grid">${photos.map((p, n) => `<button data-n="${n + 1}"><img src="${src(p)}" alt="" loading="lazy"></button>`).join('')}</div>`
+    : `<figure class="one"><img src="${src(photos[i - 1])}" alt="">${photos[i - 1].caption ? `<figcaption>${esc(photos[i - 1].caption)}</figcaption>` : ''}</figure>
+       <div class="bar"><button class="all">All photos</button><span>${i} / ${photos.length}</span><span><button class="prev" ${i === 1 ? 'disabled' : ''}>‹</button> <button class="next" ${i === photos.length ? 'disabled' : ''}>›</button></span></div>`;
+  showOverlay(`<button class="close" aria-label="Close">×</button><div class="album2">${body}</div>`, 'album-wrap');
   const o = document.getElementById('overlay');
-  o.querySelector('.prev').onclick = () => turnAlbum(-1);
-  o.querySelector('.next').onclick = () => turnAlbum(1);
+  for (const b of o.querySelectorAll('.grid button')) b.onclick = () => { album.i = +b.dataset.n; renderAlbum(); };
+  o.querySelector('.all')?.addEventListener('click', () => { album.i = 0; renderAlbum(); });
+  o.querySelector('.prev')?.addEventListener('click', () => turnAlbum(-1));
+  o.querySelector('.next')?.addEventListener('click', () => turnAlbum(1));
 }
 function turnAlbum(k) {
-  if (!album) return;
-  album.i = Math.max(0, Math.min(pack.album.photos.length, album.i + k));
+  if (!album || album.i === 0) return;
+  album.i = Math.max(1, Math.min(pack.album.photos.length, album.i + k));
   renderAlbum();
 }
 
@@ -2014,16 +2016,6 @@ function loop() {
   post?.watch(dt, (pr) => { renderer.setPixelRatio(pr); post.setSize(window.innerWidth, window.innerHeight); }, () => sea.setScale(0.3));
 }
 
-// a shooting star: "Make a wish" for a few seconds
-let wishTimer = null;
-function wish() {
-  const w = document.getElementById('wish');
-  if (state.overlay || !w) return;
-  clearTimeout(wishTimer);
-  w.hidden = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('show')));
-  wishTimer = setTimeout(() => { w.classList.remove('show'); wishTimer = setTimeout(() => (w.hidden = true), 1500); }, 4200);
-}
 function draw() {
   sea.update(clock, scene, camera, sun, waterAmb);
   if (post) post.render(); else renderer.render(scene, camera);
@@ -2034,7 +2026,7 @@ function frame(dt = 1 / 60, show = true) {
   lodTimer -= dt;
   if (lodTimer <= 0 || camera.position.distanceToSquared(lodAt) > 25) { beach.palmLOD(camera.position); dressing.lod(camera.position); lodAt.copy(camera.position); lodTimer = 0.5; }
   clock += dt;
-  if (night.update(dt, clock, state.stars, camera)) wish();
+  night.update(dt, clock, state.stars, camera);
   clouds.update(clock, camera, skyLight);
   wheelFx.update(clock, sun.color, sun.intensity * Math.max(0.1, sun.userData.dir?.y ?? 1), waterAmb);
   cosy.update(clock, Math.max(state.stars, (state.glow || 0) * 0.8));

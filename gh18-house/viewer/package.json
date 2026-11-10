@@ -12,7 +12,8 @@
     "shots": "node scripts/shots.mjs",
     "film": "node film/render.mjs gpu && python3 film/post.py ../renders/film/GH-18_film.mp4",
     "birthday": "node scripts/birthday/render.mjs",
-    "drive:test": "node scripts/drive_harness.mjs --compare"
+    "drive:test": "node scripts/drive_harness.mjs --compare",
+    "add-photos": "node scripts/add_photos.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "4.10.38",
