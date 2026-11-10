@@ -35,7 +35,11 @@ const playPage = {
     const f = path.resolve(__dirname, 'dist/play/index.html');
     let html = fs.readFileSync(f, 'utf8');
     html = html.replace(/(src|href)="\.\.\/assets\//g, '$1="assets/');
-    fs.writeFileSync(f, html);
+    // the page is at /deepti/ (the owner's name for it); /play/ only forwards there (links shared before keep working).
+    // Its files (models, photos, fonts) stay in play/: the page loads them from the site root (<base href="../">)
+    fs.mkdirSync(path.resolve(__dirname, 'dist/deepti'), { recursive: true });
+    fs.writeFileSync(path.resolve(__dirname, 'dist/deepti/index.html'), html);
+    fs.writeFileSync(f, '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>GH-18</title><meta http-equiv="refresh" content="0; url=../deepti/"><script>location.replace(\'../deepti/\' + location.search + location.hash)</script>');
     // the play's own textures (water normals; the Poly Haven scans once fetched): CC0, always copied
     const tex = path.resolve(__dirname, 'play/textures');
     if (fs.existsSync(tex)) fs.cpSync(tex, path.resolve(__dirname, 'dist/play/textures'), { recursive: true });
