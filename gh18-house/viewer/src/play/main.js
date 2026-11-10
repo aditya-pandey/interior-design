@@ -489,7 +489,7 @@ class FootWalker extends Walker {
     const R = cam ? 120 : 210;
     for (const c of this.data.colliders) {
       if (c.y1 < foot + 0.2 || c.y0 > foot + 1.75) continue;
-      if (cam && c.y1 - c.y0 <= 2.05) continue;               // (furniture's blocks are 2 m tall: walls only, for the camera)
+      if (cam && c.y1 - c.y0 <= 2.05 && Math.min(c.bb[2] - c.bb[0], c.bb[3] - c.bb[1]) > 350) continue;   // (the camera passes over furniture's blocks, not thin walls)
       const b = c.bb;
       if (x < b[0] - R || x > b[2] + R || y < b[1] - R || y > b[3] + R) continue;
       if (circleHitsPoly(x, y, R, c.poly)) return true;
