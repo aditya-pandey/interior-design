@@ -729,12 +729,12 @@ export function buildStudio(M, pack) {
   solid(114.35, 44.5, 114.85, 46.3, F, F + 0.5);
   interact.push({ kind: 'lounger', label: 'Sit and look at her paintings', pos: [114.6, F + 0.6, 45.4], r: 1.6,
     seat: { x: 114.6, z: 45.4, y: F, eye: [114.55, F + 1.15, 45.4], look: [1, 0], pitch: -0.05, flash: 'Take your time · E to get up', stand: [113.75, 45.4, -Math.PI / 2, F] } });
-  // a screen beside the bench for her video (pack.json studioVideo), on a slim stand, facing the same way
-  parts.box('metal', 114.58, F, 43.35, 114.62, F + 0.45, 43.39, 0x1d1d1d);
-  parts.box('metal', 114.5, F + 0.45, 42.75, 114.62, F + 1.3, 44.15, 0x111111);
-  parts.box('metal', 114.48, F + 0.5, 42.8, 114.49, F + 1.25, 44.1, 0x24364a);
-  solid(114.4, 42.7, 114.8, 44.2, F, F + 1.35);
-  interact.push({ kind: 'video', label: 'Watch her video', pos: [114.4, F + 0.9, 43.45], r: 2.8, normal: [-1, 0] });
+  // her video (pack.json studioVideo) on the gallery partition, facing the bench: a slim dark screen in a black
+  // bezel; main.js puts the video on it, dims the room and lifts the screen to match
+  parts.box('metal', GP.x - 0.17, F + 0.68, 44.25, GP.x - 0.12, F + 2.22, 46.55, 0x0b0b0b);
+  const vs = new THREE.Mesh(new THREE.PlaneGeometry(2.16, 1.44), new THREE.MeshBasicMaterial({ color: 0x0c0f14 }));
+  vs.rotation.y = -Math.PI / 2; vs.position.set(GP.x - 0.175, F + 1.45, 45.4); group.add(vs);
+  interact.push({ kind: 'video', label: 'Watch her video', pos: [GP.x - 0.2, F + 1.45, 45.4], r: 3.2, normal: [-1, 0] });
   // a sculpture on a plinth, a tall olive in a pot, cane chairs facing the sunset
   parts.box('plaster', 118.2, F, 49.4, 118.75, F + 0.95, 49.95, 0xf3efe6);
   const sc = new THREE.TorusKnotGeometry(0.16, 0.05, 90, 12, 2, 3); sc.translate(118.475, F + 1.2, 49.675); parts.add('paint', sc, 0x2e2a26);
@@ -896,7 +896,7 @@ export function buildStudio(M, pack) {
   slots.big.push({ cx: 109.7, cy: F + 3.05, z: SWZ, face: 'n', h: 1.7, frame: 0xb08d57, light: true });          // the void's tall wall: her horses, large
   slots.big.push({ cx: 116.5, cy: F + 1.8, z: SWZ, face: 'n', h: 0.9, frame: null });
   for (const x of [106.35, 105.55, 103.55, 101.0]) slots.small.push({ cx: x, cy: (x < ST.xTop ? U : stairH(x)) + 1.4, z: SWZ, face: 'n', h: 0.42, maxW: 0.5 });
-  for (const s of [-1, 1]) for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) {
+  for (const s of [1]) for (let r = 0; r < 2; r++) for (let c = 0; c < 5; c++) {        // (its west face is the video screen)
     slots.small.push({ cx: GP.x + s * 0.1, cz: GP.z0 + 0.55 + c * ((GP.z1 - GP.z0 - 1.1) / 4), cy: F + (r ? 1.12 : 1.78) + (c % 2 ? 0.04 : -0.03), face: s > 0 ? 'px' : 'nx', h: 0.42, maxW: 0.6 });
   }
   // upstairs (only used when the pack has more than fits downstairs)
@@ -1010,7 +1010,7 @@ export function buildStudio(M, pack) {
   });
 
   return {
-    group, carColliders, interact, mats, frameMats: () => FRAME_MATS, anchors,
+    group, carColliders, interact, mats, videoScreen: vs, frameMats: () => FRAME_MATS, anchors,
     walk: { colliders: walkColliders, surfaces: walkSurfaces },
     setNight(on) {
       mats.glow.emissiveIntensity = on ? 1.6 : 0;

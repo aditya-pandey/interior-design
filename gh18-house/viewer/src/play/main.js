@@ -699,7 +699,7 @@ function applyTime(t, regen = true) {
   sun.castShadow = t.sun > 0.05 || !!t.moon;
   hemi.intensity = t.hemi;
   hemi.color.set(t.hemiSky);
-  renderer.toneMappingExposure = t.exposure;
+  renderer.toneMappingExposure = t.exposure; state.exposure = t.exposure;
   scene.fog.color.set(t.fog);
   state.stars = t.stars ?? 0;
   state.sunEl = t.el;
@@ -1010,6 +1010,7 @@ function goStudio() {
 function toggleSound() {
   state.sound = !state.sound;
   if (tune) tune.dest.gain.value = state.sound ? 0.8 : 0;
+  if (vid) vid.el.muted = !state.sound;
   audio.start();
   audio.setOn(state.sound);
   setVal('sound', state.sound ? 'On' : 'Off');
@@ -1136,12 +1137,54 @@ function playTune() {
   const again = () => { if (tune?.ctx !== ctx) return; if (ctx.state === 'running' && ctx.currentTime > until - 1) until = ctx.currentTime + 1.2 + playBirthday(ctx, dest); setTimeout(again, 500); };
   setTimeout(again, 500);
 }
-// her video (pack.json "studioVideo": a Google Drive share link), on the screen by the painting wall
+// her video (pack.json "studioVideo": a file in play/deepti/) on the screen on the gallery wall: E or a click plays
+// and pauses it; while it plays the room dims (the exposure comes down, the screen is lifted by as much, so it
+// stays as bright), the music and the birthday tune pause, and walking away from it stops it (it carries on from
+// there next time). The chip by the clock pauses it; ⛶ watches it full screen
+let vid = null, vidDim = 1;
 function showVideo() {
-  const link = pack?.studioVideo || '', id = (link.match(/\/d\/([\w-]+)/) || link.match(/[?&]id=([\w-]+)/) || [])[1];
-  if (!id) { flash('No video yet: put its Google Drive link in pack.json → "studioVideo"'); return; }
+  const file = pack?.studioVideo || '';
+  if (!file || /^https?:/.test(file)) { flash('No video yet: put the file in play/deepti/ and its name in pack.json → "studioVideo"'); return; }
+  if (!vid) {
+    const el = document.createElement('video');
+    el.src = 'play/deepti/' + file; el.playsInline = true; el.preload = 'auto'; el.id = 'vid-el';
+    document.body.appendChild(el);
+    const tex = new THREE.VideoTexture(el); tex.colorSpace = THREE.SRGBColorSpace;
+    vid = { el, tex, on: false, off: studio.videoScreen.material, mat: new THREE.MeshBasicMaterial({ map: tex }) };
+    el.addEventListener('ended', () => { el.currentTime = 0; stopVideo(); });
+    el.addEventListener('play', vidChip); el.addEventListener('pause', vidChip);
+    document.addEventListener('fullscreenchange', () => el.classList.toggle('full', document.fullscreenElement === el));
+    const chip = document.getElementById('vid-chip'), full = document.getElementById('vid-full');
+    chip.onclick = (e) => { e.stopPropagation(); vid.el.paused ? vid.el.play() : vid.el.pause(); };
+    full.onclick = (e) => { e.stopPropagation(); el.classList.add('full'); el.controls = true; el.requestFullscreen?.().catch(() => el.classList.remove('full')); };
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) el.controls = false; });
+  }
+  if (vid.on) { vid.el.paused ? vid.el.play() : vid.el.pause(); return; }
+  vid.on = true; studio.videoScreen.material = vid.mat;
+  vid.el.muted = !state.sound;
   if (music?.playing) music.pause();
-  showOverlay(`<button class="close" aria-label="Close">×</button><div class="video"><iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`, 'video');
+  if (tune?.ctx.state === 'running') document.getElementById('tune-chip').click();
+  vid.el.play().catch(() => flash('Click the screen again to play'));
+  vidChip();
+}
+function stopVideo() {
+  if (!vid?.on) return;
+  vid.on = false; vid.el.pause(); studio.videoScreen.material = vid.off; vidChip();
+}
+function vidChip() {
+  const on = !!vid?.on;
+  document.getElementById('vid-chip').hidden = !on; document.getElementById('vid-full').hidden = !on;
+  if (on) document.querySelector('#vid-chip .val').textContent = vid.el.paused ? '▶ Her video' : '⏸ Her video';
+}
+// each frame: the room dims while it plays; it stops when she walks away
+function videoTick(dt) {
+  if (vid?.on) {
+    const p = studio.videoScreen.position;
+    if (state.mode !== 'foot' || Math.hypot(head.position.x - p.x, head.position.z - p.z) > 9) stopVideo();
+  }
+  vidDim = damp(vidDim, vid?.on && !vid.el.paused ? 0.32 : 1, 1.6, dt);
+  renderer.toneMappingExposure = (state.exposure ?? 1) * vidDim;
+  if (vid) vid.mat.color.setScalar(1.15 / vidDim);
 }
 // a recording from the owner, played once when she reaches the studio (pack.studioMessage)
 function playMessage() {
@@ -2054,6 +2097,7 @@ function frame(dt = 1 / 60, show = true) {
   if (state.rally) rallyTick(dt);
   if (roomAudio) music.setLevel(roomAudio.update(dt, camera, { playing: music.playing, inCar: state.mode === 'drive', foot: walker?.foot ?? 0 }));
   studio.update(clock, !!music?.playing || state.recordDemo);
+  videoTick(dt);
   spray.update(clock, sun, waterAmb);
   beach.update(clock);
   updateCar(dt);
